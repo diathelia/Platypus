@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Mic-2-mp3</title>
+    <meta charset="utf-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible"
+          content="ie=edge">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css"
+          integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb"
+          crossorigin="anonymous">
+    <!-- jquery  -->
+    <script src="jquery/jquery-1.8.2.js"></script>
+    <script src="jquery/jquery-ui-1.9.1.custom(added-slider).js"></script>
+
+        <script src="jquery/jquery.ui.touch-punch.js"></script>
+        <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/1.0.9/jquery.mobile-events.min.js"></script>-->
+        <link rel="stylesheet" href="jquery/jquery-ui-1.9.2.custom.css">
+
+    <script src="mediaDevices-getUserMedia-polyfill.js"></script>
+    <script src="AudioContextMonkeyPatch.js"></script>
+
+    <style>
+        body {
+            padding-top: 30px;
+            margin-left: 10px;
+        }
+        audio {
+            width: 100%;
+        }
+        #source, #slider, #edited {
+            display: none;
+        }
+        strong {
+            padding-left: 25px;
+        }
+        .container {
+            margin-left: 0;
+            margin-right: 0;
+        }
+        .row {
+            width: 100vw;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="row">
+
+            <div class="col-sm-4 text-center" id="startStop">
+
+                <div>
+                    <h3 class="text-center" id="timer"></h3>
+                </div>
+
+                <button class="btn btn-primary" id="startBtn">
+                    <i class="glyhphicon glyhphicon-record"></i> Start
+                </button>
+
+                <button class="btn btn-primary" id="stopBtn" disabled="true">
+                    <i class="glyhphicon glyhphicon-stop"></i> Stop
+                </button>
+
+                <button class="btn btn-primary upBtn" disabled="true">
+                    <i class="glyphicon glyphicon-upload"></i> Upload
+                </button>
+
+                <audio id="source" controls></audio>
+                <div id="slider"></div>
+                <!--<div class="text-center">-->
+                    <!--<ol id="convertedList"></ol>-->
+                <!--</div>-->
+            </div>
+
+            <div class="col-sm-4 text-center" id="edit">
+                <audio id="edited" controls></audio>
+            </div>
+
+            <div class="col-sm-4 text-center" id="store">
+                <!--<canvas></canvas>-->
+            </div>
+
+        </div>
+
+    </div>
+
+    <p id="featureLog"></p>
+
+    <p><strong>console.log:</strong></p>
+    <ol id="log"></ol>
+
+    <script src="isMicSupported.js"></script>
+    <script src="main.js"></script>
+
+</body>
+
+</html>
