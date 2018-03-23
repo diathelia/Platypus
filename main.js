@@ -1,4 +1,4 @@
-/* try more things like function doSmallTask(arg1, arg2) {...return x, y;}
+/*    try more things like function doSmallTask(arg1, arg2) {...return x, y;}
  *
  * 1) define the 'create audio' DOM (class=”toolIconButton” for authoring)
  * 2) call $(Main.init) on click of data-action="Media.CreateAudio" button
@@ -8,30 +8,90 @@
  * 5) (research how to use Bracken's media editors as fallbacks for mine?)
  * 6) watch how data-action="Media.CreateAudio" DOM is altered on click.
  * 7) replicate onInitSuccess and button onclick: insert tool HTML into DOM
+ * 
  */
 
 var Main = function () {
     // mp3 array's for edit / store / upload functions to access
-    var blobs = [];
-    var edits = [];
+    var blobs = [],                                        // array to load blobs into
+        edits = [],                                        // array to load edits into
+        timer,                                             // needed by startBtn and stopBtn (not keeping in long-term?)
+        recorder,                                          // instance constructed per recording, used in many places
+        context,                                           // single session context that is used in many places
+        analyser,                                          // set-up by mic.js, connected by on.startBtn, used by draw()
+        the,                                               // to be assigned to the current recording src via 'this'
+        handledURL = window.URL || window.webkitURL,       // use this to avoid overwriting window objects
+        random = Math.random,                              // a sheer convenience for using random() within canvas
+        log = $('#log');                                   // a sheer convenience for a mobile-friendly console.log
 
-    // from mic.js
-    var timer, recorder, context;
+    // authoring values: hopefully can be reduced with a getFreshValues() or (getFrames + getHandles)() approach
 
-    // authoring values (where are they instantiated? could they be mapped with returning parameters & functionalising?)
-    var leftHandle, rightHandle, leftFrames, rightFrames, totalFrames;
+    // why do edits sometimes break ????
 
-    // to reduce duplicate jQuery object instantiation:
-    var log = $('#log');    // mobile-friendly console.log
-    var the;                // the current source...src
+    var leftHandle,         // (detail where each is needed)
+        rightHandle,        //
+        leftFrames,         //
+        rightFrames,        //
+        totalFrames,        //
+        wasPlayed;          //
 
-    // amalgamate webkit and standard URL objects to new variable (prefer not to overwrite window.URL)
-    var handledURL = window.URL || window.webkitURL;
-
-    // grab feature detection string
+    // grab feature detection string from another script
     log.prepend('<li>' + IsMicSupported + '</li>');
 
-/****** setup mic.js  ************************************************************************************************/
+/****** setup canvas visualisation  ***********************************************************************************/
+
+    function getRandomColor () {
+        return random() * 255 >> 0;
+    }
+
+    function draw () {
+        'use strict';
+        // setup canvas
+        var canvas = document.getElementById('webAudioCtx');
+        if (canvas.getContext) {
+            var canvasCtx =  canvas.getContext('2d');
+        } else {
+            console.log('canvas unsupported');
+        }
+        
+        // clear canvas before drawing
+        canvasCtx.fillStyle = 'rgb(0, 0, 0)';
+        canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // get time-based array data
+        var times = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteTimeDomainData(times);
+
+        // create a particle-like oscilloscope
+        for (var i = 0; i < times.length; i++) {
+            var value = times[i];
+            var percent = value / 256;
+            var _height = canvas.height * percent;
+            var offset = canvas.height - _height - 1;
+            var barWidth = canvas.width / times.length;
+            canvasCtx.fillStyle = 'white';
+            canvasCtx.fillRect(i * barWidth, offset, 1, 1);
+        }
+
+        // get byte-based array data
+        var bytes = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(bytes);
+
+        // create some misc blocks and crap [currently]
+        for (var i = 1; i < bytes.length; i++) {
+            // canvasCtx.rotate(i * Math.PI / 180);
+            canvasCtx.fillStyle = 'rgb(' + getRandomColor() + ',' + getRandomColor() + ',' + getRandomColor() + ')';
+            canvasCtx.fillRect(i, canvas.height - bytes[i] * 0.2, 10, canvas.height);
+            canvasCtx.strokeRect(i, canvas.height - bytes[i] * 0.0001, 10, canvas.height);
+        }
+    }
+    // * 0.2
+    // canvasCtx.fillRect(i++, canvas.height - dataArray[i], 10, canvas.height);
+    // canvasCtx.strokeRect(i, i, canvas.width, canvas.height / 500);
+    // canvasCtx.fillRect(i++, canvas.height - dataArray[i], 10, canvas.height);
+    //canvasCtx.setTransform(1, 0, 0, 1, 0, 0);
+
+/****** setup context and microphone **********************************************************************************/
 
     // construct a single AudioContext instance (prefixed by AudioContextMonkeyPatch.js)
     try {
@@ -48,55 +108,49 @@ var Main = function () {
         recorder.startTime = 0;
         config = config || {};
         var realTimeWorker = new Worker('worker-realtime.js');
+
         // Initializes LAME so that we can record
         this.initialize = function () {
+            // let context decide best (usually 44100, sometimes 48000)
             config.sampleRate = context.sampleRate;
             realTimeWorker.postMessage({cmd: 'init', config: config});
         };
         // This function finalizes LAME output and saves the MP3 data to a file
         var microphone, processor;
+
         // Function that handles getting audio out of the browser's media API
         function beginRecording(stream) {
             // Set up Web Audio API to process data from the media stream (microphone)
             // Settings a bufferSize of 0 instructs the browser to choose the best bufferSize
             // Webkit version 31 requires that a valid bufferSize be passed when calling this method
+
+            // createMediaStreamSource likes to go after processor code for iOS
+            microphone = context.createMediaStreamSource(stream);
+
             processor = context.createScriptProcessor(0, 1, 1);
             // Add all buffers from LAME into an array
+
+            analyser = context.createAnalyser();
+            microphone.connect(analyser);
+
             processor.onaudioprocess = function (event) {
                 // Send microphone data to LAME for MP3 encoding while recording
                 var array = event.inputBuffer.getChannelData(0);
                 realTimeWorker.postMessage({cmd: 'encode', buf: array});
+                draw();
             };
-
-            // createMediaStreamSource likes to go after processor code for iOS
-            microphone = context.createMediaStreamSource(stream);
-            // log.prepend('<li>createMediaStreamSource(stream): ' + microphone + '</li>');
             microphone.connect(processor);
             // Begin retrieving microphone data
             processor.connect(context.destination);
-
-/****************** begin web audio API visualisation testing *********************************************************/
-                /*
-                  var analyser = context.createAnalyser();
-                  analyser.connect(processor);
-
-                  var bufferLength = analyser.frequencyBinCount;
-                  var dataArray = new Uint8Array(bufferLength);
-                  analyser.getByteTimeDomainData(dataArray);
-                  console.log(analyser);
-
-                  var canvas = $('canvas');
-                  var canvasCtx = canvas.getContext('2d');
-                  canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
-                */
-/****************** end web audio API visualisation testing ***********************************************************/
         }
+
         // Return a function which will stop recording and return all MP3 data
         this.stop = function () {
             if (processor && microphone) {
                 // Clean up the Web Audio API resources
                 microphone.disconnect();
                 processor.disconnect();
+                analyser.disconnect();
                 processor.onaudioprocess = null;
                 // Return the buffers array. Note that there may be more buffers pending here
             }
@@ -108,7 +162,7 @@ var Main = function () {
             window.navigator.mediaDevices.getUserMedia({audio: true}).then(function (stream) {
                 // Begin recording and get a function that stops the recording
                 var stopRecording = beginRecording(stream);
-                log.prepend('<li>UUID for getUserMedia(stream): ' + stream.id + '</li>');
+                //log.prepend('<li>UUID for getUserMedia(stream): ' + stream.id + '</li>');
                 recorder.startTime = Date.now();
                 // if onSuccess
                 if (onSuccess && typeof onSuccess === 'function') {
@@ -119,8 +173,7 @@ var Main = function () {
                 if (onError && typeof onError === 'function') {
                     onError(error);
                 }
-                log.prepend('<li>' + error + '</li>');                  // Mi = 'gUM is not implemented in this Browser'
-                                                                        // UC = '[object NavigatorUserMediaError]'
+                log.prepend('<li>' + error + '</li>');
             });
         };
 
@@ -136,7 +189,7 @@ var Main = function () {
             switch (e.data.cmd) {
                 case 'end':
                     if (mp3ReceiveSuccess) {
-                        mp3ReceiveSuccess(new Blob(e.data.buf, {type: 'audio/mpeg'}));        //application/octet-binary
+                        mp3ReceiveSuccess(new Blob(e.data.buf, {type: 'audio/mpeg'}));       // application/octet-binary
                     }
                     break;
                 case 'error':
@@ -145,14 +198,14 @@ var Main = function () {
                     }
                     break;
                 default :
-                    log.prepend('<li>Web Worker received a message it does not know how to handle: ' +
-                        e.data + '</li>');
+                log.prepend('<li>Web Worker received a message it does not know how to handle: ' +
+                e.data + '</li>');
             }
         };
         this.initialize();
     };
 
-    // now context is started, construct a single recorder instance outside of any click event
+    // now context is running and populated, construct a single recorder instance outside of any click event
     try {
         recorder = new MP3Recorder({bitRate: 128});
         log.prepend('<li>recorder constructed: ' + recorder + '</li>');
@@ -168,27 +221,14 @@ var Main = function () {
         log.prepend('<li>context did not suspend with the error: ' + e + '</li>');
     });
 
-/****** setup html ****************************************************************************************************/
-
-    // tack on (disabled) edit button
-    $('#edit').append(
-        '<button class="btn btn-primary editBtn" disabled="true">' +
-        '<i class="glyphicon glyphicon-edit"></i> Edit</button>'
-    );
-
-    // tack on (disabled) store button
-    $('#store').append(
-        '<button class="btn btn-primary storeBtn" disabled="true">' +
-        '<i class="glyphicon glyphicon-save"></i> Store' +
-        '</button>'
-    );
+/****** setup slider **************************************************************************************************/
 
     // setup jquery-ui slider
     $('#slider').slider({
         min: 0.0,
         max: 100.0,
         step: 0.1,
-        range: false, // needed for 3-handle slider
+        range: false, // needed for a 3-handled slider
         values: [0, 0, 100],
         // set authoring values (slidestop = mouse only, change = inc. programmatic)
         change: function (event, ui) {
@@ -205,11 +245,19 @@ var Main = function () {
             log.prepend('<li>frames  = [' + leftFrames + ', ' + rightFrames + ']</li>');
 
             // check for meaningful values
-            if ((leftFrames === 0) && (rightFrames === 0)) {
+            if ((leftFrames === 0) && (rightFrames === 0)) { // why frames? would slides be better to check against?
                 $('.editBtn').attr('disabled', true);
             } else {
                 $('.editBtn').attr('disabled', false);
             }
+
+            // this does nothing, diagnose ACTUAL editing issue wrt defined percentages feeding into frame calculation.
+            // if ((leftHandle === 0) && (rightHandle === 100)) {
+            //     $('.editBtn').attr('disabled', true);
+            // } else {
+            //     $('.editBtn').attr('disabled', false);
+            // }
+
 
             // fixes a removing-your-finger bug on (some) touch screens (investigate: many mobiles ignore this)
             $('.ui-slider-handle').blur();
@@ -217,28 +265,6 @@ var Main = function () {
     });
 
 /** restrict playback to within slide positions ***********************************************************************/
-
-    // annoyingly necessary boolean
-    var wasPlayed = false;
-
-    // called from play event below: handles initiating play() with a boolean and delay to avoid confusing the listener
-    function shouldPlay () {
-        'use strict';
-        var lMax = (the.duration / 100) * (leftHandle);
-        if ((the.currentTime >= (lMax - 0.075)) && (the.currentTime <= (lMax + 0.075))) {
-            console.log('shouldPlay in 250ms (2)');
-            setTimeout(function() {
-                console.log('inside (4)');
-                the.play();
-                wasPlayed = false;
-            }, 250);
-            console.log('afterward (3)');
-            wasPlayed = true;
-        } else {
-            console.log('was not at L%');
-            wasPlayed = false;
-        }
-    }
 
     // fires if play is resumed from pause, and the loop only catches when play should resume from the leftHandle
     // cannot use play/pause within this listener because it will call itself mid-execution, so it inits shouldPlay();
@@ -276,6 +302,25 @@ var Main = function () {
             wasPlayed = false;
         }
     });
+
+    // only called from on.play(): handles kicking off play() with a boolean and delay to avoid re-initiating on.play()
+    function shouldPlay () {
+        'use strict';
+        var lMax = (the.duration / 100) * (leftHandle);
+        if ((the.currentTime >= (lMax - 0.075)) && (the.currentTime <= (lMax + 0.075))) {
+            console.log('shouldPlay in 250ms (2)');
+            setTimeout(function() {
+                console.log('inside (4)');
+                the.play();
+                wasPlayed = false;
+            }, 250);
+            console.log('afterward (3)');
+            wasPlayed = true;
+        } else {
+            console.log('was not at L%');
+            wasPlayed = false;
+        }
+    }
 
     // runs once on repeat to keep handle values up to date and within range
     setInterval(function () {
@@ -321,7 +366,7 @@ var Main = function () {
 
         // protect from slicing by -0
         if (rightBytes === 0) {
-            log.prepend('<li>rightBytes will equal -0 and break math itself, so set R to blob.size</li>');
+            log.prepend('<li>rightBytes would equal -0 and break math itself, so set R to blob.size</li>');
             rightBytes = blob2edit.size;
         } else {
             rightBytes = -rightBytes;
@@ -338,7 +383,9 @@ var Main = function () {
             } else {
                 console.log('nothing to revoke yet');
             }
+
             // attach new src and reveal audio element
+
             $('#edited').attr('src', handledURL.createObjectURL(edits[edits.length - 1]))
                         .css('display', 'block')
                         .on('error', function (e) {
@@ -390,10 +437,8 @@ var Main = function () {
                     log.prepend('<li>' + localStorage + '</li>');
                     // if the key we just set is not null (ie it worked), then display html
                     if (localStorage.getItem('blob2store') !== null) {
-                        // get blob from storage
-                        var sUrl = localStorage.getItem('blob2store');
-                        // display
-                        $('#store').append('<audio controls src="' + sUrl + '"></audio>');
+                        // get blob from storage & display
+                        $('#store').append('<audio controls src="' + localStorage.getItem('blob2store') + '"></audio>');
                     } else {
                         log.prepend('<li>blob2store from localStorage could not be found</li>');
                     }
@@ -487,8 +532,6 @@ var Main = function () {
         $('#startBtn').removeAttr('disabled');
 
         recorder.getMp3Blob(function (blob) {
-
-            log.prepend('<li>' + blob.type + '</li>');
             // check if the blob itself is broken
             if (blob.size === 0) {
                 log.prepend('<li>blob.size was zero</li>');
@@ -523,7 +566,7 @@ var Main = function () {
                                 }
                             }).on('error', function(e) {
                                 log.prepend('<li>media error: ' + e.code + ': ' + e.message + '</li>');
-                });
+                            });
             }
             catch (e) {
                 log.prepend('<li>createObjectURL failed (from source), error: ' + e + '</li>');
@@ -569,10 +612,48 @@ var Main = function () {
     });
 
     window.addEventListener("beforeunload", function () {
+        // unload URL objects
+        handledURL.revokeObjectURL(blobs[blobs.length-1]);
+        handledURL.revokeObjectURL(edits[edits.length-1]);
+        
+        // delete session array blobs
+        blobs = [];
+        edits = [];
+        
+        // empty localStorage (til I find an actual implementation for it)
+        localStorage.clear();
+       
+        // close audio context
         context.close()
-            .then(console.log('context closed'))
-            .catch(function () {console.log('context not closed')})
-        // event.returnValue = ''; // setting this to any string will create the 'are you sure you want to leave' prompt
+               .then(console.log('context closed'))
+               .catch(function () {console.log('context not closed')});
+        // event.returnValue = '';
     });
 };
 $(Main);
+
+    // tack on (disabled) edit button
+    // $('#edit').append(
+    //     '<button class="btn btn-primary editBtn" disabled="true">' +
+    //     '<i class="glyphicon glyphicon-edit"></i> Edit</button>'
+    // );
+
+    // tack on (disabled) store button
+    // $('#store').append(
+    //     '<button class="btn btn-primary storeBtn" disabled="true">' +
+    //     '<i class="glyphicon glyphicon-save"></i> Store' +
+    //     '</button>'
+    // );
+/*
+    the = this;
+    totalFrames = the.duration * 38.28125;
+    leftFrames = (totalFrames / 100) * leftHandle;
+    rightFrames = (totalFrames / 100) * (100 - rightHandle);
+
+    // check for meaningful values
+    if ((leftFrames === 0) && (rightFrames === 0)) {
+        $('.editBtn').attr('disabled', true);
+    } else {
+        $('.editBtn').attr('disabled', false);
+    }
+*/

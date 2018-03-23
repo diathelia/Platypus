@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Mic-2-mp3</title>
+    <title>Stereotreme</title>
+    <link rel="icon" href="favicon.png">
     <meta charset="utf-8">
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
@@ -20,11 +21,12 @@
 
     <script src="mediaDevices-getUserMedia-polyfill.js"></script>
     <script src="AudioContextMonkeyPatch.js"></script>
+    <script src="main.js"></script>
 
     <style>
         body {
             padding-top: 30px;
-            margin-left: 10px;
+            /*margin-left: 10px;*/
         }
         audio {
             width: 100%;
@@ -32,15 +34,17 @@
         #source, #slider, #edited {
             display: none;
         }
-        strong {
-            padding-left: 25px;
-        }
         .container {
             margin-left: 0;
             margin-right: 0;
         }
         .row {
             width: 100vw;
+        }
+        #webAudioCtx {
+            width:100%;
+            height: 250px;
+            background-color:black;
         }
     </style>
 
@@ -52,7 +56,7 @@
 
         <div class="row">
 
-            <div class="col-sm-4 text-center" id="startStop">
+            <div class="col-sm-8 text-center" id="startStop">
 
                 <div>
                     <h3 class="text-center" id="timer"></h3>
@@ -70,33 +74,46 @@
                     <i class="glyphicon glyphicon-upload"></i> Upload
                 </button>
 
-                <audio id="source" controls></audio>
+                <br>
+
+                <canvas id="webAudioCtx">add fallback content here</canvas>
+                <audio controls id="source"></audio>
                 <div id="slider"></div>
+
+                <p><strong>console.log:</strong></p>
+                <ol id="log"></ol>
+                <p><strong>featureResults.log:</strong></p>
+                <p id="featureLog"></p>
+
                 <!--<div class="text-center">-->
                     <!--<ol id="convertedList"></ol>-->
                 <!--</div>-->
             </div>
 
-            <div class="col-sm-4 text-center" id="edit">
-                <audio id="edited" controls></audio>
-            </div>
+            <div class="col-sm-4 text-center">
 
-            <div class="col-sm-4 text-center" id="store">
-                <!--<canvas></canvas>-->
+                <button class="btn btn-primary editBtn" disabled="true">
+                    <i class="glyphicon glyphicon-edit"></i> Edit
+                </button>
+                <audio id="edited" controls></audio>
+
+                <br><br><br>
+                
+                <button class="btn btn-primary storeBtn" disabled="true">
+                        <i class="glyphicon glyphicon-save"></i> Store
+                </button>
+
+                <div id="edit">
+                </div>
+                <div id="store"></div>
             </div>
 
         </div>
 
     </div>
 
-    <p id="featureLog"></p>
-
-    <p><strong>console.log:</strong></p>
-    <ol id="log"></ol>
-
     <script src="isMicSupported.js"></script>
-    <script src="main.js"></script>
-    
+
 </body>
 
 </html>

@@ -8,7 +8,6 @@
  * can use (typeof x === 'undefined') when undeclared should count too
  *
  * alert('cannot load Web Worker, please try updating or switching browsers to continue');
- *
 /*/
 
 var IsMicSupported = (function () {
