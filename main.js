@@ -1,16 +1,3 @@
-/*    try more things like function doSmallTask(arg1, arg2) {...return x, y;}
- *
- * 1) define the 'create audio' DOM (class=”toolIconButton” for authoring)
- * 2) call $(Main.init) on click of data-action="Media.CreateAudio" button
- * 3) run init function to test API + device compatability (msg user or hide?)
- * 4) set flags for dataURL's & other exception handling detected by init
- * 4) offer Web Audio button, or possibly ask to switch browsers to continue
- * 5) (research how to use Bracken's media editors as fallbacks for mine?)
- * 6) watch how data-action="Media.CreateAudio" DOM is altered on click.
- * 7) replicate onInitSuccess and button onclick: insert tool HTML into DOM
- * 
- */
-
 var Main = function () {
     // mp3 array's for edit / store / upload functions to access
     var blobs = [],                                        // array to load blobs into
@@ -22,7 +9,7 @@ var Main = function () {
         the,                                               // to be assigned to the current recording src via 'this'
         handledURL = window.URL || window.webkitURL,       // use this to avoid overwriting window objects
         random = Math.random,                              // a sheer convenience for using random() within canvas
-        log = $('#log');                                   // a sheer convenience for a mobile-friendly console.log
+        log = $('#log');                                   // a sheer convenience for using a console.log on mobile
 
     // authoring values: hopefully can be reduced with a getFreshValues() or (getFrames + getHandles)() approach
 
@@ -65,7 +52,7 @@ var Main = function () {
         // create a particle-like oscilloscope
         for (var i = 0; i < times.length; i++) {
             var value = times[i];
-            var percent = value / 256;
+            var percent = value / 200; // 256 = centered
             var _height = canvas.height * percent;
             var offset = canvas.height - _height - 1;
             var barWidth = canvas.width / times.length;
@@ -96,7 +83,7 @@ var Main = function () {
     // construct a single AudioContext instance (prefixed by AudioContextMonkeyPatch.js)
     try {
         context = new window.AudioContext();
-        log.prepend('<li>audio context constructed: ' + context + '</li>');
+        // log.prepend('<li>audio context constructed: ' + context + '</li>');
     }
     catch (e) {
         alert(e + ': Web Audio API not supported, please try updating or switching browsers to continue');
@@ -208,7 +195,7 @@ var Main = function () {
     // now context is running and populated, construct a single recorder instance outside of any click event
     try {
         recorder = new MP3Recorder({bitRate: 128});
-        log.prepend('<li>recorder constructed: ' + recorder + '</li>');
+        // log.prepend('<li>recorder constructed: ' + recorder + '</li>');
     }
     catch (e) {
         alert(e + ': recorder was not instanced, could be a (MP3Recorder || web worker || browser) issue');
@@ -622,29 +609,41 @@ var Main = function () {
         
         // empty localStorage (til I find an actual implementation for it)
         localStorage.clear();
+
+        // force stop --> disconnect nodes
+        recorder.stop();
        
         // close audio context
         context.close()
                .then(console.log('context closed'))
-               .catch(function () {console.log('context not closed')});
+               .catch(function (e) {console.log('context not closed', e)});
         // event.returnValue = '';
     });
 };
 $(Main);
 
-    // tack on (disabled) edit button
-    // $('#edit').append(
-    //     '<button class="btn btn-primary editBtn" disabled="true">' +
-    //     '<i class="glyphicon glyphicon-edit"></i> Edit</button>'
-    // );
-
-    // tack on (disabled) store button
-    // $('#store').append(
-    //     '<button class="btn btn-primary storeBtn" disabled="true">' +
-    //     '<i class="glyphicon glyphicon-save"></i> Store' +
-    //     '</button>'
-    // );
 /*
+ * 1) define the 'create audio' DOM (class=”toolIconButton” for authoring)
+ * 2) call $(Main.init) on click of data-action="Media.CreateAudio" button
+ * 3) run init function to test API + device compatability (msg user or hide?)
+ * 4) set flags for dataURL's & other exception handling detected by init
+ * 4) offer Web Audio button, or possibly ask to switch browsers to continue
+ * 5) (research how to use Bracken's media editors as fallbacks for mine?)
+ * 6) watch how data-action="Media.CreateAudio" DOM is altered on click.
+ * 7) replicate onInitSuccess and button onclick: insert tool HTML into DOM
+ * 8) try more things like function doSmallTask(arg1, arg2) {...return x, y;}
+    tack on (disabled) edit button
+    $('#edit').append(
+        '<button class="btn btn-primary editBtn" disabled="true">' +
+        '<i class="glyphicon glyphicon-edit"></i> Edit</button>'
+    );
+
+    tack on (disabled) store button
+    $('#store').append(
+        '<button class="btn btn-primary storeBtn" disabled="true">' +
+        '<i class="glyphicon glyphicon-save"></i> Store' +
+        '</button>'
+    );
     the = this;
     totalFrames = the.duration * 38.28125;
     leftFrames = (totalFrames / 100) * leftHandle;

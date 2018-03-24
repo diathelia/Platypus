@@ -16,27 +16,27 @@ var IsMicSupported = (function () {
     var featureResults = [];
 
     // logs semantic results to screen
-    var featureLog = $('#featureLog');
+    var featureLog = $('#log');
 
     // asks if the getUserMedia object hangs off navigator(.mediaDevices) and is defined
     function isGetUserMedia(featureResults) {
         'use strict';
         if ('getUserMedia' in navigator) {
-            featureLog.append('gUM is in navigator<br>');
+            // featureLog.append('gUM is in navigator<br>');
             if (navigator.getUserMedia === undefined) {
                 featureResults.push(false);
             } else {
                 featureResults.push(true);
             }
         } else if ('getUserMedia' in navigator.mediaDevices) {
-            featureLog.append('gUM is in mediaDevices<br>');
+            // featureLog.append('gUM is in mediaDevices<br>');
             if (navigator.mediaDevices.getUserMedia === undefined) {
                 featureResults.push(false);
             } else {
                 featureResults.push(true);
             }
         } else {
-            featureLog.append('gUM is NOT in mediaDevices NOR navigator<br>');
+            // featureLog.append('gUM is NOT in mediaDevices NOR navigator<br>');
             featureResults.push(false);
         }
         // if (('getUserMedia' in navigator) || ('getUserMedia' in navigator.mediaDevices)) {
@@ -48,7 +48,7 @@ var IsMicSupported = (function () {
         'use strict';
         // relies on AudioContextMonkeyPatch.js
         if ('AudioContext' in window) {
-            featureLog.append('AudioContext is in window<br>');
+            // featureLog.append('AudioContext is in window<br>');
             try {
                 var testContext = new window.AudioContext();
             }
@@ -61,8 +61,8 @@ var IsMicSupported = (function () {
                 } else {
                     featureResults.push(true);
                 }
-                testContext.close().then(featureLog.append('context closed<br>'))
-                    .catch(function(){featureLog.append('context not closed<br>')});
+                testContext.close().then(console.log('context closed'))
+                    .catch(function(){console.log('context not closed')});
                 // .close resolves to void, will this .catch run? MDN uses 'await' which I can't use (unsupported ES6)
             }
         }
@@ -86,18 +86,18 @@ var IsMicSupported = (function () {
         var testBlob = new Blob(aFileParts, {type : 'application/octet-binary'});
 
         if (testBlob instanceof Blob) {
-            featureLog.append('Blob support<br>');
+            // featureLog.append('Blob support<br>');
 
             // Blob object supported, so test URL API
             var testURL = window.URL || window.webkitURL;
 
             if (testURL) {
-                featureLog.append('URL support<br>');
+                // featureLog.append('URL support<br>');
 
                 // URL API supported, so test BlobURL
                 try {
                     var urlToBlob = testURL.createObjectURL(testBlob);
-                    featureLog.append(urlToBlob, '<br>');
+                    // featureLog.append(urlToBlob, '<br>');
                 }
                 catch (e) {
                     featureLog.append(e, '<br>');
@@ -123,7 +123,7 @@ var IsMicSupported = (function () {
         isWebWorker(featureResults);    // expect true / false
         isBlobAndURL(featureResults);   // expect 'yesBlobURL'
 
-        featureLog.append(featureResults.join(), '<br>');
+        // featureLog.append(featureResults.join(), '<br>');
 
         if (featureResults.includes(false)) {
             // not all core dependencies can be handled, prompt user / don't insert any HTML

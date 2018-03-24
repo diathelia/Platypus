@@ -25,26 +25,36 @@
 
     <style>
         body {
-            padding-top: 30px;
-            /*margin-left: 10px;*/
-        }
-        audio {
-            width: 100%;
+            /* padding-top: 30px; */
+            background-image: url('monotreme.jpg');
+	        background-size: cover;
+	        background-position: center;
+	        background-repeat: no-repeat;
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+            padding: 0;
         }
         #source, #slider, #edited {
             display: none;
+            width: 90%;
         }
-        .container {
-            margin-left: 0;
-            margin-right: 0;
+        .container-fluid {
+            margin: 0;
+            padding: 0;
         }
         .row {
-            width: 100vw;
+            width: 100%;
+            margin: 0;
+            padding: 0;
         }
         #webAudioCtx {
             width:100%;
             height: 250px;
-            background-color:black;
+            background-color: transparent;
+        }
+        p, ol {
+            color: white; 
         }
     </style>
 
@@ -52,7 +62,7 @@
 
 <body>
 
-    <div class="container">
+    <div class="container-fluid">
 
         <div class="row">
 
@@ -74,16 +84,24 @@
                     <i class="glyphicon glyphicon-upload"></i> Upload
                 </button>
 
-                <br>
+                <!-- <br> -->
 
                 <canvas id="webAudioCtx">add fallback content here</canvas>
                 <audio controls id="source"></audio>
                 <div id="slider"></div>
+                <br>
 
-                <p><strong>console.log:</strong></p>
-                <ol id="log"></ol>
-                <p><strong>featureResults.log:</strong></p>
-                <p id="featureLog"></p>
+                <button class="btn btn-primary editBtn" disabled="true">
+                        <i class="glyphicon glyphicon-edit"></i> Edit
+                </button>
+                
+                <audio id="edited" controls></audio>
+                        
+                <button id="store" class="btn btn-primary storeBtn" disabled="true">
+                        <i class="glyphicon glyphicon-save"></i> Store
+                </button>
+    
+                <!-- <div id="edit"></div> -->
 
                 <!--<div class="text-center">-->
                     <!--<ol id="convertedList"></ol>-->
@@ -91,21 +109,10 @@
             </div>
 
             <div class="col-sm-4 text-center">
-
-                <button class="btn btn-primary editBtn" disabled="true">
-                    <i class="glyphicon glyphicon-edit"></i> Edit
-                </button>
-                <audio id="edited" controls></audio>
-
-                <br><br><br>
-                
-                <button class="btn btn-primary storeBtn" disabled="true">
-                        <i class="glyphicon glyphicon-save"></i> Store
-                </button>
-
-                <div id="edit">
-                </div>
-                <div id="store"></div>
+                <p>console.log:</p>
+                <ol id="log"></ol>
+                <!-- <p>featureResults.log:</p> -->
+                <!-- <p id="featureLog"></p> -->
             </div>
 
         </div>
