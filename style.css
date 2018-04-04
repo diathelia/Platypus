@@ -1,0 +1,46 @@
+body {
+    background-image: url('monotreme.jpg');
+	background-size: cover;
+    background-position: center;
+    background-repeat: repeat;
+    height: 100vh;
+    width: 100vw;
+    overflow-x: hidden;
+}
+
+#startStop, #console {
+    margin-top: 20px;
+}
+
+#source, #edited {
+    display: none;
+    width: 90%;
+}
+
+#slider {
+    width: 100%;
+    margin-left: 8px;
+}
+
+/* #slider, .ui-slider, .ui-slider-horizontal {
+    position: absolute;
+} */
+
+#timeHandle {
+    z-index: 3;
+}
+
+#canvas {
+    width:90%;
+    height: 500px;
+    background-color: transparent;
+}
+
+p, ol, h3 {
+    color: white;
+}
+
+#consolelog {
+    background-color: rgba(94, 217, 191, 0.3);
+    height: 100vh;
+}

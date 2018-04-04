@@ -14,49 +14,25 @@
     <!-- jquery  -->
     <script src="jquery/jquery-1.8.2.js"></script>
     <script src="jquery/jquery-ui-1.9.1.custom(added-slider).js"></script>
+    <link rel="stylesheet" href="jquery/jquery-ui-1.9.2.custom.css">
 
-        <script src="jquery/jquery.ui.touch-punch.js"></script>
+    <!-- alternative jquery to compare slider  -->
+    <!-- <script src="jquery/jquery-ui-1.9.2.custom.min.js"></script>
+    <link rel="stylesheet" href="jquery/jquery-ui.css">
+    <script src="jquery/jquery.limitslider.js"></script> -->
+
+        <!-- <script src="jquery/jquery.ui.touch-punch.js"></script> -->
         <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/1.0.9/jquery.mobile-events.min.js"></script>-->
-        <link rel="stylesheet" href="jquery/jquery-ui-1.9.2.custom.css">
 
+    <!-- up-to-date jquery to compare slider  -->
+    <!-- <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.0/themes/smoothness/jquery-ui.css"> -->
+    
     <script src="mediaDevices-getUserMedia-polyfill.js"></script>
     <script src="AudioContextMonkeyPatch.js"></script>
     <script src="main.js"></script>
-
-    <style>
-        body {
-            /* padding-top: 30px; */
-            background-image: url('monotreme.jpg');
-	        background-size: cover;
-	        background-position: center;
-	        background-repeat: no-repeat;
-            height: 100vh;
-            width: 100vw;
-            margin: 0;
-            padding: 0;
-        }
-        #source, #slider, #edited {
-            display: none;
-            width: 90%;
-        }
-        .container-fluid {
-            margin: 0;
-            padding: 0;
-        }
-        .row {
-            width: 100%;
-            margin: 0;
-            padding: 0;
-        }
-        #webAudioCtx {
-            width:100%;
-            height: 250px;
-            background-color: transparent;
-        }
-        p, ol {
-            color: white; 
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 
 </head>
 
@@ -66,50 +42,53 @@
 
         <div class="row">
 
-            <div class="col-sm-8 text-center" id="startStop">
+            <div class="col-sm-8" id="startStop">
 
-                <div>
-                    <h3 class="text-center" id="timer"></h3>
+                <div class="text-center">
+
+                    <button class="btn btn-primary" id="startBtn">
+                        <i class="glyhphicon glyhphicon-record"></i> Start
+                    </button>
+
+                    <button class="btn btn-primary" id="stopBtn" disabled="true">
+                        <i class="glyhphicon glyhphicon-stop"></i> Stop
+                    </button>
+
+                    <button class="btn btn-primary upBtn" disabled="true">
+                        <i class="glyphicon glyphicon-upload"></i> Upload
+                    </button>
+
+                    <h3 id="timer"></h3>
+
                 </div>
 
-                <button class="btn btn-primary" id="startBtn">
-                    <i class="glyhphicon glyhphicon-record"></i> Start
-                </button>
-
-                <button class="btn btn-primary" id="stopBtn" disabled="true">
-                    <i class="glyhphicon glyhphicon-stop"></i> Stop
-                </button>
-
-                <button class="btn btn-primary upBtn" disabled="true">
-                    <i class="glyphicon glyphicon-upload"></i> Upload
-                </button>
-
-                <!-- <br> -->
-
-                <canvas id="webAudioCtx">add fallback content here</canvas>
+                <canvas id="canvas">add fallback content here</canvas>
                 <audio controls id="source"></audio>
                 <div id="slider"></div>
                 <br>
 
-                <button class="btn btn-primary editBtn" disabled="true">
-                        <i class="glyphicon glyphicon-edit"></i> Edit
-                </button>
-                
-                <audio id="edited" controls></audio>
-                        
-                <button class="btn btn-primary storeBtn" disabled="true">
-                        <i class="glyphicon glyphicon-save"></i> Store
-                </button>
-    
-                <div id="store"></div>
+                <div class="text-center">
 
+                    <button class="btn btn-primary editBtn" disabled="true">
+                            <i class="glyphicon glyphicon-edit"></i> Edit
+                    </button>
+                    
+                    <audio id="edited" controls></audio>
+                            
+                    <button class="btn btn-primary storeBtn" disabled="true">
+                            <i class="glyphicon glyphicon-save"></i> Store
+                    </button>
+        
+                    <div id="store"></div>
+
+                </div>
                 <!--<div class="text-center">-->
                     <!--<ol id="convertedList"></ol>-->
                 <!--</div>-->
             </div>
 
-            <div class="col-sm-4 text-center">
-                <p>console.log:</p>
+            <div id="consolelog" class="col-sm-4">
+                <h3 id="console">console.log:</h3>
                 <ol id="log"></ol>
                 <!-- <p>featureResults.log:</p> -->
                 <!-- <p id="featureLog"></p> -->

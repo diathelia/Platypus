@@ -1,26 +1,35 @@
+// Mp3 Frame = 0.026 seconds ALWAYS. therefore: maxDuration(s) / 0.026 = totalFrames ?
+
 var Main = function () {
-    // mp3 array's for edit / store / upload functions to access
-    var blobs = [],                                        // array to load blobs into
-        edits = [],                                        // array to load edits into
+    var blobs = [],                                        // array to hold recordings for the session duration
+        edits = [],                                        // array to load edited recordings for the session duration
         timer,                                             // needed by startBtn and stopBtn (not keeping in long-term?)
         recorder,                                          // instance constructed per recording, used in many places
         context,                                           // single session context that is used in many places
         analyser,                                          // set-up by mic.js, connected by on.startBtn, used by draw()
-        the,                                               // to be assigned to the current recording src via 'this'
-        handledURL = window.URL || window.webkitURL,       // use this to avoid overwriting window objects
+        source,                                            // for current source <audio>: defined by 'this' when loaded
+        sourceNode,                                        // audioContext node for HTML audio element, not microphone
+        canvas = document.getElementById('canvas'),        // jQuery object canvas causes issues when painting
+        handledURL = window.URL || window.webkitURL,       // alias to avoid overwriting the window objects themselves
         random = Math.random,                              // a sheer convenience for using random() within canvas
         log = $('#log');                                   // a sheer convenience for using a console.log on mobile
 
-    // authoring values: hopefully can be reduced with a getFreshValues() or (getFrames + getHandles)() approach
+    if (canvas.getContext) {                               // move this feature detection to isMicSupported
+        var canvasCtx =  canvas.getContext('2d');          // part of the UI on.load (needs a fallback image)
+    } else {
+        console.log('canvas unsupported');
+    }
 
-    // why do edits sometimes break ????
+    // authoring values:
+    var leftHandle,         // sliding percentage to trim from audio start
+        rightHandle,        // sliding percentage to trim from audio end
+        timeValue,          // current audio time in percent
+                            // #timeHandle = the DOM element (created & defined later)
+        leftFrames,         // discrete n frames to trim (requires leftHandle)
+        rightFrames,        // discrete n frames to trim (requires rightHandle)
+        totalFrames;        // 
+        // wasPlayed = false;  // Only used within the playback restrict section to control looping playback
 
-    var leftHandle,         // (detail where each is needed)
-        rightHandle,        //
-        leftFrames,         //
-        rightFrames,        //
-        totalFrames,        //
-        wasPlayed;          //
 
     // grab feature detection string from another script
     log.prepend('<li>' + IsMicSupported + '</li>');
@@ -28,34 +37,45 @@ var Main = function () {
 /****** setup canvas visualisation  ***********************************************************************************/
 
     function getRandomColor () {
-        return random() * 255 >> 0;
+        return random() * 256 >> 0;
     }
 
+    // repeatedly called from on.audioprocess and attempting to also be called from <audio>.timeupdate/playing etc
     function draw () {
         'use strict';
-        // setup canvas
-        var canvas = document.getElementById('webAudioCtx');
-        if (canvas.getContext) {
-            var canvasCtx =  canvas.getContext('2d');
-        } else {
-            console.log('canvas unsupported');
-        }
-        
+
         // clear canvas before drawing
         canvasCtx.fillStyle = 'rgb(0, 0, 0)';
         canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // get time-based array data
-        var times = new Uint8Array(analyser.frequencyBinCount);
-        analyser.getByteTimeDomainData(times);
+        // get time-based array data for particles
+        var particles = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteTimeDomainData(particles);
 
-        // create a particle-like oscilloscope
-        for (var i = 0; i < times.length; i++) {
-            var value = times[i];
+        // get time-based array data for waveform
+        var waveform = new Float32Array(analyser.frequencyBinCount);
+        analyser.getFloatTimeDomainData(waveform);
+
+        // draw black-lined oscilloscope
+        canvasCtx.beginPath();
+        for (var i = 0; i < waveform.length; i++) {
+            var x = i;
+            var y = (0.5 + waveform[i] / 2) * canvas.height;
+            if (i == 0) {
+                canvasCtx.moveTo(x, y);
+            } else {
+                canvasCtx.lineTo(x, y);
+            }
+        }
+        canvasCtx.stroke();
+
+        // create a white-particle oscilloscope
+        for (var i = 0; i < particles.length; i++) {
+            var value = particles[i];
             var percent = value / 200; // 256 = centered
             var _height = canvas.height * percent;
             var offset = canvas.height - _height - 1;
-            var barWidth = canvas.width / times.length;
+            var barWidth = canvas.width / particles.length;
             canvasCtx.fillStyle = 'white';
             canvasCtx.fillRect(i * barWidth, offset, 1, 1);
         }
@@ -65,20 +85,32 @@ var Main = function () {
         analyser.getByteFrequencyData(bytes);
 
         // create some misc blocks and crap [currently]
-        for (var i = 1; i < bytes.length; i++) {
-            // canvasCtx.rotate(i * Math.PI / 180);
+        for (var x = 1; x < bytes.length; x++) {
+            // canvasCtx.rotate(x * Math.PI / 180);
             canvasCtx.fillStyle = 'rgb(' + getRandomColor() + ',' + getRandomColor() + ',' + getRandomColor() + ')';
-            canvasCtx.fillRect(i, canvas.height - bytes[i] * 0.2, 10, canvas.height);
-            canvasCtx.strokeRect(i, canvas.height - bytes[i] * 0.0001, 10, canvas.height);
+            // short color lines dance overtop oscilloscope 
+            canvasCtx.fillRect(x, canvas.height - bytes[x] * 0.666, 0.666, canvas.height / 13);
         }
     }
-    // * 0.2
-    // canvasCtx.fillRect(i++, canvas.height - dataArray[i], 10, canvas.height);
-    // canvasCtx.strokeRect(i, i, canvas.width, canvas.height / 500);
-    // canvasCtx.fillRect(i++, canvas.height - dataArray[i], 10, canvas.height);
-    //canvasCtx.setTransform(1, 0, 0, 1, 0, 0);
 
-/****** setup context and microphone **********************************************************************************/
+/****** experimental & historical canvas mappings to play with ********************************************************
+
+    // coloured bouncing city-scape
+    canvasCtx.fillRect(i, canvas.height - bytes[i] * 0.2, 10, canvas.height);
+    canvasCtx.strokeRect(i, canvas.height - bytes[i] * 0.0001, 10, canvas.height);
+
+    // black bullets rain down from top of canvas
+    canvasCtx.strokeRect(i, canvas.height - (bytes[i] / 0.03), 0.001, canvas.height / 25);
+
+    // misc
+    canvasCtx.fillRect(i++, canvas.height - dataArray[i], 10, canvas.height);
+    canvasCtx.strokeRect(i, i, canvas.width, canvas.height / 500);
+    canvasCtx.fillRect(i++, canvas.height - dataArray[i], 10, canvas.height);
+
+    // for resetting a transform (like rotate)
+    canvasCtx.setTransform(1, 0, 0, 1, 0, 0);
+
+******* setup context and microphone **********************************************************************************/
 
     // construct a single AudioContext instance (prefixed by AudioContextMonkeyPatch.js)
     try {
@@ -124,7 +156,7 @@ var Main = function () {
                 // Send microphone data to LAME for MP3 encoding while recording
                 var array = event.inputBuffer.getChannelData(0);
                 realTimeWorker.postMessage({cmd: 'encode', buf: array});
-                draw();
+                draw(); // seems to only work here, the only on-repeat processing function (others are mostly inits)
             };
             microphone.connect(processor);
             // Begin retrieving microphone data
@@ -143,7 +175,7 @@ var Main = function () {
             }
         };
 
-        // Function for kicking off recording on button press --> refactored for promise-based MediaDevices
+        // Function for kicking off recording on 'start' click --> refactored for promise-based MediaDevices
         this.start = function (onSuccess, onError) {
             // Request access to the microphone
             window.navigator.mediaDevices.getUserMedia({audio: true}).then(function (stream) {
@@ -151,7 +183,6 @@ var Main = function () {
                 var stopRecording = beginRecording(stream);
                 //log.prepend('<li>UUID for getUserMedia(stream): ' + stream.id + '</li>');
                 recorder.startTime = Date.now();
-                // if onSuccess
                 if (onSuccess && typeof onSuccess === 'function') {
                     onSuccess();
                 }
@@ -210,129 +241,183 @@ var Main = function () {
 
 /****** setup slider **************************************************************************************************/
 
-    // setup jquery-ui slider
-    $('#slider').slider({
-        min: 0.0,
-        max: 100.0,
-        step: 0.1,
-        range: false, // needed for a 3-handled slider
-        values: [0, 0, 100],
-        // set authoring values (slidestop = mouse only, change = inc. programmatic)
-        change: function (event, ui) {
-            'use strict';
-            leftHandle = ui.values[0];
-            // ui.values[1] is for mapping to currentTime, but not from within this change event
-            rightHandle = ui.values[2];
-
-            totalFrames = the.duration * 38.28125; // mp3 frames per second (constant independent of bitrate)
-            leftFrames = (totalFrames / 100) * leftHandle;
-            rightFrames = (totalFrames / 100) * (100 - rightHandle);
-
-            // log.prepend('<li>slides  = [' + leftHandle + ', ' + rightHandle + ']</li>');
-            log.prepend('<li>frames  = [' + leftFrames + ', ' + rightFrames + ']</li>');
-
-            // check for meaningful values
-            if ((leftFrames === 0) && (rightFrames === 0)) { // why frames? would slides be better to check against?
-                $('.editBtn').attr('disabled', true);
-            } else {
-                $('.editBtn').attr('disabled', false);
-            }
-
-            // this does nothing, diagnose ACTUAL editing issue wrt defined percentages feeding into frame calculation.
-            // if ((leftHandle === 0) && (rightHandle === 100)) {
-            //     $('.editBtn').attr('disabled', true);
-            // } else {
-            //     $('.editBtn').attr('disabled', false);
-            // }
-
-
-            // fixes a removing-your-finger bug on (some) touch screens (investigate: many mobiles ignore this)
-            $('.ui-slider-handle').blur();
-        }
-    });
-
-/** restrict playback to within slide positions ***********************************************************************/
-
-    // fires if play is resumed from pause, and the loop only catches when play should resume from the leftHandle
-    // cannot use play/pause within this listener because it will call itself mid-execution, so it inits shouldPlay();
-    $('#source').on('play', function() {
+    function setupSlider () {
         'use strict';
+        // constant for each new source recording
+        totalFrames = source.duration * 38.28125;
 
-        // should I map this handle elsewhere?
-        $('.ui-slider-handle').eq(1).attr('id', 'timeHandle');
+        // setup jquery-ui slider
+        $('#slider').slider({
+            step   : 1,
+            range  : false,
+            values : [0, 0, 100],
 
-        // if shouldPlay wasn't just fulfilled (which can only be requested from this loop), react normally to play();
-        if (wasPlayed === false) {
+            // define #timeHandle to target from inside setInterval
+            create : function (event, ui) {
+                'use strict';
+                $('.ui-slider-handle').eq(0).attr('id', 'timeHandle');
+            },
 
-            // this loop play's from a non-zero L position, so if the leftHandle is not at 0%, continue
-            if (leftHandle !== 0) {
+            // restrict handles from sliding over each other & restrict timeHandle to within left / right Handles
+            slide: function (event, ui) {
+                'use strict';
+                // keep top-scope variables up-to-date for other authoring/playback functions
+                leftHandle  = ui.values[1];
+                rightHandle = ui.values[2];
 
-                // merely helps to clean up calculation below
-                var rMax = (the.duration / 100) * (rightHandle);
-
-                // approximates if currentTime is the near position of the rightHandle and sets currentTime to the left
-                if (((the.currentTime >= (rMax - .075)) && (the.currentTime <= (rMax + .075))) || rightHandle === 100) {
-
-                    the.currentTime = ((the.duration / 100) * leftHandle);
-                    log.prepend('<li>loop</li>');
-                    console.log('shouldPlay(1)');
-                    shouldPlay();
-                } else {
-                    log.prepend('<li>~loop</li>');
+                // if left/right Handles get too close to overlapping, return false to stop slide
+                if ((ui.values[1] >= (ui.values[2] - 1)) || (ui.values[2] <= (ui.values[1] + 1))) {
+                    console.log('[collision]');
+                    return false;
                 }
-            } else {
-                console.log('leftHandle === 0');
+            },
+
+            // refresh frame values when handles are explicitly moved by the user
+            stop: function (event, ui) {
+                'use strict';           
+                checkFrames();
             }
-
-        } else {
-            console.log('wasPlayed = true');
-            wasPlayed = false;
-        }
-    });
-
-    // only called from on.play(): handles kicking off play() with a boolean and delay to avoid re-initiating on.play()
-    function shouldPlay () {
-        'use strict';
-        var lMax = (the.duration / 100) * (leftHandle);
-        if ((the.currentTime >= (lMax - 0.075)) && (the.currentTime <= (lMax + 0.075))) {
-            console.log('shouldPlay in 250ms (2)');
-            setTimeout(function() {
-                console.log('inside (4)');
-                the.play();
-                wasPlayed = false;
-            }, 250);
-            console.log('afterward (3)');
-            wasPlayed = true;
-        } else {
-            console.log('was not at L%');
-            wasPlayed = false;
-        }
+        });
     }
 
     // runs once on repeat to keep handle values up to date and within range
     setInterval(function () {
         'use strict';
+        if (source) {
+            // timeValue (int) is given to both timeHandle value & CSS position
+            timeValue = parseInt((source.currentTime / source.duration) * 100);
+            // add percentage and update position
+            $('#timeHandle').css('left', (timeValue  + '\%'));
+            // assigns up-to-date timeValue to timeHandle
+            $('#slider').slider('values', 0, timeValue);
 
-        // only restrict playback if there is audio to restrict
-        if (the) {
-            // set the timeHandle to mirror playback
-            $('#timeHandle').css('left', ((the.currentTime / the.duration) * 100) + '\%');
-
-            if (leftHandle) {
-                if (the.currentTime <= (the.duration / 100) * leftHandle) {
-                    the.pause();
-                    the.currentTime = ((the.duration / 100) * leftHandle);
-                }
+            // set lower-bound of currentTime to wherever leftHandle currently is
+            if (source.currentTime < (source.duration / 100) * leftHandle) {
+                source.pause();
+                source.currentTime = ((source.duration / 100) * leftHandle);
             }
 
-            if (rightHandle) {
-                if ((the.currentTime >= ((the.duration / 100) * (rightHandle) - 0.125))) {
-                    the.pause();
-                    the.currentTime = (the.duration / 100) * (rightHandle);
-                }
+            // set upper-bound of currentTime to wherever rightHandle currently is
+            if ((source.currentTime > ((source.duration / 100) * (rightHandle) - 0.125))) {
+                source.pause();
+                source.currentTime = ((source.duration / 100) * rightHandle);
             }
         }
-    }, 100);
+    }, 50);
+
+    // checks that current frame values are properly mapped to slider handles
+    function checkFrames () {
+        'use strict';
+        // Mp3 Frame = 0.026ms (constant independent of bitrate)
+        leftFrames = (totalFrames / 100) * leftHandle;
+        rightFrames = (totalFrames / 100) * (100 - rightHandle);
+
+        log.prepend('<li>frames  = [' + leftFrames + ', ' + rightFrames + ']</li>');
+
+        // check for meaningful values, enable/disable edit button
+        if ((leftFrames === 0) && (rightFrames === 0)) { // why frames? would slides be better to check against?
+            $('.editBtn').attr('disabled', true);
+        } else {
+            $('.editBtn').attr('disabled', false);
+        }
+    }
+
+/** [restricting playback experimental section] ***********************************************************************/
+
+    // (these aren't stopping timeHandle, nor pausing rn... but is immobilising [L/R]handles instead)
+    // sets leftHandle as lower limit for timeHandle
+    // if (timeValue < leftHandle) {
+    //     console.log('[lower]');
+    //     source.pause();
+    //     return false;
+    // }
+    // sets rightHandle as upper limit for timeHandle
+    // if (timeValue > rightHandle) {
+    //     console.log('[upper]');
+    //     source.pause();
+    //     return false;
+    // }
+    // fixes a removing-your-finger bug on (some) touch screens (investigate: many mobiles ignore this)
+    // $('.ui-slider-handle').blur();
+
+    // yet another way to call draw() repeatedly. works without connecting sourceNode (colors change, no motion)
+    // if (!source.paused) {
+    //     draw();
+    // }
+
+    // strange visual bug: when source becomes a sourceNode, playback breaks.
+    // maybe the added task is slowing playback such that timeIntervals are breaking? doubt it. connection/piping issue.
+    /*$('#source').on('loadedmetadata', function () {
+        // 'use strict';
+        sourceNode = context.createMediaElementSource(source);
+        sourceNode.connect(analyser);
+        navigator.mediaDevices.enumerateDevices()
+            .then(function(devices) {
+                devices.forEach(function(device) {
+                    console.log(device.kind + ": " + device.label +
+                        " id = " + device.deviceId);
+                });
+            })
+            .catch(function(err) {
+                console.log(err.name + ": " + err.message);
+            });
+        sourceNode.connect(context.destination);
+    }).on('timeupdate', function () {
+        console.log('shouldDraw');
+        draw();
+    })*/
+    // .on('play', function() {
+        // uses a boolean 'wasPlayed' to indicate currentTime was stopped at rightHandle when play() event fired
+        // fires if play is resumed from pause, and the loop only catches when play should resume from the leftHandle
+        // cannot use play/pause within this listener because it will call itself mid-execution, so it inits shouldPlay.
+        // 'use strict';
+        // if shouldPlay wasn't just fulfilled (which can only be requested from this loop), react normally to play();
+        // if (wasPlayed === false) {
+
+            // this loop play's from a non-zero L position, so if the leftHandle is not at 0%, continue
+            // if ((leftHandle || rightHandle) !== 0) {
+
+                // merely helps to clean up calculation below
+                // var rMax = (source.duration / 100) * (rightHandle);
+
+                // approximates if currentTime is the near position of the rightHandle and sets currentTime to the left
+    //             if (((source.currentTime >= (rMax - .075)) && (source.currentTime <= (rMax + .075))) || rightHandle === 100) {
+
+    //                 source.currentTime = ((source.duration / 100) * leftHandle);
+    //                 log.prepend('<li>loop</li>');
+    //                 console.log('shouldPlay(1)');
+    //                 shouldPlay();
+    //             } else {
+    //                 log.prepend('<li>~loop</li>');
+    //             }
+    //         } else {
+    //             console.log('leftHandle || rightHandle === 0');
+    //         }
+
+    //     } else {
+    //         console.log('wasPlayed = true');
+    //         wasPlayed = false;
+    //     }
+    // });
+
+    // only called from on.play(): handles kicking off play() with a boolean and delay to avoid re-initiating on.play()
+    // function shouldPlay () {
+    //     'use strict';
+    //     var lMax = (source.duration / 100) * (leftHandle);
+    //     if ((source.currentTime >= (lMax - 0.075)) && (source.currentTime <= (lMax + 0.075))) {
+    //         console.log('shouldPlay in 250ms (2)');
+    //         setTimeout(function() {
+    //             console.log('inside (4)');
+    //             source.play();
+    //             wasPlayed = false;
+    //         }, 250);
+    //         console.log('afterward (3)');
+    //         wasPlayed = true;
+    //     } else {
+    //         console.log('was not at L%');
+    //         wasPlayed = false;
+    //     }
+    // }
 
 /** button functions **************************************************************************************************/
 
@@ -365,14 +450,13 @@ var Main = function () {
         try {
             // first check for previous blob URL to revoke
             if (edits[edits.length - 2]) {
-                handledURL.revokeObjectURL(blobs[blobs.length - 2]);
+                handledURL.revokeObjectURL(blobs[blobs.length - 2]);   // could also delete this blob from array here...
                 console.log('revoked');
             } else {
                 console.log('nothing to revoke yet');
             }
 
             // attach new src and reveal audio element
-
             $('#edited').attr('src', handledURL.createObjectURL(edits[edits.length - 1]))
                         .css('display', 'block')
                         .on('error', function (e) {
@@ -530,37 +614,34 @@ var Main = function () {
             try {
                 // first check for previous blob URL to revoke
                 if (blobs[blobs.length-2]) {
-                    handledURL.revokeObjectURL(blobs[blobs.length-2]);
+                    handledURL.revokeObjectURL(blobs[blobs.length-2]); // could also delete this blob from array here...
                     console.log('revoked');
                 } else {
                     console.log('nothing to revoke yet');
                 }
 
-                // reveal audio element & update {'the'} duration target variables
-                $('#source').attr('src', handledURL.createObjectURL(blobs[blobs.length-1]))
+                // next reveal audio element & update 'source' variables
+                $('#source').attr('src', handledURL.createObjectURL(blobs[blobs.length - 1]))
                             .css('display', 'block')
                             .on('durationchange', function () {
-                                the = this;
-                                totalFrames = the.duration * 38.28125;
-                                leftFrames = (totalFrames / 100) * leftHandle;
-                                rightFrames = (totalFrames / 100) * (100 - rightHandle);
-
-                                // check for meaningful values
-                                if ((leftFrames === 0) && (rightFrames === 0)) {
-                                    $('.editBtn').attr('disabled', true);
-                                } else {
-                                    $('.editBtn').attr('disabled', false);
-                                }
-                            }).on('error', function(e) {
+                                source = this;
+                                setupSlider();
+                            })
+                            .on('error', function (e) {
                                 log.prepend('<li>media error: ' + e.code + ': ' + e.message + '</li>');
-                            });
+                });
             }
             catch (e) {
                 log.prepend('<li>createObjectURL failed (from source), error: ' + e + '</li>');
             }
-
-            // reveal slider
-            $('#slider').css('display', 'block');
+            //finally {
+                // now define slider in relation to new 'source' variables
+                // alternative place to connect to visualisation
+                // console.log(source);
+                // sourceNode = context.createMediaElementSource(source);
+                // sourceNode.connect(analyser);
+                // sourceNode.connect(context.destination);
+            //}
         });
 
         // logic so that clicking stop 'directly' suspends recording (for iOS)
@@ -610,7 +691,7 @@ var Main = function () {
         // empty localStorage (til I find an actual implementation for it)
         localStorage.clear();
 
-        // force stop --> disconnect nodes
+        // force stop --> disconnect nodes (Zhuker warns this may not empty all buffers (some might still be in Worker?)
         recorder.stop();
        
         // close audio context
@@ -645,7 +726,7 @@ $(Main);
         '</button>'
     );
     the = this;
-    totalFrames = the.duration * 38.28125;
+    totalFrames = source.duration * 38.28125;
     leftFrames = (totalFrames / 100) * leftHandle;
     rightFrames = (totalFrames / 100) * (100 - rightHandle);
 
@@ -655,4 +736,10 @@ $(Main);
     } else {
         $('.editBtn').attr('disabled', false);
     }
+    // this does nothing, diagnose ACTUAL editing issue wrt defined percentages feeding into frame calculation.
+    // if ((leftHandle === 0) && (rightHandle === 100)) {
+    //     $('.editBtn').attr('disabled', true);
+    // } else {
+    //     $('.editBtn').attr('disabled', false);
+    // }
 */
