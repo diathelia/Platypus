@@ -1,3 +1,36 @@
+/* Slider Controls */
+#leftHandle, #rightHandle {
+    background-color: blue;
+    color: inherit;
+    outline: none;
+    z-index: 3 !important; /* do I need this? */
+}
+
+/* #leftHandle {
+    margin-right: 0.6em;
+}
+
+#rightHandle {
+    margin-left: 0.6em;
+} */
+
+#timeHandle {
+    background-color: red;
+    color: inherit;
+    border-radius: 50%;
+    outline: none;
+    width: 0.78em;
+    height: 0.78em;
+    top: -.05em;
+}
+
+/* Player Controls */
+#playerUI {
+    display: none;
+    background-color: rgba(94, 217, 191, 0.3);
+    color: auto; 
+}
+
 body {
     background-image: url('monotreme.jpg');
 	background-size: cover;
@@ -18,16 +51,8 @@ body {
 }
 
 #slider {
-    width: 100%;
-    margin-left: 8px;
-}
-
-/* #slider, .ui-slider, .ui-slider-horizontal {
-    position: absolute;
-} */
-
-#timeHandle {
-    z-index: 3;
+    width: 830px;
+    margin-left: 105px;
 }
 
 #canvas {

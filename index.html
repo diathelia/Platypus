@@ -17,17 +17,10 @@
     <link rel="stylesheet" href="jquery/jquery-ui-1.9.2.custom.css">
     <script src="jquery/jquery.ui.touch-punch.js"></script>
     <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/1.0.9/jquery.mobile-events.min.js"></script>-->
-
-    <!-- up-to-date jquery to compare slider  -->
-    <!-- <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.0/themes/smoothness/jquery-ui.css"> -->
-    
     <script src="mediaDevices-getUserMedia-polyfill.js"></script>
     <script src="AudioContextMonkeyPatch.js"></script>
-    <script src="main.js"></script>
     <link rel="stylesheet" href="style.css">
-
+    <script src="isMicSupported.js"></script>
 </head>
 
 <body>
@@ -57,9 +50,19 @@
                 </div>
 
                 <canvas id="canvas">add fallback content here</canvas>
-                <audio controls id="source"></audio>
+                
                 <div id="slider"></div>
-                <br>
+
+                <div class="text-center" id="playerUI">
+                    <span>
+                        <span id="duration"></span>
+                        <a class="btn btn-primary" id="play">Play</a>
+                        <a class="btn btn-primary" id="pause">Pause</a>
+                        <input id="volume" type="range" min="0" max="10" value="5" />
+                    </span>
+                </div>
+
+                <audio controls id="source"></audio>
 
                 <div class="text-center">
 
@@ -91,9 +94,7 @@
         </div>
 
     </div>
-
-    <script src="isMicSupported.js"></script>
-
+    <script src="main.js"></script>
 </body>
 
 </html>
