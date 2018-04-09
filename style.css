@@ -1,21 +1,12 @@
 /* Slider Controls */
 #leftHandle, #rightHandle {
-    background-color: blue;
+    background-color: red;
     color: inherit;
     outline: none;
-    z-index: 3 !important; /* do I need this? */
 }
-
-/* #leftHandle {
-    margin-right: 0.6em;
-}
-
-#rightHandle {
-    margin-left: 0.6em;
-} */
 
 #timeHandle {
-    background-color: red;
+    background-color: blue;
     color: inherit;
     border-radius: 50%;
     outline: none;
@@ -24,9 +15,22 @@
     top: -.05em;
 }
 
+/* #leftHandle {
+    z-index: 5 !important;
+    margin-left: 0.6em;
+} */
+
 /* Player Controls */
-#playerUI {
+#slider, #playerUI {
+    width: 69%;
+    margin-left: 105px;
     display: none;
+}
+
+#slider {
+    height: 50px;
+}
+#playerUI {
     background-color: rgba(94, 217, 191, 0.3);
     color: auto; 
 }
@@ -50,13 +54,9 @@ body {
     width: 90%;
 }
 
-#slider {
-    width: 830px;
-    margin-left: 105px;
-}
-
 #canvas {
-    width:90%;
+    width:69%;
+    margin-left: 105px;
     height: 500px;
     background-color: transparent;
 }

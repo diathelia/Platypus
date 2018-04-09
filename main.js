@@ -122,6 +122,9 @@ var Main = (function () {
         alert(e + ': Web Audio API not supported, please try updating or switching browsers to continue');
     }
 
+    // perhaps I do need a better init function for <contexts, slider, canvas>
+    setupSlider(); // seperated setup from update, dont need sliders being created on top of one another
+
     // populate AudioContext & prepare Worker communication for the recorder object
     var MP3Recorder = function (config) {
         recorder = this;
@@ -161,7 +164,6 @@ var Main = (function () {
             };
             microphone.connect(processor);
             // Begin retrieving microphone data
-            console.log(context.destination);
             processor.connect(context.destination);
         }
 
@@ -243,38 +245,36 @@ var Main = (function () {
 
 /****** setup playback slider and player controls *********************************************************************/
 
+    // this is mistakenly called each new source, only needs to init once! seperate update from setup code
     function setupSlider () {
         'use strict';
-        // constant for each new source recording
-        totalFrames = source.duration * 38.28125;
 
         // setup jquery-ui slider
         $('#slider').slider({
             step   : 1,
             range  : false,
             animate: true,
-            values : [0, 0, 100],
+            values : [0, 0, 100], // jquery gives lowest value precedence upon overlap, so leftHandle = [0]
 
             // define convienient handles to target for editing and playback
             create: function () {
                 'use strict';
-                $('.ui-slider-handle').eq(0).attr('id', 'timeHandle');
-                $('.ui-slider-handle').eq(1).attr('id', 'leftHandle');
+                $('.ui-slider-handle').eq(0).attr('id', 'leftHandle');
+                $('.ui-slider-handle').eq(1).attr('id', 'timeHandle');
                 $('.ui-slider-handle').eq(2).attr('id', 'rightHandle');
 
-                var handleWidth = $('.ui-slider-handle').eq(1).css('width');
-                
+                // var handleWidth = $('.ui-slider-handle').eq(1).css('width');
             },
 
             // restrict handles from sliding over each other update editing values
             slide: function (event, ui) {
                 'use strict';
                 // keep these top-scope variables up-to-date for other authoring/playback functions
-                leftHandle  = ui.values[1];
+                leftHandle  = ui.values[0];
                 rightHandle = ui.values[2];
 
                 // if left/right Handles get too close to overlapping, return false to stop slide
-                if ((ui.values[1] >= (ui.values[2] - 1)) || (ui.values[2] <= (ui.values[1] + 1))) {
+                if ((ui.values[0] >= (ui.values[2] - 1)) || (ui.values[2] <= (ui.values[0] + 1))) {
                     console.log('[collision]');
                     return false;
                 }
@@ -307,7 +307,7 @@ var Main = (function () {
         }
     }
 
-    // set up playerUI when source audio is ready
+    // set up playerUI when source audio is ready (could contain entire slider setup...?)
     $('#source').on('loadedmetadata', function () {
         'use strict';
 
@@ -341,6 +341,18 @@ var Main = (function () {
     // runs once on repeat to keep handle values up to date and within range
     setInterval(function () {
         'use strict';
+
+        // this interval is reseting timeHandle when it is dragged back to currentTime
+        // it needs to also move currentTime to dragged position IF its within [L/R]handles
+        
+        // $('#slider').on( 'sliderslide', function(event, ui) {
+            // if () {}... or could this conditional ^ be better placed in the other slide event?
+            // i think within the slide event outside of this interval, if timeHandle is sliding within
+            // its prescribed range, then it can shift currentTime value also. this will then allow this
+            // interval to remain as is, and also not confuse the slider with two seperate slide events
+        // });
+
+
         // only runs if interval has some audio to affect
         if (source) {
             // timeValue (int) is given to both timeHandle value & CSS position
@@ -348,7 +360,7 @@ var Main = (function () {
             // add percentage and update position
             $('#timeHandle').css('left', (timeValue  + '\%'));
             // assigns up-to-date timeValue to timeHandle
-            $('#slider').slider('values', 0, timeValue);
+            $('#slider').slider('values', 1, timeValue);
 
             // set lower-bound of currentTime to wherever leftHandle currently is
             if (source.currentTime <= (source.duration / 100) * leftHandle) {
@@ -688,7 +700,8 @@ var Main = (function () {
                             .css('display', 'block')
                             .on('durationchange', function () {
                                 source = this;
-                                setupSlider();
+                                totalFrames = source.duration * 38.28125;
+                                $('#slider').css('display', 'block');
                             })
                             .on('error', function (e) {
                                 log.prepend('<li>media error: ' + e.code + ': ' + e.message + '</li>');
