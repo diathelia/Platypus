@@ -27,9 +27,10 @@
     display: none;
 }
 
-#slider {
+/* #slider {
     height: 50px;
-}
+} */
+
 #playerUI {
     background-color: rgba(94, 217, 191, 0.3);
     color: auto; 
