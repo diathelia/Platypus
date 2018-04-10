@@ -1,4 +1,8 @@
 /* Slider Controls */
+.ui-slider-handle {
+    margin-top: 20px; /* why not half slider width? (=25px) */
+}
+
 #leftHandle, #rightHandle {
     background-color: red;
     color: inherit;
@@ -12,13 +16,8 @@
     outline: none;
     width: 0.78em;
     height: 0.78em;
-    top: -.05em;
+    top: -0.078em;
 }
-
-/* #leftHandle {
-    z-index: 5 !important;
-    margin-left: 0.6em;
-} */
 
 /* Player Controls */
 #slider, #playerUI {
@@ -27,13 +26,12 @@
     display: none;
 }
 
-/* #slider {
+#slider {
     height: 50px;
-} */
-
+}
 #playerUI {
     background-color: rgba(94, 217, 191, 0.3);
-    color: auto; 
+    color: auto;
 }
 
 body {
@@ -56,9 +54,9 @@ body {
 }
 
 #canvas {
-    width:69%;
+    width: 69%;
     margin-left: 105px;
-    height: 500px;
+    height: 300px;
     background-color: transparent;
 }
 
@@ -69,4 +67,8 @@ p, ol, h3 {
 #consolelog {
     background-color: rgba(94, 217, 191, 0.3);
     height: 100vh;
+}
+
+#download a {
+    text-decoration-line: underline;
 }

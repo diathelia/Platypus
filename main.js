@@ -35,10 +35,10 @@ var Main = (function () {
 /****** setup canvas visualisation ************************************************************************************/
 
     function getRandomColor () {
-        return random() * 256 >> 0;
+        return ((random() * 256) - 100) >> 0;
     }
 
-    // repeatedly called from on.audioprocess and attempting to also be called from <audio>.timeupdate/playing etc
+    // repeatedly called from on.audioprocess and attempting to also be called <audio>.timeupdate/playing etc
     function draw () {
         'use strict';
 
@@ -46,29 +46,12 @@ var Main = (function () {
         canvasCtx.fillStyle = 'rgb(0, 0, 0)';
         canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
 
+        // slightly improves for loop efficiency
+        var i;
+        
         // get time-based array data for particles
         var particles = new Uint8Array(analyser.frequencyBinCount);
         analyser.getByteTimeDomainData(particles);
-
-        // get time-based array data for waveform
-        var waveform = new Float32Array(analyser.frequencyBinCount);
-        analyser.getFloatTimeDomainData(waveform);
-
-        // slightly improves for loop efficiency
-        var i;
-
-        // draw black-lined oscilloscope
-        canvasCtx.beginPath();
-        for (i = 0; i < waveform.length; i++) {
-            var x = i;
-            var y = (0.5 + waveform[i] / 2) * canvas.height;
-            if (i == 0) {
-                canvasCtx.moveTo(x, y);
-            } else {
-                canvasCtx.lineTo(x, y);
-            }
-        }
-        canvasCtx.stroke();
 
         // create a white-particle oscilloscope
         for (i = 0; i < particles.length; i++) {
@@ -86,19 +69,36 @@ var Main = (function () {
         analyser.getByteFrequencyData(bytes);
 
         // create some misc blocks and crap [currently]
-        for (var x = 1; x < bytes.length; x++) {
-            // canvasCtx.rotate(x * Math.PI / 180);
-            canvasCtx.fillStyle = 'rgb(' + getRandomColor() + ',' + getRandomColor() + ',' + getRandomColor() + ')';
-            // short color lines dance overtop oscilloscope 
-            canvasCtx.fillRect(x, canvas.height - bytes[x] * 0.666, 0.666, canvas.height / 13);
+        for (i = 1; i < bytes.length; i++) {
+            // canvasCtx.rotate(i * Math.PI / 180);    (this change made the palette blue/purple) ↓
+            canvasCtx.fillStyle = 'rgb(' + getRandomColor() + ',' + getRandomColor() + ',' + (256 >> 0) + ')';
+            // coloured bouncing city-scape
+            canvasCtx.fillRect(i, canvas.height - bytes[i] * 0.2, 10, canvas.height);
+            canvasCtx.strokeRect(i, canvas.height - bytes[i] * 0.0001, 10, canvas.height);
         }
     }
 
 /****** experimental & historical canvas mappings to play with ********************************************************
+        
+        // get time-based array data for waveform
+        var waveform = new Float32Array(analyser.frequencyBinCount);
+        analyser.getFloatTimeDomainData(waveform);
 
-    // coloured bouncing city-scape
-    canvasCtx.fillRect(i, canvas.height - bytes[i] * 0.2, 10, canvas.height);
-    canvasCtx.strokeRect(i, canvas.height - bytes[i] * 0.0001, 10, canvas.height);
+        // draw black-lined oscilloscope
+        canvasCtx.beginPath();
+        for (i = 0; i < waveform.length; i++) {
+            var x = i;
+            var y = (0.5 + waveform[i] / 2) * canvas.height;
+            if (i == 0) {
+                canvasCtx.moveTo(x, y);
+            } else {
+                canvasCtx.lineTo(x, y);
+            }
+        }
+        canvasCtx.stroke();
+
+    // short color lines dance overtop oscilloscope 
+    canvasCtx.fillRect(x, canvas.height - bytes[x] * 0.666, 0.666, canvas.height / 13);
 
     // black bullets rain down from top of canvas
     canvasCtx.strokeRect(i, canvas.height - (bytes[i] / 0.03), 0.001, canvas.height / 25);
@@ -113,7 +113,7 @@ var Main = (function () {
 
 ******* setup context and microphone **********************************************************************************/
 
-    // construct a single AudioContext instance (prefixed by AudioContextMonkeyPatch.js)
+    // construct only one AudioContext instance (prefixed by AudioContextMonkeyPatch.js)
     try {
         context = new window.AudioContext();
         // log.prepend('<li>audio context constructed: ' + context + '</li>');
@@ -122,8 +122,21 @@ var Main = (function () {
         alert(e + ': Web Audio API not supported, please try updating or switching browsers to continue');
     }
 
-    // perhaps I do need a better init function for <contexts, slider, canvas>
-    setupSlider(); // seperated setup from update, dont need sliders being created on top of one another
+    // construct only one slider to be updated dynamically
+    setupSlider();
+
+    // only start button = resume, otherwise context is suspended
+    function suspendContext () {
+        if (context.state === 'running') {
+                context.suspend().then(function() {
+                    log.prepend('<li>audio context suspended</li>');
+                }).catch(function(e) {
+                    log.prepend('<li>audio context could not be suspended with the error: ' + e + '</li>');
+                });
+        } else {
+            log.prepend('<li>audio context was not running when stop was clicked</li>');
+        }
+    }
 
     // populate AudioContext & prepare Worker communication for the recorder object
     var MP3Recorder = function (config) {
@@ -181,6 +194,8 @@ var Main = (function () {
 
         // Function for kicking off recording on 'start' click --> refactored for promise-based MediaDevices
         this.start = function (onSuccess, onError) {
+            // first disable the start button to prevent multiple prompts/recorder objects
+            // $('startBtn').attr('disabled', true); // doesnt work, maybe block page with invisible div while prompt exists?
             // Request access to the microphone
             window.navigator.mediaDevices.getUserMedia({audio: true}).then(function (stream) {
                 // Begin recording and get a function that stops the recording
@@ -236,16 +251,10 @@ var Main = (function () {
         alert(e + ': recorder was not instanced, could be a (MP3Recorder || web worker || browser) issue');
     }
 
-    // suspend context here so that clicking start = resume, stop = suspend
-    context.suspend().then(function () {
-        log.prepend('<li>audio context suspended</li>');
-    }).catch(function(e) {
-        log.prepend('<li>context did not suspend with the error: ' + e + '</li>');
-    });
+    suspendContext();
 
 /****** setup playback slider and player controls *********************************************************************/
 
-    // this is mistakenly called each new source, only needs to init once! seperate update from setup code
     function setupSlider () {
         'use strict';
 
@@ -254,16 +263,14 @@ var Main = (function () {
             step   : 1,
             range  : false,
             animate: true,
-            values : [0, 0, 100], // jquery gives lowest value precedence upon overlap, so leftHandle = [0]
+            values : [0, 100, 0], // (jquery gives lowest index value precedence upon overlap)
 
-            // define convienient handles to target for editing and playback
+            // define convienient handle id's to target for editing and playback
             create: function () {
                 'use strict';
                 $('.ui-slider-handle').eq(0).attr('id', 'leftHandle');
-                $('.ui-slider-handle').eq(1).attr('id', 'timeHandle');
-                $('.ui-slider-handle').eq(2).attr('id', 'rightHandle');
-
-                // var handleWidth = $('.ui-slider-handle').eq(1).css('width');
+                $('.ui-slider-handle').eq(1).attr('id', 'rightHandle');
+                $('.ui-slider-handle').eq(2).attr('id', 'timeHandle');
             },
 
             // restrict handles from sliding over each other update editing values
@@ -271,10 +278,25 @@ var Main = (function () {
                 'use strict';
                 // keep these top-scope variables up-to-date for other authoring/playback functions
                 leftHandle  = ui.values[0];
-                rightHandle = ui.values[2];
+                rightHandle = ui.values[1];
 
+                // $('#timeHandle').on('focus', function () {
+                    // console.log('focused');
+                    if ($('#timeHandle').hasClass('ui-state-active')) { // this could also go inside interval if needed
+                        source.currentTime = (source.duration / 100) * ui.values[2];
+                        console.log('active');
+                    }
+                // });
+                /*
+                   timeHandle ⇌ currentTime:
+                   interval maps currentTime onto slider via timeValue...
+                   this function maps ui.values[2] back to currentTime...
+                   I guess this is the UI issue: two competing functions.
+                   but why does this push timeHandle to the left?
+                   why does moving left/rightHandle affect the timeHandle?
+                */
                 // if left/right Handles get too close to overlapping, return false to stop slide
-                if ((ui.values[0] >= (ui.values[2] - 1)) || (ui.values[2] <= (ui.values[0] + 1))) {
+                if ((ui.values[0] >= (ui.values[1] - 1)) || (ui.values[1] <= (ui.values[0] + 1))) {
                     console.log('[collision]');
                     return false;
                 }
@@ -290,10 +312,59 @@ var Main = (function () {
         });
     }
 
+    // runs once on repeat to keep handle values up to date and within range
+    setInterval(function () {
+        'use strict';
+        // only runs if interval has some audio to affect
+        if (source) {
+            // timeValue (int) is given to both timeHandle value & CSS position
+            timeValue = parseInt((source.currentTime / source.duration) * 100);
+            // add percentage and update position
+            $('#timeHandle').css('left', (timeValue  + '\%'));
+            // assigns up-to-date timeValue to timeHandle
+            $('#slider').slider('values', 2, timeValue);
+
+            // set lower-bound of currentTime to wherever leftHandle currently is
+            if (source.currentTime <= (source.duration / 100) * leftHandle) {
+                source.currentTime = ((source.duration / 100) * leftHandle) + 0.01; // temp fix, better to re-position leftHandle
+                $('#pause').hide();
+                $('#play').show();
+                source.pause();
+            }
+
+            // set upper-bound of currentTime to wherever rightHandle currently is
+            if (source.currentTime >= (source.duration / 100) * rightHandle) {
+                source.currentTime = ((source.duration / 100) * leftHandle) + 0.01; // temp fix, better to re-position leftHandle
+                $('#pause').hide();
+                $('#play').show();
+                source.pause();
+
+            }
+
+            //Get hours and minutes
+            var s = parseInt(source.currentTime % 60);
+            var m = parseInt((source.currentTime / 60) % 60);
+
+            //Add 0 if seconds less than 10
+            if (s < 10) {
+                s = '0' + s;
+            }
+
+            $('#duration').html('<p>' + m + ':' + s + '</p>');	
+
+            // if playback ends, reset currentTime and buttons
+            if (source.currentTime === source.duration) {
+                source.currentTime = 0; // issue: leftHandle = 0, therefore inits other interval loops (worse when sliders have moved)
+                source.pause();
+                $('#pause').hide();
+                $('#play').show();
+            }
+        }
+    }, 26); // 26 ms is both the exact frame length and the fastest possible 'timeupdate' event that I am circumventing
+
     // checks that current frame values are properly mapped to slider handles
     function checkFrames () {
         'use strict';
-        // Mp3 Frame = 0.026s (constant independent of bitrate)
         leftFrames = (totalFrames / 100) * leftHandle;
         rightFrames = (totalFrames / 100) * (100 - rightHandle);
 
@@ -314,7 +385,9 @@ var Main = (function () {
         // prepare player
         $('#pause').hide();
         $('#playerUI').css('display', 'block');
-        $('#duration').html('0.00');
+        $('#duration').html('<p>0:00</p>');
+        $('#download').html('<a href="' + handledURL.createObjectURL(blobs[blobs.length - 1]) + 
+                            '" download class="btn btn-primary">⇩</a>'); // works but no 'save as' prompt
 
         //volume vontrol
         $('#volume').on('input', function () {
@@ -337,66 +410,6 @@ var Main = (function () {
             $('#play').show();
         });
     });
-
-    // runs once on repeat to keep handle values up to date and within range
-    setInterval(function () {
-        'use strict';
-
-        // this interval is reseting timeHandle when it is dragged back to currentTime
-        // it needs to also move currentTime to dragged position IF its within [L/R]handles
-        
-        // $('#slider').on( 'sliderslide', function(event, ui) {
-            // if () {}... or could this conditional ^ be better placed in the other slide event?
-            // i think within the slide event outside of this interval, if timeHandle is sliding within
-            // its prescribed range, then it can shift currentTime value also. this will then allow this
-            // interval to remain as is, and also not confuse the slider with two seperate slide events
-        // });
-
-
-        // only runs if interval has some audio to affect
-        if (source) {
-            // timeValue (int) is given to both timeHandle value & CSS position
-            timeValue = parseInt((source.currentTime / source.duration) * 100);
-            // add percentage and update position
-            $('#timeHandle').css('left', (timeValue  + '\%'));
-            // assigns up-to-date timeValue to timeHandle
-            $('#slider').slider('values', 1, timeValue);
-
-            // set lower-bound of currentTime to wherever leftHandle currently is
-            if (source.currentTime <= (source.duration / 100) * leftHandle) {
-                source.currentTime = ((source.duration / 100) * leftHandle) + 0.01; // temp fix, better to re-position leftHandle
-                $('#pause').hide();
-                $('#play').show();
-                source.pause();
-            }
-
-            // set upper-bound of currentTime to wherever rightHandle currently is
-            if (source.currentTime >= (source.duration / 100) * rightHandle) {
-                source.currentTime = ((source.duration / 100) * leftHandle) + 0.01; // temp fix, better to re-position leftHandle
-                $('#pause').hide();
-                $('#play').show();
-                source.pause();
-
-            }
-
-            //Get hours and minutes
-            var s = parseInt(source.currentTime % 60);
-            var m = parseInt((source.currentTime / 60) % 60);
-            //Add 0 if seconds less than 10
-            if (s < 10) {
-                s = '0' + s;
-            }
-            $('#duration').html(m + '.' + s);	
-
-            // if playback ends, reset currentTime and buttons
-            if (source.currentTime === source.duration) {
-                source.currentTime = 0; // issue: leftHandle = 0, therefore inits other interval loops (worse when sliders have moved)
-                source.pause();
-                $('#pause').hide();
-                $('#play').show();
-            }
-        }
-    }, 26); // 26 ms is both the exact frame length and the fastest possible 'timeupdate' event that I am circumventing
 
 /** [restricting playback experimental section] ***********************************************************************/
 
@@ -498,15 +511,13 @@ var Main = (function () {
 
     function edit(blob2edit) {
         'use strict';
-        // 1 second of CBR mp3 at 128kb/s = 16,000 bytes
-        // 1152 samples per frame is constant
-        // 8 bits per sample is constant
-        // therefore 1152 / 8 = 144 bits per sample (constant)
-        // slider frames multiplied by bytes per frame
-        // (417.95918367 for a 44100 sampleRate, 384 for a 48000 sampleRate)
-        // mp3 frames per second = 38.28125 (independent of bitrate)
-        // An MP3 frame always represents 26ms of audio, regardless of the bitrate.
-        // 1/0.026 = 38.46 frames per second (does this 38.46 relate to the 384 byte value below?)
+        // mp3 seconds per frame = 0.026             (constant)
+        // CBR mp3 at a 128,000 bitRate              (constant)
+        // 1152 samples per frame                    (constant)
+        // 1152 / 8 = 144 bits per sample            (constant)
+        
+        // 'bits / frame = frame_size * bit_rate / sample_rate' - http://lame.sourceforge.net/tech-FAQ.txt
+        //  417.95918367 = 144        * 128000   / 44100
 
         var leftBytes = Math.round(leftFrames * 417.95918367);
         var rightBytes = Math.round(rightFrames * 417.95918367);
@@ -645,8 +656,10 @@ var Main = (function () {
                 log.prepend('<li>audio context failed to resume with the error: ' + e + '</li>');
             });
         } else {
-            log.prepend('<li>audio context was not suspended when start was clicked</li>');
+            log.prepend('<li>context was not suspended when resume ran</li>');
         }
+        // this didn't work either... where is the prompt initiated?!
+        // $('startBtn').attr('disabled', true);
 
         var btn = $(this);
 
@@ -661,7 +674,7 @@ var Main = (function () {
             }, 1000);
             updateTimer();
             // disable start button
-            btn.attr('disabled', true);
+            // btn.attr('disabled', true);
             $('#stopBtn').removeAttr('disabled');
         }, function (e) {
             alert(e, 'Could not make use of your microphone, please check your hardware is working:');
@@ -697,8 +710,9 @@ var Main = (function () {
 
                 // next reveal audio element & update 'source' variables
                 $('#source').attr('src', handledURL.createObjectURL(blobs[blobs.length - 1]))
-                            .css('display', 'block')
+                            // .css('display', 'block')
                             .on('durationchange', function () {
+                                // prepare for slider
                                 source = this;
                                 totalFrames = source.duration * 38.28125;
                                 $('#slider').css('display', 'block');
@@ -720,16 +734,8 @@ var Main = (function () {
             //}
         });
 
-        // logic so that clicking stop 'directly' suspends recording (for iOS)
-        if (context.state === 'running') {
-                context.suspend().then(function() {
-                    log.prepend('<li>audio context suspended</li>');
-                }).catch(function(e) {
-                    log.prepend('<li>audio context could not be suspended with the error: ' + e + '</li>');
-                });
-        } else {
-            log.prepend('<li>audio context was not running when stop was clicked</li>');
-        }
+        // logic so that clicking stop 'directly' suspends recording (for iOS):
+        suspendContext(); // warning: suspend code may need to exist here b/c iOS may not like this function reference...
 
         // enable secondary buttons
         $('.storeBtn, .upBtn').removeAttr('disabled');
@@ -777,10 +783,8 @@ var Main = (function () {
         // event.returnValue = '';
     });
 })();
-// $(Main);
-/*
-// Mp3 Frame = 0.026 seconds ALWAYS. therefore: maxDuration(s) / 0.026 = totalFrames ?
 
+/* $(Main);
  * 1) define the 'create audio' DOM (class=”toolIconButton” for authoring)
  * 2) call $(Main.init) on click of data-action="Media.CreateAudio" button
  * 3) run init function to test API + device compatability (msg user or hide?)
@@ -818,5 +822,4 @@ var Main = (function () {
     //     $('.editBtn').attr('disabled', true);
     // } else {
     //     $('.editBtn').attr('disabled', false);
-    // }
-*/
+    // }*/
