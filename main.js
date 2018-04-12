@@ -51,7 +51,9 @@ var Main = (function () {
         }
         finally {
             // suspend audioContext until user starts recording
-            suspendAudioCtx();
+            if (recorder) {
+                suspendAudioCtx();
+            }
         }
 
         // init canvas 2d context
