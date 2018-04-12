@@ -6,7 +6,7 @@ var Main = (function () {
         audioCtx,                                       // single session audioContext that is used in many places
         analyser,                                       // set-up by mic.js, connected by on.startBtn, used by draw()
         source,                                         // for current source <audio>: defined by 'this' when loaded
-        sourceNode,                                     // audioContext node for HTML audio element, not microphone
+    //  sourceNode,                                     // audioContext node for HTML audio element, not microphone
         canvas = document.getElementById('canvas'),     // jQuery object canvas causes issues when painting
         canvasCtx,                                      // single session canvasContext used in MP3Recorder and draw()
         handledURL = window.URL || window.webkitURL,    // alias to avoid overwriting the window objects themselves
@@ -40,7 +40,11 @@ var Main = (function () {
         catch (e) {
             alert(e + ': Web Audio API not supported, please try updating or switching browsers to continue');
         }
-
+        finally {
+            setInterval(function () {
+                console.log(audioCtx.state);
+            }, 2600);
+        }
         // config recorder and connect to audio and canvas contexts
         try {
             recorder = new MP3Recorder({bitRate: 128});
@@ -58,15 +62,13 @@ var Main = (function () {
 
         // init canvas 2d context
         if (canvas.getContext) {
-            canvasCtx = canvas.getContext('2d');
+            canvasCtx = canvas.getContext('2d'); 
         } else {
             log.prepend('<li>canvas context unsupported</li>');
         }
 
         // event listener specially for the first recording, not subsequent recordings
         $('#source').one('durationchange', function () {
-            'use strict';
-
             // construct slider once (updated dynamically)
             initSlider();
 
@@ -78,7 +80,7 @@ var Main = (function () {
         });
     }
 
-/** context and microphone functions **********************************************************************************/
+/** audioContext and microphone functions *****************************************************************************/
 
     // inits recorder object, populate AudioContext & prepares Worker communication
     var MP3Recorder = function (config) {
@@ -90,7 +92,7 @@ var Main = (function () {
         // Initializes LAME so that we can record
         this.initialize = function () {
             // let context decide best (usually 44100, sometimes 48000)
-            config.sampleRate = audioCtx.sampleRate;
+            config.sampleRate = 44100; // audioCtx.sampleRate;
             realTimeWorker.postMessage({cmd: 'init', config: config});
         };
         // This function finalizes LAME output and saves the MP3 data to a file
@@ -190,11 +192,9 @@ var Main = (function () {
         if (audioCtx.state === 'running') {
                 audioCtx.suspend().then(function() {
                     log.prepend('<li>audio context suspended</li>');
-                }).catch(function(e) {
-                    log.prepend('<li>audio context could not be suspended with the error: ' + e + '</li>');
                 });
         } else {
-            log.prepend('<li>audio context was not running when stop was clicked</li>');
+            log.prepend('<li>audio context was not running when suspendAudioCtx ran</li>');
         }
     }
 
@@ -292,7 +292,6 @@ var Main = (function () {
 
             // define convienient handle id's to target for editing and playback
             create: function () {
-                'use strict';
                 $('.ui-slider-handle').eq(0).attr('id', 'leftHandle');
                 $('.ui-slider-handle').eq(1).attr('id', 'rightHandle');
                 $('.ui-slider-handle').eq(2).attr('id', 'timeHandle');
@@ -300,7 +299,6 @@ var Main = (function () {
 
             // restrict handles from sliding over each other update editing values
             slide: function (event, ui) {
-                'use strict';
                 // keep these top-scope variables up-to-date for other authoring/playback functions
                 leftHandle  = ui.values[0];
                 rightHandle = ui.values[1];
@@ -308,7 +306,7 @@ var Main = (function () {
                 // timeHandle ⇌ currentTime:
                 if ($('#timeHandle').hasClass('ui-state-active')) { // this could also go inside interval if needed
                     source.currentTime = (source.duration / 100) * ui.values[2];
-                    console.log('active');
+                    console.log('timeHandle is active');
                 }
 
                 /*
@@ -331,7 +329,6 @@ var Main = (function () {
 
             // refresh frame values when handles are explicitly moved by the user
             stop: function () {
-                'use strict';           
                 checkFrames();
                 // fixes a removing-your-finger bug on some touch screens (investigate: many mobiles ignore this)
                 $('.ui-slider-handle').blur();
@@ -708,8 +705,6 @@ var Main = (function () {
         if (audioCtx.state === 'suspended') {
             audioCtx.resume().then(function () {
                 log.prepend('<li>audio context resumed</li>');
-            }).catch(function(e) {
-                log.prepend('<li>audio context failed to resume with the error: ' + e + '</li>');
             });
         } else {
             log.prepend('<li>context was not suspended when resume ran</li>');
@@ -773,7 +768,6 @@ var Main = (function () {
                                 // keep relevant slider values up to date
                                 source = this;
                                 totalFrames = source.duration * 38.28125;
-                                console.log('expect this msg more than once');
                             })
                             .on('error', function (e) {
                                 log.prepend('<li>media error: ' + e.code + ': ' + e.message + '</li>');
@@ -792,7 +786,6 @@ var Main = (function () {
             //}
         });
 
-        // logic so that clicking stop 'directly' suspends recording (for iOS):
         suspendAudioCtx(); // warning: iOS may not like this function reference...
 
         // enable secondary buttons
@@ -821,9 +814,9 @@ var Main = (function () {
         recorder.stop();
        
         // close audio context
-        audioCtx.close()
-               .then(console.log('context closed'))
-               .catch(function (e) {console.log('context not closed', e)});
+        audioCtx.close().then(console.log('context closed'));
+        // await audioCtx.close();
+        // .catch(function (e) {console.log('context not closed', e)});
 
         // terminate worker, somehow trigger it to empty its buffer first (postMessage!)
         // event.returnValue = '';
