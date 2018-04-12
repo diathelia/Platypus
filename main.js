@@ -26,10 +26,10 @@ var Main = (function () {
     // grab feature detection string from isMicSupported.js Module
     log.prepend('<li>' + IsMicSupported + '</li>');
 
-/** Prepare webpage application for recording ************************************************************************/
+/** Prepare application for recording **********************************************************************************/
 
     // initiate application resources
-    var init = function () {
+    function init () {
         'use strict';
 
         // init Web Audio API context (prefixed by AudioContextMonkeyPatch.js)
@@ -49,6 +49,10 @@ var Main = (function () {
         catch (e) {
             alert(e + ': recorder was not instanced, could be a (MP3Recorder || web worker || browser) issue');
         }
+        finally {
+            // suspend audioContext until user starts recording
+            suspendAudioCtx();
+        }
 
         // init canvas 2d context
         if (canvas.getContext) {
@@ -56,9 +60,6 @@ var Main = (function () {
         } else {
             log.prepend('<li>canvas context unsupported</li>');
         }
-
-        // suspend audioContext until user starts recording
-        suspendAudioCtx();
 
         // event listener specially for the first recording, not subsequent recordings
         $('#source').one('durationchange', function () {
@@ -72,12 +73,10 @@ var Main = (function () {
 
             // init player UI
             initPlayerUI();
-
-            console.log('expect this msg once only');
         });
     }
 
-/****** canvas visualisation functions ********************************************************************************/
+/****** canvas visualisation functions *********************************************************************************/
 
     function getRandomColor () {
         'use strict';
@@ -277,7 +276,7 @@ var Main = (function () {
         }
     }
 
-/****** slider and playback functions **********************************************************************************/
+/*** slider and playback functions *************************************************************************************/
 
     // init jquery-ui slider
     function initSlider () {
@@ -802,9 +801,9 @@ var Main = (function () {
 
 /** warn user to save progress before unloading resources *************************************************************/
 
-    $(window).on('beforeunload', function () {
-        return 'Are you sure you want to leave? Any unsaved recordings will be lost';
-    });
+    // $(window).on('beforeunload', function () {
+    //     return 'Are you sure you want to leave? Any unsaved recordings will be lost';
+    // });
 
     $(window).on('unload', function () {
         // unload URL objects
