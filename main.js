@@ -1,17 +1,17 @@
 var Main = (function () {
-    var blobs = [],                                        // array to hold recordings for the session
-        edits = [],                                        // array to load edited recordings for the session
-        timer,                                             // needed by startBtn and stopBtn (replace with [m:ss])
-        recorder,                                          // single instance constructed, used in many places
-        audioCtx,                                          // single session audioContext that is used in many places
-        analyser,                                          // set-up by mic.js, connected by on.startBtn, used by draw()
-        source,                                            // for current source <audio>: defined by 'this' when loaded
-        sourceNode,                                        // audioContext node for HTML audio element, not microphone
-        canvas = document.getElementById('canvas'),        // jQuery object canvas causes issues when painting
-        canvasCtx,                                         // single session canvasContext used in MP3Recorder and draw()
-        handledURL = window.URL || window.webkitURL,       // alias to avoid overwriting the window objects themselves
-        random = Math.random,                              // a sheer convenience for using random() within canvas
-        log = $('#log'),                                   // a sheer convenience for using a HTML console.log for mobile
+    var blobs = [],                                     // array to hold recordings for the session
+        edits = [],                                     // array to load edited recordings for the session
+        timer,                                          // needed by startBtn and stopBtn (replace with [m:ss])
+        recorder,                                       // single instance constructed, used in many places
+        audioCtx,                                       // single session audioContext that is used in many places
+        analyser,                                       // set-up by mic.js, connected by on.startBtn, used by draw()
+        source,                                         // for current source <audio>: defined by 'this' when loaded
+        sourceNode,                                     // audioContext node for HTML audio element, not microphone
+        canvas = document.getElementById('canvas'),     // jQuery object canvas causes issues when painting
+        canvasCtx,                                      // single session canvasContext used in MP3Recorder and draw()
+        handledURL = window.URL || window.webkitURL,    // alias to avoid overwriting the window objects themselves
+        random = Math.random,                           // a sheer convenience for using random() within canvas
+        log = $('#log'),                                // a sheer convenience for using a HTML console.log for mobile
 
     //  authoring values:
         leftHandle,         // sliding percentage to trim from audio start
@@ -26,7 +26,7 @@ var Main = (function () {
     // grab feature detection string from isMicSupported.js Module
     log.prepend('<li>' + IsMicSupported + '</li>');
 
-/** Prepare application for recording **********************************************************************************/
+/** prepare application for recording *********************************************************************************/
 
     // initiate application resources
     function init () {
@@ -78,89 +78,9 @@ var Main = (function () {
         });
     }
 
-/****** canvas visualisation functions *********************************************************************************/
+/** context and microphone functions **********************************************************************************/
 
-    function getRandomColor () {
-        'use strict';
-        return ((random() * 256) - 100) >> 0;
-    }
-
-    // repeatedly called from on.audioprocess and attempting to also be called <audio>.timeupdate/playing etc
-    function draw () {
-        'use strict';
-
-        // clear canvas before drawing
-        canvasCtx.fillStyle = 'rgb(0, 0, 0)';
-        canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // slightly improves for loop efficiency
-        var i;
-        
-        // get time-based array data for particles
-        var particles = new Uint8Array(analyser.frequencyBinCount);
-        analyser.getByteTimeDomainData(particles);
-
-        // create a white-particle oscilloscope
-        for (i = 0; i < particles.length; i++) {
-            var value = particles[i];
-            var percent = value / 200; // 256 = centered
-            var _height = canvas.height * percent;
-            var offset = canvas.height - _height - 1;
-            var barWidth = canvas.width / particles.length;
-            canvasCtx.fillStyle = 'white';
-            canvasCtx.fillRect(i * barWidth, offset, 1, 1);
-        }
-
-        // get byte-based array data
-        var bytes = new Uint8Array(analyser.frequencyBinCount);
-        analyser.getByteFrequencyData(bytes);
-
-        // create some misc blocks and crap [currently]
-        for (i = 1; i < bytes.length; i++) {
-            // canvasCtx.rotate(i * Math.PI / 180);    (this change made the palette blue/purple) ↓
-            canvasCtx.fillStyle = 'rgb(' + getRandomColor() + ',' + getRandomColor() + ',' + (256 >> 0) + ')';
-            // coloured bouncing city-scape
-            canvasCtx.fillRect(i, canvas.height - bytes[i] * 0.2, 10, canvas.height);
-            canvasCtx.strokeRect(i, canvas.height - bytes[i] * 0.0001, 10, canvas.height);
-        }
-    }
-
-/****** experimental & historical canvas mappings to play with ********************************************************
-        
-        // get time-based array data for waveform
-        var waveform = new Float32Array(analyser.frequencyBinCount);
-        analyser.getFloatTimeDomainData(waveform);
-
-        // draw black-lined oscilloscope
-        canvasCtx.beginPath();
-        for (i = 0; i < waveform.length; i++) {
-            var x = i;
-            var y = (0.5 + waveform[i] / 2) * canvas.height;
-            if (i == 0) {
-                canvasCtx.moveTo(x, y);
-            } else {
-                canvasCtx.lineTo(x, y);
-            }
-        }
-        canvasCtx.stroke();
-
-    // short color lines dance overtop oscilloscope 
-    canvasCtx.fillRect(x, canvas.height - bytes[x] * 0.666, 0.666, canvas.height / 13);
-
-    // black bullets rain down from top of canvas
-    canvasCtx.strokeRect(i, canvas.height - (bytes[i] / 0.03), 0.001, canvas.height / 25);
-
-    // misc
-    canvasCtx.fillRect(i++, canvas.height - dataArray[i], 10, canvas.height);
-    canvasCtx.strokeRect(i, i, canvas.width, canvas.height / 500);
-    canvasCtx.fillRect(i++, canvas.height - dataArray[i], 10, canvas.height);
-
-    // for resetting a transform (like rotate)
-    canvasCtx.setTransform(1, 0, 0, 1, 0, 0);
-
-******* context and microphone functions *******************************************************************************/
-
-    // populate AudioContext & prepare Worker communication for the recorder object
+    // inits recorder object, populate AudioContext & prepares Worker communication
     var MP3Recorder = function (config) {
         recorder = this;
         recorder.startTime = 0;
@@ -264,7 +184,7 @@ var Main = (function () {
         this.initialize();
     };
 
-    // only start button = resume, otherwise context is suspended
+    // suspends context until required by start button
     function suspendAudioCtx () {
         'use strict';
         if (audioCtx.state === 'running') {
@@ -278,7 +198,88 @@ var Main = (function () {
         }
     }
 
-/*** slider and playback functions *************************************************************************************/
+/** canvas visualisation functions ************************************************************************************/
+
+    function getRandomColor () {
+        'use strict';
+        return ((random() * 256) - 100) >> 0;
+    }
+
+    // repeatedly called from on.audioprocess
+    function draw () {
+        'use strict';
+
+        // clear canvas before drawing
+        canvasCtx.fillStyle = 'rgb(0, 0, 0)';
+        canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // slightly improves for loop efficiency
+        var i;
+        
+        // get time-based array data for particles
+        var particles = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteTimeDomainData(particles);
+
+        // create a white-particle oscilloscope
+        for (i = 0; i < particles.length; i++) {
+            var value = particles[i];
+            var percent = value / 200; // 256 = centered
+            var _height = canvas.height * percent;
+            var offset = canvas.height - _height - 1;
+            var barWidth = canvas.width / particles.length;
+            canvasCtx.fillStyle = 'white';
+            canvasCtx.fillRect(i * barWidth, offset, 1, 1);
+        }
+
+        // get byte-based array data
+        var bytes = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(bytes);
+
+        // create some misc blocks and crap [currently]
+        for (i = 1; i < bytes.length; i++) {
+            // canvasCtx.rotate(i * Math.PI / 180);    (this change made the palette blue/purple) ↓
+            canvasCtx.fillStyle = 'rgb(' + getRandomColor() + ',' + getRandomColor() + ',' + (256 >> 0) + ')';
+            // coloured bouncing city-scape
+            canvasCtx.fillRect(i, canvas.height - bytes[i] * 0.2, 10, canvas.height);
+            canvasCtx.strokeRect(i, canvas.height - bytes[i] * 0.0001, 10, canvas.height);
+        }
+    }
+
+/** [experimental & historical canvas mappings] ***********************************************************************/
+    
+    // get time-based array data for waveform
+    var waveform = new Float32Array(analyser.frequencyBinCount);
+    analyser.getFloatTimeDomainData(waveform);
+
+    // draw black-lined oscilloscope
+    canvasCtx.beginPath();
+    for (i = 0; i < waveform.length; i++) {
+        var x = i;
+        var y = (0.5 + waveform[i] / 2) * canvas.height;
+        if (i == 0) {
+            canvasCtx.moveTo(x, y);
+        } else {
+            canvasCtx.lineTo(x, y);
+        }
+    }
+    canvasCtx.stroke();
+
+    // short color lines dance overtop oscilloscope 
+    canvasCtx.fillRect(x, canvas.height - bytes[x] * 0.666, 0.666, canvas.height / 13);
+
+    // black bullets rain down from top of canvas
+    canvasCtx.strokeRect(i, canvas.height - (bytes[i] / 0.03), 0.001, canvas.height / 25);
+
+    // misc
+    canvasCtx.fillRect(i++, canvas.height - dataArray[i], 10, canvas.height);
+    canvasCtx.strokeRect(i, i, canvas.width, canvas.height / 500);
+    canvasCtx.fillRect(i++, canvas.height - dataArray[i], 10, canvas.height);
+
+    // for resetting a transform (like rotate)
+    canvasCtx.setTransform(1, 0, 0, 1, 0, 0);
+
+
+/** slider and playback functions *************************************************************************************/
 
     // init jquery-ui slider
     function initSlider () {
@@ -342,7 +343,7 @@ var Main = (function () {
         $('#slider').css('display', 'block');
     }
 
-    // checks that current frame values are properly mapped to slider handles
+    // check frame values are mapped to current slider values
     function checkFrames () {
         'use strict';
         leftFrames = (totalFrames / 100) * leftHandle;
@@ -700,7 +701,7 @@ var Main = (function () {
         upload(blobs[blobs.length - 1]);
     });
 
-/** Start initiates recording, Stop gets and presents blob, then enables secondary buttons ****************************/
+/** Start initiates recording, Stop gets and presents blob  ***********************************************************/
 
     $('#startBtn').on('click', function (e) {
         'use strict';
@@ -834,6 +835,12 @@ var Main = (function () {
     // initiate required resources
     init();
 })();
+
+
+
+
+
+
 /* 
  * 1) define the 'create audio' DOM (class=”toolIconButton” for authoring)
  * 2) call $(Main.init) on click of data-action="Media.CreateAudio" button
