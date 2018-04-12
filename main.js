@@ -246,7 +246,7 @@ var Main = (function () {
     }
 
 /** [experimental & historical canvas mappings] ***********************************************************************/
-    
+    /*
     // get time-based array data for waveform
     var waveform = new Float32Array(analyser.frequencyBinCount);
     analyser.getFloatTimeDomainData(waveform);
@@ -277,8 +277,7 @@ var Main = (function () {
 
     // for resetting a transform (like rotate)
     canvasCtx.setTransform(1, 0, 0, 1, 0, 0);
-
-
+    */
 /** slider and playback functions *************************************************************************************/
 
     // init jquery-ui slider
@@ -364,8 +363,8 @@ var Main = (function () {
         'use strict';
 
         // prepare player
-        $('#pause').hide();
         $('#playerUI').css('display', 'block');
+        $('#pause').hide();
         $('#duration').html('<p>0:00</p>');
         $('#download').html('<a href="' + handledURL.createObjectURL(blobs[blobs.length - 1]) + 
                             '"download class="btn btn-primary">⇩</a>'); // works but no 'save as' prompt
@@ -395,10 +394,8 @@ var Main = (function () {
     // runs once on repeat to keep handle values up to date and within range
     function initInterval () {
         'use strict';
-        console.log('interval (once)');
 
         setInterval(function () {
-
             // only runs if interval has some audio to affect
             if (source) {
                 // timeValue (int) is given to both timeHandle value & CSS position
@@ -835,12 +832,6 @@ var Main = (function () {
     // initiate required resources
     init();
 })();
-
-
-
-
-
-
 /* 
  * 1) define the 'create audio' DOM (class=”toolIconButton” for authoring)
  * 2) call $(Main.init) on click of data-action="Media.CreateAudio" button
