@@ -23,7 +23,7 @@
 #slider, #playerUI {
     width: 69%;
     margin-left: 105px;
-    display: none;
+/*     display: none; */
 }
 
 #slider {
