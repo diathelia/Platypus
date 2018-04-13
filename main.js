@@ -41,11 +41,7 @@ var Main = (function () {
         catch (e) {
             alert(e + ': Web Audio API not supported, please try updating or switching browsers to continue');
         }
-        finally {
-            setInterval(function () {
-                console.log(audioCtx.state);
-            }, 2600);
-        }
+
         // config recorder and connect to audio and canvas contexts
         try {
             recorder = new MP3Recorder({bitRate: 128});
@@ -358,7 +354,7 @@ var Main = (function () {
 
         // prepare player
         $('#playerUI').css('visibility', 'visible');
-        $('#pause').hide();
+        $('#pause').css('display', 'none');
         $('#duration').html('0:00');
         $('#download').html('<a href="' + handledURL.createObjectURL(blobs[blobs.length - 1]) + 
                             '"download class="btn btn-primary">⇩</a>'); // Chrome = no 'save as' prompt (does in firefox)
@@ -371,8 +367,8 @@ var Main = (function () {
         //play button
         $('#play').on('click', function () {
             source.play();
-            $('#play').hide();
-            $('#pause').show();
+            $('#play').css('display', 'none');
+            $('#pause').css('display', 'inline-block');
             // $('#duration').fadeIn(400);
             console.log(source.currentTime);
         });
@@ -380,8 +376,8 @@ var Main = (function () {
         //pause button
         $('#pause').on('click', function () {
             source.pause();
-            $('#pause').hide();
-            $('#play').show();
+            $('#play').css('display', 'inline-block');
+            $('#pause').css('display', 'none');
         });
     }
 
@@ -402,16 +398,16 @@ var Main = (function () {
                 // set lower-bound of currentTime to wherever leftHandle currently is
                 if (source.currentTime <= (source.duration / 100) * leftHandle) {
                     source.currentTime = ((source.duration / 100) * leftHandle) + 0.01; // temp fix, better to re-position leftHandle
-                    $('#pause').hide();
-                    $('#play').show();
+                    $('#pause').css('display', 'none');
+                    $('#play').css('display', 'inline-block');
                     source.pause();
                 }
 
                 // set upper-bound of currentTime to wherever rightHandle currently is
                 if (source.currentTime >= (source.duration / 100) * rightHandle) {
                     source.currentTime = ((source.duration / 100) * leftHandle) + 0.01; // temp fix, better to re-position leftHandle
-                    $('#pause').hide();
-                    $('#play').show();
+                    $('#pause').css('display', 'none');
+                    $('#play').css('display', 'inline-block');
                     source.pause();
 
                 }
@@ -425,14 +421,15 @@ var Main = (function () {
                     s = '0' + s;
                 }
 
-                $('#duration').html('<p>' + m + ':' + s + '</p>');	
+                // update duration
+                $('#duration').html(m + ':' + s);	
 
                 // if playback ends, reset currentTime and buttons
                 if (source.currentTime === source.duration) {
                     source.currentTime = 0; // issue: leftHandle = 0, therefore inits other interval loops (worse when sliders have moved)
                     source.pause();
-                    $('#pause').hide();
-                    $('#play').show();
+                    $('#pause').css('display', 'none');
+                    $('#play').css('display', 'inline-block');
                 }
             }
         }, 26); // 26 ms is both the exact frame length and the fastest possible 'timeupdate' event that I am circumventing
