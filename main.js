@@ -1,4 +1,5 @@
 var Main = (function () {
+
     var blobs = [],                                     // array to hold recordings for the session
         edits = [],                                     // array to load edited recordings for the session
         timer,                                          // needed by startBtn and stopBtn (replace with [m:ss])
@@ -138,8 +139,6 @@ var Main = (function () {
 
         // Function for kicking off recording on 'start' click --> refactored for promise-based MediaDevices
         this.start = function (onSuccess, onError) {
-            // first disable the start button to prevent multiple prompts/recorder objects
-            // $('startBtn').attr('disabled', true); // doesnt work, maybe block page with invisible div while prompt exists?
             // Request access to the microphone
             window.navigator.mediaDevices.getUserMedia({audio: true}).then(function (stream) {
                 // Begin recording and get a function that stops the recording
@@ -284,7 +283,8 @@ var Main = (function () {
     function initSlider () {
         'use strict';
 
-        $('#slider').slider({
+        // reveal DOM slider
+        $('#slider').css('visibility', 'visible').slider({
             step   : 1,
             range  : false,
             animate: true,
@@ -334,9 +334,6 @@ var Main = (function () {
                 $('.ui-slider-handle').blur();
             }
         });
-
-        // reveal slider
-        $('#slider').css('display', 'block');
     }
 
     // check frame values are mapped to current slider values
@@ -360,11 +357,11 @@ var Main = (function () {
         'use strict';
 
         // prepare player
-        $('#playerUI').css('display', 'block');
+        $('#playerUI').css('visibility', 'visible');
         $('#pause').hide();
-        $('#duration').html('<p>0:00</p>');
+        $('#duration').html('0:00');
         $('#download').html('<a href="' + handledURL.createObjectURL(blobs[blobs.length - 1]) + 
-                            '"download class="btn btn-primary">⇩</a>'); // works but no 'save as' prompt
+                            '"download class="btn btn-primary">⇩</a>'); // Chrome = no 'save as' prompt (does in firefox)
         
         //volume vontrol
         $('#volume').on('input', function () {
@@ -376,7 +373,7 @@ var Main = (function () {
             source.play();
             $('#play').hide();
             $('#pause').show();
-            $('#duration').fadeIn(400);
+            // $('#duration').fadeIn(400);
             console.log(source.currentTime);
         });
 
@@ -574,7 +571,7 @@ var Main = (function () {
 
             // attach new src and reveal audio element
             $('#edited').attr('src', handledURL.createObjectURL(edits[edits.length - 1]))
-                        .css('display', 'block')
+                        .css('visibility', 'visible')
                         .on('error', function (e) {
                             log.prepend('<li>media error: ' + e.code + ': ' + e.message + '</li>');
                         });
@@ -710,7 +707,7 @@ var Main = (function () {
             log.prepend('<li>context was not suspended when resume ran</li>');
         }
 
-        // forces getUserMedia prompt to resolve before allowing more start clicks
+        // forces user to resolve getUserMedia prompt before allowing more start clicks:
         // stops possibility of qeueing multiple recordings at once (functionality works but breaks UI)
         $('#startBtn').attr('disabled', true);
 
@@ -726,12 +723,15 @@ var Main = (function () {
                 updateTimer();
             }, 1000);
             updateTimer();
-            // disable start button
-            // btn.attr('disabled', true);
             $('#stopBtn').removeAttr('disabled');
         }, function (e) {
             alert(e, 'Could not make use of your microphone, please check your hardware is working:');
         });
+
+        // swap out start button for stop button
+        $('#startBtn').css('display', 'none');
+        $('#stopBtn').css('display', 'inline-block');
+
     });
 
     $('#stopBtn').on('click', function (e) {
@@ -740,8 +740,10 @@ var Main = (function () {
         clearInterval(timer);
 
         recorder.stop();
-        $(this).attr('disabled', true);
-        $('#startBtn').removeAttr('disabled');
+
+        // swap out stop button for start button
+        $(this).attr('disabled', true).css('display', 'none');
+        $('#startBtn').removeAttr('disabled').css('display', 'inline-block');
 
         recorder.getMp3Blob(function (blob) {
             // check if the blob itself is broken
@@ -763,7 +765,7 @@ var Main = (function () {
 
                 // next reveal audio element & update 'source' variables
                 $('#source').attr('src', handledURL.createObjectURL(blobs[blobs.length - 1]))
-                            .css({ display: 'block', visibility: 'hidden'}) // will visibility help with mobile?
+                            .css('visibility', 'hidden')
                             .on('durationchange', function () {
                                 // keep relevant slider values up to date
                                 source = this;
@@ -788,8 +790,10 @@ var Main = (function () {
 
         suspendAudioCtx(); // warning: iOS may not like this function reference...
 
-        // enable secondary buttons
+        // enable store and upload buttons (not edit which is enabled when an editHandle is moved)
         $('#storeBtn, #upBtn').removeAttr('disabled');
+        // display all secondary buttons
+        $('#storeBtn, #upBtn, #editBtn').css('visibility', 'visible');
     });
 
 /** warn user to save progress before unloading resources *************************************************************/

@@ -1,6 +1,36 @@
+/* setup and hide features */
+#source, #edited, #slider, #playerUI, #editBtn, #storeBtn, #upBtn {
+    visibility: hidden;
+}
+
+#stopBtn {
+    display: none;
+}
+
+/* define tool appearance */
+#slider, #playerUI, #canvas, audio {
+    margin-left: auto;
+    margin-right: auto;
+    width: 90%;
+}
+
+#slider {
+    height: 50px;
+}
+
+#playerUI {
+    background-color: rgba(94, 217, 191, 0.3);
+    color: auto;
+}
+
+#canvas {
+    height: 400px;
+    background-color: transparent;
+}
+
 /* Slider Controls */
 .ui-slider-handle {
-    margin-top: 20px; /* why not half slider width? (=25px) */
+    margin-top: 20px;
 }
 
 #leftHandle, #rightHandle {
@@ -17,23 +47,10 @@
     width: 0.78em;
     height: 0.78em;
     top: -0.078em;
+    /* margin-left: 0.6em; */
 }
 
-/* Player Controls */
-#slider, #playerUI {
-    width: 69%;
-    margin-left: 105px;
-/*     display: none; */
-}
-
-#slider {
-    height: 50px;
-}
-#playerUI {
-    background-color: rgba(94, 217, 191, 0.3);
-    color: auto;
-}
-
+/* general page styling */
 body {
     background-image: url('monotreme.jpg');
 	background-size: cover;
@@ -48,22 +65,6 @@ body {
     margin-top: 20px;
 }
 
-#source, #edited {
-    display: none;
-    width: 90%;
-}
-
-#canvas {
-    width: 69%;
-    margin-left: 105px;
-    height: 300px;
-    background-color: transparent;
-}
-
-p, ol, h3 {
-    color: white;
-}
-
 #consolelog {
     background-color: rgba(94, 217, 191, 0.3);
     height: 100vh;
@@ -72,3 +73,46 @@ p, ol, h3 {
 #download a {
     text-decoration-line: underline;
 }
+
+p, ol, h3 {
+    color: white;
+}
+
+#duration {
+    display: inline-block;
+}
+
+/* styling the volume thumb for Chrome, Firefox, Edge * /
+
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    border: 1px solid #000000;
+    height: 36px;
+    width: 16px;
+    border-radius: 3px;
+    background: #ffffff;
+    cursor: pointer;
+    margin-top: -14px;
+    box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+  }
+  
+input[type=range]::-moz-range-thumb {
+    box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+    border: 1px solid #000000;
+    height: 36px;
+    width: 16px;
+    border-radius: 3px;
+    background: #ffffff;
+    cursor: pointer;
+}
+  
+input[type=range]::-ms-thumb {
+    box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+    border: 1px solid #000000;
+    height: 36px;
+    width: 16px;
+    border-radius: 3px;
+    background: #ffffff;
+    cursor: pointer;
+}
+*/

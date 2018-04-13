@@ -30,69 +30,65 @@
 
         <div class="row">
 
-            <div class="col-sm-8" id="startStop">
+            <div class="col-sm-9 text-center" id="startStop">
 
-                <div class="text-center">
+                <button class="btn btn-primary" id="startBtn">
+                    <i class="glyhphicon glyhphicon-record"></i> Start
+                </button>
 
-                    <button class="btn btn-primary" id="startBtn">
-                        <i class="glyhphicon glyhphicon-record"></i> Start
-                    </button>
+                <button class="btn btn-primary" id="stopBtn" disabled="true">
+                    <i class="glyhphicon glyhphicon-stop"></i> Stop
+                </button>
 
-                    <button class="btn btn-primary" id="stopBtn" disabled="true">
-                        <i class="glyhphicon glyhphicon-stop"></i> Stop
+                <h3 id="timer"></h3>
+    
+                <canvas id="canvas">add fallback content here</canvas>
+                
+                <div id="slider"></div>
+                
+                <div id="playerUI">
+
+                    <span id="duration"></span>
+
+                    <button class="btn btn-primary" id="back">⏮</button>
+
+                    <button class="btn btn-primary" id="play">▶️</button>
+
+                    <button class="btn btn-primary" id="pause">⏸</button>
+
+                    <button class="btn btn-primary" id="forward">⏭</button>
+
+                    <button class="btn btn-primary" id="editBtn" disabled="true">
+                        <i class="glyphicon glyphicon-edit"></i> Edit
                     </button>
 
                     <button class="btn btn-primary" id="upBtn" disabled="true">
                         <i class="glyphicon glyphicon-upload"></i> Upload
                     </button>
 
-                    <h3 id="timer"></h3>
+                    <span id="download"></span>
+
+                    <input id="volume" type="range" min="0" max="10" value="5" />
 
                 </div>
 
-                <canvas id="canvas">add fallback content here</canvas>
+                <br>
+
+                <audio id="edited" controls></audio>
                 
-                <div id="slider"></div>
-                
-                <div class="text-center" id="playerUI">
+                <br>
 
-                    <span>
+                <button class="btn btn-primary" id="storeBtn" disabled="true">
+                    <i class="glyphicon glyphicon-save"></i> Store
+                </button>
+    
+                <div id="store"></div>
 
-                        <span id="duration"></span>
-                        <button class="btn btn-primary" id="back">⏮</button>
-                        <button class="btn btn-primary" id="play">▶️</button>
-                        <button class="btn btn-primary" id="pause">⏸</button>
-                        <button class="btn btn-primary" id="forward">⏭</button>
-                        <input id="volume" type="range" min="0" max="10" value="5" />
-                        <span id="download"></span>
-
-                    </span>
-
-                </div>
-
-                <audio controls id="source"></audio>
-
-                <div class="text-center">
-
-                    <button class="btn btn-primary" id="editBtn" disabled="true">
-                            <i class="glyphicon glyphicon-edit"></i> Edit
-                    </button>
-                    
-                    <audio id="edited" controls></audio>
-                            
-                    <button class="btn btn-primary" id="storeBtn" disabled="true">
-                            <i class="glyphicon glyphicon-save"></i> Store
-                    </button>
-        
-                    <div id="store"></div>
-
-                </div>
-                <!--<div class="text-center">-->
-                    <!--<ol id="convertedList"></ol>-->
-                <!--</div>-->
+                <audio controls id="source"></audio> <!-- placed at bottom because should never be visible -->
+            
             </div>
 
-            <div id="consolelog" class="col-sm-4">
+            <div class="col-sm-3" id="consolelog">
                 <h3 id="console">console.log:</h3>
                 <ol id="log"></ol>
                 <!-- <p>featureResults.log:</p> -->
