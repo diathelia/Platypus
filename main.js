@@ -64,10 +64,6 @@ var Main = (function () {
             log.prepend('<li>canvas context unsupported</li>');
         }
 
-        // event listener specially for the first recording, not subsequent recordings
-        // $('#source').one('loadedmetadata', function () {
-        // log.prepend('<li>.one fired from stopBtn</li>');
-
         // construct slider once (updated dynamically)
         initSlider();
 
@@ -76,7 +72,9 @@ var Main = (function () {
 
         // init player UI
         initPlayerUI();
-        // });
+
+        // reveal source media element for debugging
+        $('#source').css('visibility', 'visible');
     }
 
 /** audioContext and microphone functions *****************************************************************************/
@@ -796,7 +794,7 @@ var Main = (function () {
         $('#storeBtn, #upBtn').removeAttr('disabled');
         // reveal UI elements
         log.prepend('<li>about to reveal UI</li>');
-        $('#source, #slider, #playerUI, #storeBtn, #upBtn, #editBtn').css('visibility', 'visible');
+        $('#slider, #playerUI, #storeBtn, #upBtn, #editBtn').css('visibility', 'visible');
     });
 
 /** warn user to save progress before unloading resources *************************************************************/
