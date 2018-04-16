@@ -63,22 +63,22 @@ var Main = (function () {
         } else {
             log.prepend('<li>canvas context unsupported</li>');
         }
-
-        // event listener specially for the first recording, not subsequent recordings
-        $('#source').on('loadedmetadata', function () {
-
-            log.prepend('<li>.on fired</li>');
-
-            // construct slider once (updated dynamically)
-            initSlider();
-
-            // start playback/slider interval once (updated dynamically)
-            initInterval();
-
-            // init player UI
-            initPlayerUI();
-        });
     }
+
+    // event listener specially for the first recording, not subsequent recordings
+    $('#source').one('loadedmetadata', function () {
+
+        log.prepend('<li>.one fired</li>');
+
+        // construct slider once (updated dynamically)
+        initSlider();
+
+        // start playback/slider interval once (updated dynamically)
+        initInterval();
+
+        // init player UI
+        initPlayerUI();
+    });
 
 /** audioContext and microphone functions *****************************************************************************/
 
