@@ -796,7 +796,7 @@ var Main = (function () {
         $('#storeBtn, #upBtn').removeAttr('disabled');
         // reveal UI elements
         log.prepend('<li>about to reveal UI</li>');
-        $('#slider, #playerUI, #storeBtn, #upBtn, #editBtn').css('visibility', 'visible');
+        $('#source, #slider, #playerUI, #storeBtn, #upBtn, #editBtn').css('visibility', 'visible');
     });
 
 /** warn user to save progress before unloading resources *************************************************************/
