@@ -65,9 +65,9 @@ var Main = (function () {
         }
 
         // event listener specially for the first recording, not subsequent recordings
-        $('#source').one('loadedmetadata', function () {
+        $('#source').on('loadedmetadata', function () {
 
-            log.prepend('<li>.one fired</li>');
+            log.prepend('<li>.on fired</li>');
 
             // construct slider once (updated dynamically)
             initSlider();
