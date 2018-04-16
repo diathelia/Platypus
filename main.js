@@ -36,7 +36,7 @@ var Main = (function () {
         // init Web Audio API context (prefixed by AudioContextMonkeyPatch.js)
         try {
             audioCtx = new window.AudioContext();
-            log.prepend('<li>audio context constructed</li>');
+            log.prepend('<li>audio context constructed: ' + audioCtx.state + '</li>');
         }
         catch (e) {
             alert(e + ': Web Audio API not supported, please try updating or switching browsers to continue');
@@ -63,6 +63,20 @@ var Main = (function () {
         } else {
             log.prepend('<li>canvas context unsupported</li>');
         }
+
+        // event listener specially for the first recording, not subsequent recordings
+        // $('#source').one('loadedmetadata', function () {
+        // log.prepend('<li>.one fired from stopBtn</li>');
+
+        // construct slider once (updated dynamically)
+        initSlider();
+
+        // start playback/slider interval once (updated dynamically)
+        initInterval();
+
+        // init player UI
+        initPlayerUI();
+        // });
     }
 
 /** audioContext and microphone functions *****************************************************************************/
@@ -267,10 +281,10 @@ var Main = (function () {
     function initSlider () {
         'use strict';
 
-            log.prepend('<li>initSlider fired</li>');
+        log.prepend('<li>initSlider fired</li>');
 
         // reveal DOM slider
-        $('#slider').css('visibility', 'visible').slider({
+        $('#slider').slider({
             step   : 1,
             range  : false,
             animate: true,
@@ -294,7 +308,6 @@ var Main = (function () {
                     source.currentTime = (source.duration / 100) * ui.values[2];
                     console.log('timeHandle is active');
                 }
-
                 /*
                     $('#timeHandle').on('focus', function () {
                         console.log('focused');
@@ -305,7 +318,6 @@ var Main = (function () {
                    but why does this push timeHandle to the left?
                    why does moving left/rightHandle affect the timeHandle?
                 */
-
                 // if left/right Handles get too close to overlapping, return false to stop slide
                 if ((ui.values[0] >= (ui.values[1] - 1)) || (ui.values[1] <= (ui.values[0] + 1))) {
                     console.log('[collision]');
@@ -345,11 +357,8 @@ var Main = (function () {
         log.prepend('<li>initPlayerUI fired</li>');
 
         // prepare player
-        $('#playerUI').css('visibility', 'visible');
         $('#pause').css('display', 'none');
         $('#duration').html('0:00');
-        $('#download').html('<a href="' + handledURL.createObjectURL(blobs[blobs.length - 1]) + 
-                            '"download class="btn btn-primary">⇩</a>'); // Chrome = no 'save as' prompt (does in firefox)
         
         //volume vontrol
         $('#volume').on('input', function () {
@@ -756,30 +765,17 @@ var Main = (function () {
 
                 // next reveal audio element & update 'source' variables
                 $('#source').attr('src', handledURL.createObjectURL(blobs[blobs.length - 1]))
-                            .css('visibility', 'hidden')
+                            // .css('visibility', 'hidden')
                             .on('durationchange', function () {
                                 // keep relevant slider values up to date
                                 source = this;
                                 totalFrames = source.duration * 38.28125;
+                                $('#download').html('<a href="' + handledURL.createObjectURL(blobs[blobs.length - 1]) + 
+                                '"download class="btn btn-primary">⇩</a>'); // Chrome = no 'save as' prompt (does in firefox)
                             })
                             .on('error', function (e) {
                                 log.prepend('<li>media error: ' + e.code + ': ' + e.message + '</li>');
-                            })
-                            // event listener specially for the first recording, not subsequent recordings
-                            .one('loadedmetadata', function () {
-
-                                log.prepend('<li>.one fired from stopBtn</li>');
-
-                                // construct slider once (updated dynamically)
-                                initSlider();
-
-                                // start playback/slider interval once (updated dynamically)
-                                initInterval();
-
-                                // init player UI
-                                initPlayerUI();
                             });
-
             }
             catch (e) {
                 log.prepend('<li>createObjectURL failed (from source), error: ' + e + '</li>');
@@ -798,8 +794,9 @@ var Main = (function () {
 
         // enable store and upload buttons (not edit which is enabled when an editHandle is moved)
         $('#storeBtn, #upBtn').removeAttr('disabled');
-        // display all secondary buttons
-        $('#storeBtn, #upBtn, #editBtn').css('visibility', 'visible');
+        // reveal UI elements
+        log.prepend('<li>about to reveal UI</li>');
+        $('#slider, #playerUI, #storeBtn, #upBtn, #editBtn').css('visibility', 'visible');
     });
 
 /** warn user to save progress before unloading resources *************************************************************/
