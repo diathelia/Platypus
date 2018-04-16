@@ -65,21 +65,6 @@ var Main = (function () {
         }
     }
 
-    // event listener specially for the first recording, not subsequent recordings
-    $('#source').one('loadedmetadata', function () {
-
-        log.prepend('<li>.one fired</li>');
-
-        // construct slider once (updated dynamically)
-        initSlider();
-
-        // start playback/slider interval once (updated dynamically)
-        initInterval();
-
-        // init player UI
-        initPlayerUI();
-    });
-
 /** audioContext and microphone functions *****************************************************************************/
 
     // inits recorder object, populate AudioContext & prepares Worker communication
@@ -779,7 +764,22 @@ var Main = (function () {
                             })
                             .on('error', function (e) {
                                 log.prepend('<li>media error: ' + e.code + ': ' + e.message + '</li>');
+                            })
+                            // event listener specially for the first recording, not subsequent recordings
+                            .one('loadedmetadata', function () {
+
+                                log.prepend('<li>.one fired from stopBtn</li>');
+
+                                // construct slider once (updated dynamically)
+                                initSlider();
+
+                                // start playback/slider interval once (updated dynamically)
+                                initInterval();
+
+                                // init player UI
+                                initPlayerUI();
                             });
+
             }
             catch (e) {
                 log.prepend('<li>createObjectURL failed (from source), error: ' + e + '</li>');
