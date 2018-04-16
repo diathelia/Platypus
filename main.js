@@ -66,6 +66,9 @@ var Main = (function () {
 
         // event listener specially for the first recording, not subsequent recordings
         $('#source').one('durationchange', function () {
+
+            log.prepend('<li>.one fired</li>');
+
             // construct slider once (updated dynamically)
             initSlider();
 
@@ -279,6 +282,8 @@ var Main = (function () {
     function initSlider () {
         'use strict';
 
+            log.prepend('<li>initSlider fired</li>');
+
         // reveal DOM slider
         $('#slider').css('visibility', 'visible').slider({
             step   : 1,
@@ -352,6 +357,8 @@ var Main = (function () {
     function initPlayerUI () {
         'use strict';
 
+        log.prepend('<li>initPlayerUI fired</li>');
+
         // prepare player
         $('#playerUI').css('visibility', 'visible');
         $('#pause').css('display', 'none');
@@ -384,6 +391,8 @@ var Main = (function () {
     // runs once on repeat to keep handle values up to date and within range
     function initInterval () {
         'use strict';
+
+        log.prepend('<li>initInterval fired</li>');
 
         setInterval(function () {
             // only runs if interval has some audio to affect
