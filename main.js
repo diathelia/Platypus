@@ -74,7 +74,7 @@ var Main = (function () {
         initPlayerUI();
 
         // reveal source media element for debugging
-        $('#source').css('visibility', 'visible');
+        // $('#source').css('visibility', 'visible');
     }
 
 /** audioContext and microphone functions *****************************************************************************/
