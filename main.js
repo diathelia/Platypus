@@ -65,7 +65,7 @@ var Main = (function () {
         }
 
         // event listener specially for the first recording, not subsequent recordings
-        $('#source').one('durationchange', function () {
+        $('#source').one('loadedmetadata', function () {
 
             log.prepend('<li>.one fired</li>');
 
