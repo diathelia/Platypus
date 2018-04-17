@@ -805,17 +805,16 @@ var Main = (function () {
     $('#source').on('canplaythrough', function () {
         log.prepend('<li>.on canplaythrough #source = ' + source + '</li>');
         // keep relevant slider values up to date
-        if (source) {
+        // if (source) {
             log.prepend('<li>if (source) succeeded! = ' + source + '</li>');
             source = this;
             totalFrames = source.duration * 38.28125;
             // append the same blobURL as a download link
         $('#download').html('<a href="' + blobURL + 
         '"download class="btn btn-primary">⇩</a>'); // Chrome = no 'save as' prompt (does in firefox)
-        } else {
-            log.prepend('<li>if (source) failed! = ' + source + '</li>');
-        }
-
+        // } else {
+        //     log.prepend('<li>if (source) failed! = ' + source + '</li>');
+        // }
     })
     .on('error', function (e) {
         log.prepend('<li>media error: ' + e.code + ': ' + e.message + '</li>');
