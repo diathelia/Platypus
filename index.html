@@ -84,7 +84,10 @@
     
                 <div id="store"></div>
 
-                <audio controls id="source"></audio> <!-- placed at bottom because should never be visible -->
+                <!-- placed at bottom to avoid any interference when revealing UI elements and also
+                     banished to the far ends of the negative left-margin to both hide and manipulate
+                     (this is due to a bug in Firefox if display: none or visibility: hidden are set) -->
+                <audio controls id="source"></audio>
             
             </div>
 

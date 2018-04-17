@@ -1,6 +1,13 @@
 /* setup and hide features */
-#source, #edited, #slider, #playerUI, #editBtn, #storeBtn, #upBtn {
+#edited, #slider, #playerUI, #editBtn, #storeBtn, #upBtn {
     visibility: hidden;
+}
+
+/* hiding via margin due to a Firefox playback bug:
+   if audio element is hidden on not displayed then
+   the custom JavaScript control play(); will break */
+#source {
+    margin-left: -9999px;
 }
 
 #stopBtn {

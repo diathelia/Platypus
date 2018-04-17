@@ -310,12 +310,13 @@ var Main = (function () {
                     $('#timeHandle').on('focus', function () {
                         console.log('focused');
                     });
-                   interval maps currentTime onto slider via timeValue...
-                   this function maps ui.values[2] back to currentTime...
-                   I guess this is the UI issue: two competing functions.
-                   but why does this push timeHandle to the left?
-                   why does moving left/rightHandle affect the timeHandle?
+                    interval maps currentTime onto slider via timeValue...
+                    this function maps ui.values[2] back to currentTime...
+                    I guess this is the UI issue: two competing functions.
+                    but why does this push timeHandle to the left?
+                    why does moving left/rightHandle affect the timeHandle?
                 */
+
                 // if left/right Handles get too close to overlapping, return false to stop slide
                 if ((ui.values[0] >= (ui.values[1] - 1)) || (ui.values[1] <= (ui.values[0] + 1))) {
                     console.log('[collision]');
@@ -768,6 +769,7 @@ var Main = (function () {
                                 // keep relevant slider values up to date
                                 source = this;
                                 totalFrames = source.duration * 38.28125;
+                                // append download link here so URL is not created too early with the rest of the UI
                                 $('#download').html('<a href="' + handledURL.createObjectURL(blobs[blobs.length - 1]) + 
                                 '"download class="btn btn-primary">⇩</a>'); // Chrome = no 'save as' prompt (does in firefox)
                             })
