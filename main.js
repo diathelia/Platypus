@@ -6,7 +6,7 @@ var Main = (function () {
         recorder,                                       // single instance constructed, used in many places
         audioCtx,                                       // single session audioContext that is used in many places
         analyser,                                       // set-up by mic.js, connected by on.startBtn, used by draw()
-        source,                                         // for current source <audio>: defined by 'this' when loaded
+        source, // = $('#source')                       // for current source <audio>: defined by 'this' when loaded
     //  sourceNode,                                     // audioContext node for HTML audio element, not microphone
         canvas = document.getElementById('canvas'),     // jQuery object canvas causes issues when painting
         canvasCtx,                                      // single session canvasContext used in MP3Recorder and draw()
@@ -50,12 +50,14 @@ var Main = (function () {
             // log.prepend('<li>recorder constructed: ' + recorder + '</li>');
         }
         catch (e) {
-            alert(e + ': recorder was not instanced, could be a (MP3Recorder || web worker || browser) issue');
+            alert(e + ': recorder was not instanced, could be a MP3Recorder, Web Worker or Browser issue');
         }
         finally {
             // suspend audioContext until user starts recording
-            if (recorder) {
-                suspendAudioCtx();
+            if (recorder && audioCtx.state === 'running') {
+                suspendAudioCtx(); // warning: iOS may not like this function reference...
+            } else {
+                log.prepend('<li>audio context was not running (from init)</li>');
             }
         }
 
@@ -74,9 +76,6 @@ var Main = (function () {
 
         // init player UI
         initPlayerUI();
-
-        // reveal source media element for debugging
-        // $('#source').css('visibility', 'visible');
     }
 
 /** audioContext and microphone functions *****************************************************************************/
@@ -188,13 +187,9 @@ var Main = (function () {
     // suspends context until required by start button
     function suspendAudioCtx () {
         'use strict';
-        if (audioCtx.state === 'running') {
-                audioCtx.suspend().then(function() {
-                    log.prepend('<li>audio context suspended</li>');
-                });
-        } else {
-            log.prepend('<li>audio context was not running when suspendAudioCtx ran</li>');
-        }
+        audioCtx.suspend().then(function() {
+            log.prepend('<li>audio context suspended</li>');
+        });
     }
 
 /** canvas visualisation functions ************************************************************************************/
@@ -222,6 +217,13 @@ var Main = (function () {
 
         // create a white-particle oscilloscope
         for (var i = 0; i < particles.length; i++) {
+
+            // canvasCtx.rotate(i * Math.PI / 180);    (this change made the palette blue/purple) ↓
+            canvasCtx.fillStyle = 'rgb(' + getRandomColor() + ',' + getRandomColor() + ',' + (256 >> 0) + ')';
+            // coloured bouncing city-scape
+            canvasCtx.fillRect(i, canvas.height - particles[i] * 0.2, 10, canvas.height);
+            canvasCtx.strokeRect(i, canvas.height - particles[i] * 0.0001, 10, canvas.height);
+            
             var value = particles[i],
                 percent = value / 200, // 256 = centered
                 _height = canvas.height * percent,
@@ -230,13 +232,8 @@ var Main = (function () {
 
             canvasCtx.fillStyle = 'white';
             canvasCtx.fillRect(i * barWidth, offset, 1, 1);
-
-            // canvasCtx.rotate(i * Math.PI / 180);    (this change made the palette blue/purple) ↓
-            canvasCtx.fillStyle = 'rgb(' + getRandomColor() + ',' + getRandomColor() + ',' + (256 >> 0) + ')';
-            // coloured bouncing city-scape
-            canvasCtx.fillRect(i, canvas.height - particles[i] * 0.2, 10, canvas.height);
-            canvasCtx.strokeRect(i, canvas.height - particles[i] * 0.0001, 10, canvas.height);
         }
+
         // get byte-based array data
         // var bytes = new Uint8Array(analyser.frequencyBinCount);
         // analyser.getByteFrequencyData(bytes);
@@ -372,7 +369,13 @@ var Main = (function () {
 
         //play button
         $('#play').on('click', function () {
-            source.play(); // whyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+            
+            source.play().then(function() {
+                log.prepend('<li>Yay! Video is playing!</li>');
+            }).catch(function(e) {
+                log.prepend('<li>Error: ' + e + '</li>');
+            });
+
             $('#play').css('display', 'none');
             $('#pause').css('display', 'inline-block');
             // $('#duration').fadeIn(400);
@@ -777,11 +780,28 @@ var Main = (function () {
                 // create a blobURL for the audio element and the download button to share
                 blobURL = handledURL.createObjectURL(blobs[blobs.length - 1]);
 
+                //     .play().then(function() {
+                //         log.prepend('<li>Yay! Video is playing!</li>');
+                //   }).catch(e) (function() {
+                //         log.prepend('<li>Error: ' + e + '</li>');
+                //   });
+
                 // attach blobURL and use new audio.src to update authoring values
-                $('#source').attr('src', blobURL)
-                            .on('durationchange', function () {
+                $('#source').attr('src', blobURL).on('durationchange', function () {
                                 // keep relevant slider values up to date
                                 source = this;
+
+                                // on firefox, the issue is this whole event doesnt fire. But for Edge and iOS:
+
+                                // the play button issue may relate to 'this', so check values below.
+
+                                // firefox PC will re-fire this event when media is played to the end, this issue
+                                // could be related to optimising speed by not loading media til play is hit!
+
+                                // this would explain that play() cannot fire, because it is waiting for this event,
+                                // which sets source = this for the player to work in the first place.
+
+                                log.prepend('<li>source = this' + source + ' = ' + this + '</li>');
                                 totalFrames = source.duration * 38.28125;
                                 log.prepend('<li>.on durationchange #source = ' + source + '</li>');
                                 // append the same blobURL as a download link
@@ -795,7 +815,15 @@ var Main = (function () {
             catch (e) {
                 log.prepend('<li>createObjectURL failed (from source), error: ' + e + '</li>');
             }
-            // finally {
+            finally {
+                // if (source) {
+                    $('#source').on('durationchange', function () {
+                        log.prepend('<li>durationchange fired from finally</li>');
+                    });
+                // } else {
+                //     log.prepend('<li>if (source) failed from finally</li>');
+                // }
+            }
                 // var srcAttr = $('#source').attr('src');
                 // if (srcAttr === blobURL) {
                 //     srcFlag = true;
@@ -815,8 +843,12 @@ var Main = (function () {
             // }
         });
 
-        suspendAudioCtx(); // warning: iOS may not like this function reference...
-
+        if (audioCtx.state === 'running') {
+            suspendAudioCtx(); // warning: iOS may not like this function reference...
+        } else {
+            log.prepend('<li>audio context was not running (from stopBtn)</li>');
+        }
+        
         // enable store and upload buttons (not edit which is enabled when an editHandle is moved)
         $('#storeBtn, #upBtn').removeAttr('disabled');
         // reveal UI elements
@@ -895,4 +927,5 @@ var Main = (function () {
     //     $('#editBtn').attr('disabled', true);
     // } else {
     //     $('#editBtn').attr('disabled', false);
-    // }*/
+    // }
+    */

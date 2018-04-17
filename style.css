@@ -7,7 +7,7 @@
    if audio element is hidden on not displayed then
    the custom JavaScript control play(); will break */
 #source {
-    margin-left: -9999px;
+    /* margin-left: -9999px; */
 }
 
 #stopBtn {
