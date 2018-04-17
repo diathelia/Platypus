@@ -104,20 +104,22 @@ var Main = (function () {
             // createMediaStreamSource likes to go after processor code for iOS
             microphone = audioCtx.createMediaStreamSource(stream);
 
-            processor = audioCtx.createScriptProcessor(0, 1, 1);
             // Add all buffers from LAME into an array
+            processor = audioCtx.createScriptProcessor(0, 1, 1);
 
             analyser = audioCtx.createAnalyser();
             microphone.connect(analyser);
 
             processor.onaudioprocess = function (event) {
+                // immediately update canvas, then send off buffer 
+                draw(); // seems to only work here, the only on-repeat processing function (others are mostly inits)
                 // Send microphone data to LAME for MP3 encoding while recording
                 var array = event.inputBuffer.getChannelData(0);
                 realTimeWorker.postMessage({cmd: 'encode', buf: array});
-                draw(); // seems to only work here, the only on-repeat processing function (others are mostly inits)
             };
-            microphone.connect(processor);
+
             // Begin retrieving microphone data
+            microphone.connect(processor);
             processor.connect(audioCtx.destination);
         }
 
@@ -197,7 +199,7 @@ var Main = (function () {
 
     function getRandomColor () {
         'use strict';
-        return ((random() * 256) - 100) >> 0;
+        return (random() * 256) >> 0;
     }
 
     // repeatedly called from on.audioprocess
@@ -205,39 +207,42 @@ var Main = (function () {
         'use strict';
 
         // clear canvas before drawing
-        canvasCtx.fillStyle = 'rgb(0, 0, 0)';
         canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // slightly improves for loop efficiency
-        var i;
+        // canvasCtx.fillStyle = 'rgb(0, 0, 0)';
         
         // get time-based array data for particles
         var particles = new Uint8Array(analyser.frequencyBinCount);
-        analyser.getByteTimeDomainData(particles);
+        // analyser.getByteTimeDomainData(particles);
+        analyser.getByteFrequencyData(particles);
+
+        // slightly improves for loop efficiency ?
+        var i;
 
         // create a white-particle oscilloscope
         for (i = 0; i < particles.length; i++) {
-            var value = particles[i];
-            var percent = value / 200; // 256 = centered
-            var _height = canvas.height * percent;
-            var offset = canvas.height - _height - 1;
-            var barWidth = canvas.width / particles.length;
+            var value = particles[i],
+                percent = value / 256, // 256 = centered
+                _height = canvas.height * percent,
+                offset = canvas.height - _height - 1,
+                barWidth = canvas.width / particles.length;
+
             canvasCtx.fillStyle = 'white';
             canvasCtx.fillRect(i * barWidth, offset, 1, 1);
-        }
 
-        // get byte-based array data
-        var bytes = new Uint8Array(analyser.frequencyBinCount);
-        analyser.getByteFrequencyData(bytes);
-
-        // create some misc blocks and crap [currently]
-        for (i = 1; i < bytes.length; i++) {
             // canvasCtx.rotate(i * Math.PI / 180);    (this change made the palette blue/purple) ↓
             canvasCtx.fillStyle = 'rgb(' + getRandomColor() + ',' + getRandomColor() + ',' + (256 >> 0) + ')';
             // coloured bouncing city-scape
-            canvasCtx.fillRect(i, canvas.height - bytes[i] * 0.2, 10, canvas.height);
-            canvasCtx.strokeRect(i, canvas.height - bytes[i] * 0.0001, 10, canvas.height);
+            canvasCtx.fillRect(i, canvas.height - particles[i] * 0.2, 10, canvas.height);
+            canvasCtx.strokeRect(i, canvas.height - particles[i] * 0.0001, 10, canvas.height);
         }
+
+        // get byte-based array data
+        // var bytes = new Uint8Array(analyser.frequencyBinCount);
+        // analyser.getByteFrequencyData(bytes);
+
+        // create some misc blocks and crap [currently]
+        // for (i = 1; i < bytes.length; i++) {
+        // }
     }
 
 /** [experimental & historical canvas mappings] ***********************************************************************/
@@ -349,7 +354,7 @@ var Main = (function () {
         }
     }
 
-    // set up playerUI when source audio is ready
+    // set up playerUI
     function initPlayerUI () {
         'use strict';
 
@@ -366,11 +371,11 @@ var Main = (function () {
 
         //play button
         $('#play').on('click', function () {
-            source.play();
+            source.play(); // whyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
             $('#play').css('display', 'none');
             $('#pause').css('display', 'inline-block');
             // $('#duration').fadeIn(400);
-            console.log(source.currentTime);
+            log.prepend('<li>' + source.currentTime + '</li>');
         });
 
         //pause button
@@ -782,7 +787,7 @@ var Main = (function () {
             }
             //finally {
                 // now define slider in relation to new 'source' variables
-                // alternative place to connect to visualisation
+                // alternative place to connect to visualisation to playback
                 // console.log(source);
                 // sourceNode = audioCtx.createMediaElementSource(source);
                 // sourceNode.connect(analyser);
