@@ -7,7 +7,6 @@ var Main = (function () {
         audioCtx,                                       // single session audioContext that is used in many places
         analyser,                                       // set-up by mic.js, connected by on.startBtn, used by draw()
         source,                                         // for current source <audio>: defined by 'this' when loaded
-        srcFlag = false, // [debugging firefox's issue with media events and undefined sources]
     //  sourceNode,                                     // audioContext node for HTML audio element, not microphone
         canvas = document.getElementById('canvas'),     // jQuery object canvas causes issues when painting
         canvasCtx,                                      // single session canvasContext used in MP3Recorder and draw()
