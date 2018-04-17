@@ -12,6 +12,7 @@ var Main = (function () {
         canvasCtx,                                      // single session canvasContext used in MP3Recorder and draw()
         drawVisual,                                     // requestAnimationFrame id to cancel callback loop
         handledURL = window.URL || window.webkitURL,    // alias to avoid overwriting the window objects themselves
+        blobURL,                                        // allows audio.src and download.href to share the same object URL
         random = Math.random,                           // a sheer convenience for using random() within canvas
         log = $('#log'),                                // a sheer convenience for using a HTML console.log for mobile
 
@@ -375,7 +376,6 @@ var Main = (function () {
             $('#play').css('display', 'none');
             $('#pause').css('display', 'inline-block');
             // $('#duration').fadeIn(400);
-            log.prepend('<li>' + source.currentTime + '</li>');
         });
 
         //pause button
@@ -764,42 +764,20 @@ var Main = (function () {
                 blobs.push(blob);
             }
 
-            // create a url and update authoring values
+            // first check for previous blob URL to revoke
             try {
-                // first check for previous blob URL to revoke
                 if (blobs[blobs.length-2]) {
-                    
                     handledURL.revokeObjectURL(blobs[blobs.length-2]); // could also delete this blob from array here...
                     log.prepend('<li>revoked via blobs array</li>');
-
-                    if (blobURL) {
-                        handledURL.revokeObjectURL(blobURL);
-                        log.prepend('<li>revoked via blobURL variable</li>');
-                    } else {
-                        log.prepend('<li>no blobURL variable to revoke</li>');
-                    }
-
                 } else {
-                    log.prepend('<li>nothing to revoke yet</li>');
+                    log.prepend('<li>nothing in blobs array to revoke yet</li>');
                 }
 
-                // what if firefox's issue is the added blobURL ??
-                var blobURL = handledURL.createObjectURL(blobs[blobs.length - 1]);
+                // what if firefox's issue is the added blobURL?! (this var is to try reuse the same URL rather than duplicating)
+                blobURL = handledURL.createObjectURL(blobs[blobs.length - 1]);
 
-                // next reveal audio element & update 'source' variables
-                $('#source').attr('src', blobURL)
-                            .on('durationchange', function () {
-                                // keep relevant slider values up to date
-                                log.prepend('<li>.on durationchange. #source = ' + source + '</li>');
-                                source = this;
-                                totalFrames = source.duration * 38.28125;
-                                // append download link here so URL is not created too early with the rest of the UI
-                                $('#download').html('<a href="' + blobURL + 
-                                '"download class="btn btn-primary">⇩</a>'); // Chrome = no 'save as' prompt (does in firefox)
-                            })
-                            .on('error', function (e) {
-                                log.prepend('<li>media error: ' + e.code + ': ' + e.message + '</li>');
-                            });
+                // attach blobURL
+                $('#source').attr('src', blobURL);
             }
             catch (e) {
                 log.prepend('<li>createObjectURL failed (from source), error: ' + e + '</li>');
@@ -821,6 +799,26 @@ var Main = (function () {
         // reveal UI elements
         log.prepend('<li>about to reveal UI</li>');
         $('#slider, #playerUI, #storeBtn, #upBtn, #editBtn').css('visibility', 'visible');
+    });
+
+    // use new audio.src to update authoring values
+    $('#source').on('canplaythrough', function () {
+        log.prepend('<li>.on canplaythrough #source = ' + source + '</li>');
+        // keep relevant slider values up to date
+        if (source) {
+            log.prepend('<li>if (source) succeeded! = ' + source + '</li>');
+            source = this;
+            totalFrames = source.duration * 38.28125;
+            // append the same blobURL as a download link
+        $('#download').html('<a href="' + blobURL + 
+        '"download class="btn btn-primary">⇩</a>'); // Chrome = no 'save as' prompt (does in firefox)
+        } else {
+            log.prepend('<li>if (source) failed! = ' + source + '</li>');
+        }
+
+    })
+    .on('error', function (e) {
+        log.prepend('<li>media error: ' + e.code + ': ' + e.message + '</li>');
     });
 
 /** warn user to save progress before unloading resources *************************************************************/
