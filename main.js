@@ -768,21 +768,33 @@ var Main = (function () {
             try {
                 // first check for previous blob URL to revoke
                 if (blobs[blobs.length-2]) {
+                    
                     handledURL.revokeObjectURL(blobs[blobs.length-2]); // could also delete this blob from array here...
-                    console.log('revoked');
+                    log.prepend('<li>revoked via blobs array</li>');
+
+                    if (blobURL) {
+                        handledURL.revokeObjectURL(blobURL);
+                        log.prepend('<li>revoked via blobURL variable</li>');
+                    } else {
+                        log.prepend('<li>no blobURL variable to revoke</li>');
+                    }
+
                 } else {
-                    console.log('nothing to revoke yet');
+                    log.prepend('<li>nothing to revoke yet</li>');
                 }
 
+                // what if firefox's issue is the added blobURL ??
+                var blobURL = handledURL.createObjectURL(blobs[blobs.length - 1]);
+
                 // next reveal audio element & update 'source' variables
-                $('#source').attr('src', handledURL.createObjectURL(blobs[blobs.length - 1]))
-                            // .css('visibility', 'hidden')
+                $('#source').attr('src', blobURL)
                             .on('durationchange', function () {
                                 // keep relevant slider values up to date
+                                log.prepend('<li>.on durationchange. #source = ' + source + '</li>');
                                 source = this;
                                 totalFrames = source.duration * 38.28125;
                                 // append download link here so URL is not created too early with the rest of the UI
-                                $('#download').html('<a href="' + handledURL.createObjectURL(blobs[blobs.length - 1]) + 
+                                $('#download').html('<a href="' + blobURL + 
                                 '"download class="btn btn-primary">⇩</a>'); // Chrome = no 'save as' prompt (does in firefox)
                             })
                             .on('error', function (e) {
