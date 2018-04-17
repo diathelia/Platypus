@@ -6,13 +6,13 @@ var Main = (function () {
         recorder,                                       // single instance constructed, used in many places
         audioCtx,                                       // single session audioContext that is used in many places
         analyser,                                       // set-up by mic.js, connected by on.startBtn, used by draw()
-        source, // = $('#source')                       // for current source <audio>: defined by 'this' when loaded
+        source,                                         // for current source <audio>: defined by 'this' when loaded
     //  sourceNode,                                     // audioContext node for HTML audio element, not microphone
         canvas = document.getElementById('canvas'),     // jQuery object canvas causes issues when painting
         canvasCtx,                                      // single session canvasContext used in MP3Recorder and draw()
         drawVisual,                                     // requestAnimationFrame id to cancel callback loop
         handledURL = window.URL || window.webkitURL,    // alias to avoid overwriting the window objects themselves
-        blobURL,                                        // allows audio.src and download.href to share the same object URL
+        // blobURL,                                        // allows audio.src and download.href to share the same object URL
         random = Math.random,                           // a sheer convenience for using random() within canvas
         log = $('#log'),                                // a sheer convenience for using a HTML console.log for mobile
 
@@ -553,6 +553,8 @@ var Main = (function () {
         // 'bits / frame = frame_size * bit_rate / sample_rate' - http://lame.sourceforge.net/tech-FAQ.txt
         //  417.95918367 = 144        * 128000   / 44100
 
+        // if i turn this equation into JavaScript, I could maintain edit functionality at different bitrates!
+
         var leftBytes = Math.round(leftFrames * 417.95918367);
         var rightBytes = Math.round(rightFrames * 417.95918367);
 
@@ -570,8 +572,8 @@ var Main = (function () {
         try {
             // first check for previous blob URL to revoke
             if (edits[edits.length - 2]) {
-                handledURL.revokeObjectURL(blobs[blobs.length - 2]);   // could also delete this blob from array here...
-                console.log('revoked');
+                handledURL.revokeObjectURL(edits[edits.length - 2]);   // could also delete this blob from array here...
+                console.log('revoked old edit URL');
             } else {
                 console.log('nothing to revoke yet');
             }
@@ -768,42 +770,32 @@ var Main = (function () {
                 blobs.push(blob);
             }
 
-            // first check for previous blob URL to revoke
             try {
+                // first check for previous blob URL to revoke
                 if (blobs[blobs.length-2]) {
                     handledURL.revokeObjectURL(blobs[blobs.length-2]); // could also delete this blob from array here...
-                    log.prepend('<li>revoked via blobs array</li>');
+                    log.prepend('<li>revoked old source URL</li>');
                 } else {
-                    log.prepend('<li>nothing in blobs array to revoke yet</li>');
+                    log.prepend('<li>nothing to revoke yet</li>');
                 }
 
-                // create a blobURL for the audio element and the download button to share
-                blobURL = handledURL.createObjectURL(blobs[blobs.length - 1]);
-
-                //     .play().then(function() {
-                //         log.prepend('<li>Yay! Video is playing!</li>');
-                //   }).catch(e) (function() {
-                //         log.prepend('<li>Error: ' + e + '</li>');
-                //   });
+                // create a single blobURL for the audio element and the download button to share
+                var blobURL = handledURL.createObjectURL(blobs[blobs.length - 1]);
 
                 // attach blobURL and use new audio.src to update authoring values
                 $('#source').attr('src', blobURL).on('durationchange', function () {
+                                // on firefox (android), the issue is this whole event doesnt fire.
+                                // But for Edge and iOS the play button issue may relate to 'this'.
+                                // firefox PC will re-fire this event when media is played to the end.
+                                // this issue could be due to Firefox not loading media til play is hit!
+                                // explains play() cannot fire because it is waiting for this media event
+                                // which sets source = this; for the player to work in the first place.
+                                
                                 // keep relevant slider values up to date
                                 source = this;
-
-                                // on firefox, the issue is this whole event doesnt fire. But for Edge and iOS:
-
-                                // the play button issue may relate to 'this', so check values below.
-
-                                // firefox PC will re-fire this event when media is played to the end, this issue
-                                // could be related to optimising speed by not loading media til play is hit!
-
-                                // this would explain that play() cannot fire, because it is waiting for this event,
-                                // which sets source = this for the player to work in the first place.
-
-                                log.prepend('<li>source = this' + source + ' = ' + this + '</li>');
-                                totalFrames = source.duration * 38.28125;
                                 log.prepend('<li>.on durationchange #source = ' + source + '</li>');
+                                totalFrames = source.duration * 38.28125;
+
                                 // append the same blobURL as a download link
                                 $('#download').html('<a href="' + blobURL + 
                                 '"download class="btn btn-primary">⇩</a>'); // Chrome = no 'save as' prompt (does in firefox)
@@ -815,31 +807,12 @@ var Main = (function () {
             catch (e) {
                 log.prepend('<li>createObjectURL failed (from source), error: ' + e + '</li>');
             }
-            finally {
-                // if (source) {
-                    $('#source').on('durationchange', function () {
-                        log.prepend('<li>durationchange fired from finally</li>');
-                    });
-                // } else {
-                //     log.prepend('<li>if (source) failed from finally</li>');
-                // }
-            }
-                // var srcAttr = $('#source').attr('src');
-                // if (srcAttr === blobURL) {
-                //     srcFlag = true;
-                // } else {
-                //     srcFlag = false;
-                // }
-                // } else {
-                //     log.prepend('<li>srcAttr !== blobURL = ' + source + '</li>');
-                // }
-
-                // now define slider in relation to new 'source' variables
-                // alternative place to connect to visualisation to playback
-                // console.log(source);
-                // sourceNode = audioCtx.createMediaElementSource(source);
-                // sourceNode.connect(analyser);
-                // sourceNode.connect(audioCtx.destination);
+            // }
+            // alternative place to connect to visualisation to playback
+            // console.log(source);
+            // sourceNode = audioCtx.createMediaElementSource(source);
+            // sourceNode.connect(analyser);
+            // sourceNode.connect(audioCtx.destination);
             // }
         });
 
