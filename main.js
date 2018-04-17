@@ -1,5 +1,5 @@
 var Main = (function () {
-
+    //  audio + canvas environment variables:
     var blobs = [],                                     // array to hold recordings for the session
         edits = [],                                     // array to load edited recordings for the session
         timer,                                          // needed by startBtn and stopBtn (replace with [m:ss])
@@ -12,7 +12,6 @@ var Main = (function () {
         canvasCtx,                                      // single session canvasContext used in MP3Recorder and draw()
         drawVisual,                                     // requestAnimationFrame id to cancel callback loop
         handledURL = window.URL || window.webkitURL,    // alias to avoid overwriting the window objects themselves
-        // blobURL,                                        // allows audio.src and download.href to share the same object URL
         random = Math.random,                           // a sheer convenience for using random() within canvas
         log = $('#log'),                                // a sheer convenience for using a HTML console.log for mobile
 
@@ -573,9 +572,9 @@ var Main = (function () {
             // first check for previous blob URL to revoke
             if (edits[edits.length - 2]) {
                 handledURL.revokeObjectURL(edits[edits.length - 2]);   // could also delete this blob from array here...
-                console.log('revoked old edit URL');
+                log.prepend('<li>revoked old edit URL</li>');
             } else {
-                console.log('nothing to revoke yet');
+                log.prepend('<li>nothing to revoke yet</li>');
             }
 
             // attach new src and reveal audio element
@@ -784,13 +783,6 @@ var Main = (function () {
 
                 // attach blobURL and use new audio.src to update authoring values
                 $('#source').attr('src', blobURL).on('durationchange', function () {
-                                // on firefox (android), the issue is this whole event doesnt fire.
-                                // But for Edge and iOS the play button issue may relate to 'this'.
-                                // firefox PC will re-fire this event when media is played to the end.
-                                // this issue could be due to Firefox not loading media til play is hit!
-                                // explains play() cannot fire because it is waiting for this media event
-                                // which sets source = this; for the player to work in the first place.
-                                
                                 // keep relevant slider values up to date
                                 source = this;
                                 log.prepend('<li>.on durationchange #source = ' + source + '</li>');
@@ -799,6 +791,14 @@ var Main = (function () {
                                 // append the same blobURL as a download link
                                 $('#download').html('<a href="' + blobURL + 
                                 '"download class="btn btn-primary">⇩</a>'); // Chrome = no 'save as' prompt (does in firefox)
+
+                                // refresh / reset authoring values for new source
+                                leftHandle  = 0;
+                                $('#slider').slider('values', 0, 0);
+                                rightHandle = 100;
+                                $('#slider').slider('values', 1, 100);
+                                timeValue = source.currentTime;
+                                checkFrames();
                             })
                             .on('error', function (e) {
                                 log.prepend('<li>media error: ' + e.code + ': ' + e.message + '</li>');
