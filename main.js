@@ -14,6 +14,8 @@ var Main = (function () {
         random = Math.random,                           // a sheer convenience for using random() within canvas
         log = $('#log'),                                // a sheer convenience for using a HTML console.log for mobile
 
+        drawVisual, // animation callback id
+
     //  authoring values:
         leftHandle,         // sliding percentage to trim from audio start
         rightHandle,        // sliding percentage to trim from audio end
@@ -112,7 +114,7 @@ var Main = (function () {
 
             processor.onaudioprocess = function (event) {
                 // immediately update canvas, then send off buffer 
-                draw(); // seems to only work here, the only on-repeat processing function (others are mostly inits)
+                // draw(); // seems to only work here, the only on-repeat processing function (others are mostly inits)
                 // Send microphone data to LAME for MP3 encoding while recording
                 var array = event.inputBuffer.getChannelData(0);
                 realTimeWorker.postMessage({cmd: 'encode', buf: array});
@@ -206,22 +208,22 @@ var Main = (function () {
     function draw () {
         'use strict';
 
+        // callback to parent function gives requestAnimationFrame control over calls per second
+        drawVisual = window.requestAnimationFrame(draw);
+
         // clear canvas before drawing
         canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
         // canvasCtx.fillStyle = 'rgb(0, 0, 0)';
         
         // get time-based array data for particles
         var particles = new Uint8Array(analyser.frequencyBinCount);
-        // analyser.getByteTimeDomainData(particles);
+        analyser.getByteTimeDomainData(particles);
         analyser.getByteFrequencyData(particles);
 
-        // slightly improves for loop efficiency ?
-        var i;
-
         // create a white-particle oscilloscope
-        for (i = 0; i < particles.length; i++) {
+        for (var i = 0; i < particles.length; i++) {
             var value = particles[i],
-                percent = value / 256, // 256 = centered
+                percent = value / 200, // 256 = centered
                 _height = canvas.height * percent,
                 offset = canvas.height - _height - 1,
                 barWidth = canvas.width / particles.length;
@@ -235,7 +237,6 @@ var Main = (function () {
             canvasCtx.fillRect(i, canvas.height - particles[i] * 0.2, 10, canvas.height);
             canvasCtx.strokeRect(i, canvas.height - particles[i] * 0.0001, 10, canvas.height);
         }
-
         // get byte-based array data
         // var bytes = new Uint8Array(analyser.frequencyBinCount);
         // analyser.getByteFrequencyData(bytes);
@@ -728,6 +729,10 @@ var Main = (function () {
             }, 1000);
             updateTimer();
             $('#stopBtn').removeAttr('disabled');
+
+            // kick-off drawing: requestAnimationFrame callback drives animation from within draw();
+            draw();
+
         }, function (e) {
             alert(e, 'Could not make use of your microphone, please check your hardware is working:');
         });
@@ -735,14 +740,17 @@ var Main = (function () {
         // swap out start button for stop button
         $('#startBtn').css('display', 'none');
         $('#stopBtn').css('display', 'inline-block');
-
     });
 
     $('#stopBtn').on('click', function (e) {
         'use strict';
         e.preventDefault();
-        clearInterval(timer);
 
+        // cancel animation callback
+        window.cancelAnimationFrame(drawVisual);
+        // stop timer
+        clearInterval(timer);
+        // stop recorder
         recorder.stop();
 
         // swap out stop button for start button
