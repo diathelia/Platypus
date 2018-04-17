@@ -7,6 +7,7 @@ var Main = (function () {
         audioCtx,                                       // single session audioContext that is used in many places
         analyser,                                       // set-up by mic.js, connected by on.startBtn, used by draw()
         source,                                         // for current source <audio>: defined by 'this' when loaded
+        srcFlag = false, // [debugging firefox's issue with media events and undefined sources]
     //  sourceNode,                                     // audioContext node for HTML audio element, not microphone
         canvas = document.getElementById('canvas'),     // jQuery object canvas causes issues when painting
         canvasCtx,                                      // single session canvasContext used in MP3Recorder and draw()
@@ -757,6 +758,7 @@ var Main = (function () {
         $('#startBtn').removeAttr('disabled').css('display', 'inline-block');
 
         recorder.getMp3Blob(function (blob) {
+
             // check if the blob itself is broken
             if (blob.size === 0) {
                 log.prepend('<li>blob.size was zero</li>');
@@ -773,23 +775,45 @@ var Main = (function () {
                     log.prepend('<li>nothing in blobs array to revoke yet</li>');
                 }
 
-                // what if firefox's issue is the added blobURL?! (this var is to try reuse the same URL rather than duplicating)
+                // create a blobURL for the audio element and the download button to share
                 blobURL = handledURL.createObjectURL(blobs[blobs.length - 1]);
 
-                // attach blobURL
-                $('#source').attr('src', blobURL);
+                // attach blobURL and use new audio.src to update authoring values
+                $('#source').attr('src', blobURL)
+                            .on('durationchange', function () {
+                                // keep relevant slider values up to date
+                                source = this;
+                                totalFrames = source.duration * 38.28125;
+                                log.prepend('<li>.on durationchange #source = ' + source + '</li>');
+                                // append the same blobURL as a download link
+                                $('#download').html('<a href="' + blobURL + 
+                                '"download class="btn btn-primary">⇩</a>'); // Chrome = no 'save as' prompt (does in firefox)
+                            })
+                            .on('error', function (e) {
+                                log.prepend('<li>media error: ' + e.code + ': ' + e.message + '</li>');
+                            });
             }
             catch (e) {
                 log.prepend('<li>createObjectURL failed (from source), error: ' + e + '</li>');
             }
-            //finally {
+            // finally {
+                // var srcAttr = $('#source').attr('src');
+                // if (srcAttr === blobURL) {
+                //     srcFlag = true;
+                // } else {
+                //     srcFlag = false;
+                // }
+                // } else {
+                //     log.prepend('<li>srcAttr !== blobURL = ' + source + '</li>');
+                // }
+
                 // now define slider in relation to new 'source' variables
                 // alternative place to connect to visualisation to playback
                 // console.log(source);
                 // sourceNode = audioCtx.createMediaElementSource(source);
                 // sourceNode.connect(analyser);
                 // sourceNode.connect(audioCtx.destination);
-            //}
+            // }
         });
 
         suspendAudioCtx(); // warning: iOS may not like this function reference...
@@ -799,25 +823,6 @@ var Main = (function () {
         // reveal UI elements
         log.prepend('<li>about to reveal UI</li>');
         $('#slider, #playerUI, #storeBtn, #upBtn, #editBtn').css('visibility', 'visible');
-    });
-
-    // use new audio.src to update authoring values
-    $('#source').on('canplaythrough', function () {
-        log.prepend('<li>.on canplaythrough #source = ' + source + '</li>');
-        // keep relevant slider values up to date
-        // if (source) {
-            log.prepend('<li>if (source) succeeded! = ' + source + '</li>');
-            source = this;
-            totalFrames = source.duration * 38.28125;
-            // append the same blobURL as a download link
-        $('#download').html('<a href="' + blobURL + 
-        '"download class="btn btn-primary">⇩</a>'); // Chrome = no 'save as' prompt (does in firefox)
-        // } else {
-        //     log.prepend('<li>if (source) failed! = ' + source + '</li>');
-        // }
-    })
-    .on('error', function (e) {
-        log.prepend('<li>media error: ' + e.code + ': ' + e.message + '</li>');
     });
 
 /** warn user to save progress before unloading resources *************************************************************/
