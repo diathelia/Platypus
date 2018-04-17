@@ -10,11 +10,10 @@ var Main = (function () {
     //  sourceNode,                                     // audioContext node for HTML audio element, not microphone
         canvas = document.getElementById('canvas'),     // jQuery object canvas causes issues when painting
         canvasCtx,                                      // single session canvasContext used in MP3Recorder and draw()
+        drawVisual,                                     // requestAnimationFrame id to cancel callback loop
         handledURL = window.URL || window.webkitURL,    // alias to avoid overwriting the window objects themselves
         random = Math.random,                           // a sheer convenience for using random() within canvas
         log = $('#log'),                                // a sheer convenience for using a HTML console.log for mobile
-
-        drawVisual, // animation callback id
 
     //  authoring values:
         leftHandle,         // sliding percentage to trim from audio start
