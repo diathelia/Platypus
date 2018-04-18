@@ -28,8 +28,6 @@ var Main = (function () {
     // grab feature detection string from isMicSupported.js Module
     log.prepend('<li>' + IsMicSupported + '</li>');
 
-/** prepare application for recording *********************************************************************************/
-
     // initiate application resources
     function init () {
         'use strict';
@@ -216,7 +214,7 @@ var Main = (function () {
         // create a white-particle oscilloscope
         for (var i = 0; i < particles.length; i++) {            
             var value = particles[i],
-                percent = value / 200, // 256 = centered
+                percent = value / 156, // 256 = centered
                 _height = canvas.height * percent,
                 offset = canvas.height - _height - 1,
                 barWidth = canvas.width / particles.length;
@@ -233,9 +231,10 @@ var Main = (function () {
         for (var i = 1; i < bytes.length; i++) {
             // canvasCtx.rotate(i * Math.PI / 180);    (this change made the palette blue/purple) ↓
             canvasCtx.fillStyle = 'rgb(' + getRandomColor() + ',' + getRandomColor() + ',' + (256 >> 0) + ')';
+            canvasCtx.strokeStyle = 'rgba(256, 256, 256, 0.6)';
             // coloured bouncing city-scape
-            canvasCtx.fillRect(i, canvas.height - bytes[i] * 0.2, 10, canvas.height);
-            canvasCtx.strokeRect(i, canvas.height - bytes[i] * 0.0001, 10, canvas.height);
+            canvasCtx.strokeRect(i, canvas.height - bytes[i] * 0.5, 10, canvas.height);
+            canvasCtx.fillRect(i, canvas.height - bytes[i] / 2, 10, canvas.height);
         }
     }
 
