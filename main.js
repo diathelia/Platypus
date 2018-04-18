@@ -202,7 +202,7 @@ var Main = (function () {
     function draw () {
         'use strict';
 
-        // callback to parent function gives requestAnimationFrame control over calls per second
+        // callback to parent function gives requestAnimationFrame control over draws per second (aims at 60fps)
         drawVisual = window.requestAnimationFrame(draw);
 
         // clear canvas before drawing
@@ -212,17 +212,9 @@ var Main = (function () {
         // get time-based array data for particles
         var particles = new Uint8Array(analyser.frequencyBinCount);
         analyser.getByteTimeDomainData(particles);
-        analyser.getByteFrequencyData(particles);
 
         // create a white-particle oscilloscope
-        for (var i = 0; i < particles.length; i++) {
-
-            // canvasCtx.rotate(i * Math.PI / 180);    (this change made the palette blue/purple) ↓
-            canvasCtx.fillStyle = 'rgb(' + getRandomColor() + ',' + getRandomColor() + ',' + (256 >> 0) + ')';
-            // coloured bouncing city-scape
-            canvasCtx.fillRect(i, canvas.height - particles[i] * 0.2, 10, canvas.height);
-            canvasCtx.strokeRect(i, canvas.height - particles[i] * 0.0001, 10, canvas.height);
-            
+        for (var i = 0; i < particles.length; i++) {            
             var value = particles[i],
                 percent = value / 200, // 256 = centered
                 _height = canvas.height * percent,
@@ -234,12 +226,17 @@ var Main = (function () {
         }
 
         // get byte-based array data
-        // var bytes = new Uint8Array(analyser.frequencyBinCount);
-        // analyser.getByteFrequencyData(bytes);
+        var bytes = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(bytes);
 
         // create some misc blocks and crap [currently]
-        // for (i = 1; i < bytes.length; i++) {
-        // }
+        for (var i = 1; i < bytes.length; i++) {
+            // canvasCtx.rotate(i * Math.PI / 180);    (this change made the palette blue/purple) ↓
+            canvasCtx.fillStyle = 'rgb(' + getRandomColor() + ',' + getRandomColor() + ',' + (256 >> 0) + ')';
+            // coloured bouncing city-scape
+            canvasCtx.fillRect(i, canvas.height - bytes[i] * 0.2, 10, canvas.height);
+            canvasCtx.strokeRect(i, canvas.height - bytes[i] * 0.0001, 10, canvas.height);
+        }
     }
 
 /** [experimental & historical canvas mappings] ***********************************************************************/
@@ -587,7 +584,7 @@ var Main = (function () {
         catch (e) {
             log.prepend('<li>createObjectURL failed (from edit), error: ' + e + '</li>');
         }
-    }
+    }                                                                                                                   // KEEP / DISCARD
 
     function store(blob2store) {
         // 'use strict'; will break store function
@@ -686,14 +683,14 @@ var Main = (function () {
         edit(blobs[blobs.length - 1]);
     });
 
-    // pass (source || edit) to store function (base on keep / discard prompt)
+    // pass (source || edit) to store function (base on keep / discard prompt)                                          // KEEP / DISCARD
     $('#storeBtn').on('click', function (e) {
         e.preventDefault();
         // if (keep === true) {store(edits[edits.length - 1]);} else {...
         store(blobs[blobs.length - 1]);
     });
 
-    // pass (source || edit) to upload function (base on keep / discard prompt)
+    // pass (source || edit) to upload function (base on keep / discard prompt)                                         // KEEP / DISCARD
     $('#upBtn').on('click', function (e) {
         e.preventDefault();
         // if (keep === true) {upload(edits[edits.length - 1]);} else {...
