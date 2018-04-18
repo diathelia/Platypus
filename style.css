@@ -1,6 +1,44 @@
+/* Slider */
+.slide-wrap {
+    background-color: white;
+    color: white;
+    padding: 0 0.6em;
+    margin: 0;
+}
+
+#slider, #playerUI {
+    height: 2.75em;
+    border: none;
+    margin: 0;
+    padding: 0;
+}
+
+#leftHandle, #rightHandle, #timeHandle {
+    top: 0.0018em; /* centered within slider hieght */
+    height: 100%;
+    outline: none;
+    border: none;
+    padding: 0;
+    background-position: center;
+    background-size: auto;
+    cursor: pointer;
+}
+
+#leftHandle, #rightHandle {
+    background: transparent url('editHandle.svg') no-repeat border-box scroll;
+}
+
+#timeHandle {
+    background: transparent url('timeHandle.svg') no-repeat border-box scroll;
+}
+
 /* setup and hide features */
 #edited, #slider, #playerUI, #editBtn, #storeBtn, #upBtn {
     visibility: hidden;
+}
+
+#stopBtn {
+    display: none;
 }
 
 /* hiding via margin due to a Firefox playback bug:
@@ -10,19 +48,12 @@
     margin-left: -9999px;
 }
 
-#stopBtn {
-    display: none;
-}
-
 /* define tool appearance */
-#slider, #playerUI, #canvas, audio {
+.slide-wrap, #playerUI, #canvas, audio {
     margin-left: auto;
     margin-right: auto;
     width: 90%;
-}
-
-#slider {
-    height: 50px;
+    padding: 0 0.6em;
 }
 
 #playerUI {
@@ -31,30 +62,10 @@
 }
 
 #canvas {
-    height: 400px;
+    height: 50vh;
     background-color: transparent;
-}
-
-/* Slider Controls */
-.ui-slider-handle {
-    margin-top: 20px;
-}
-
-#leftHandle, #rightHandle {
-    background-color: red;
-    color: inherit;
-    outline: none;
-}
-
-#timeHandle {
-    background-color: blue;
-    color: inherit;
-    border-radius: 50%;
-    outline: none;
-    width: 0.78em;
-    height: 0.78em;
-    top: -0.078em;
-    /* margin-left: 0.6em; */
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* general page styling */
@@ -66,6 +77,9 @@ body {
     height: 100vh;
     width: 100vw;
     overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    border: none;
 }
 
 #startStop, #console {

@@ -299,21 +299,11 @@ var Main = (function () {
                 leftHandle  = ui.values[0];
                 rightHandle = ui.values[1];
 
-                // timeHandle ⇌ currentTime:
-                if ($('#timeHandle').hasClass('ui-state-active')) { // this could also go inside interval if needed
+                // force mapping timeHandle ⇌ currentTime while user is dragging timeHandle
+                if ($('#timeHandle').hasClass('ui-state-active')) {
                     source.currentTime = (source.duration / 100) * ui.values[2];
                     console.log('timeHandle is active');
                 }
-                /*
-                    $('#timeHandle').on('focus', function () {
-                        console.log('focused');
-                    });
-                    interval maps currentTime onto slider via timeValue...
-                    this function maps ui.values[2] back to currentTime...
-                    I guess this is the UI issue: two competing functions.
-                    but why does this push timeHandle to the left?
-                    why does moving left/rightHandle affect the timeHandle?
-                */
 
                 // if left/right Handles get too close to overlapping, return false to stop slide
                 if ((ui.values[0] >= (ui.values[1] - 1)) || (ui.values[1] <= (ui.values[0] + 1))) {
@@ -325,7 +315,7 @@ var Main = (function () {
             // refresh frame values when handles are explicitly moved by the user
             stop: function () {
                 checkFrames();
-                // fixes a removing-your-finger bug on some touch screens (investigate: many mobiles ignore this)
+                // fixes a removing-your-finger bug on some touch screens (investigate: some mobiles ignore this)
                 $('.ui-slider-handle').blur();
             }
         });
@@ -414,7 +404,6 @@ var Main = (function () {
                     $('#pause').css('display', 'none');
                     $('#play').css('display', 'inline-block');
                     source.pause();
-
                 }
 
                 //Get hours and minutes
@@ -583,7 +572,7 @@ var Main = (function () {
         catch (e) {
             log.prepend('<li>createObjectURL failed (from edit), error: ' + e + '</li>');
         }
-    }                                                                                                                   // KEEP / DISCARD
+    }                                                                                                                  // KEEP / DISCARD
 
     function store(blob2store) {
         // 'use strict'; will break store function
@@ -682,14 +671,14 @@ var Main = (function () {
         edit(blobs[blobs.length - 1]);
     });
 
-    // pass (source || edit) to store function (base on keep / discard prompt)                                          // KEEP / DISCARD
+    // pass (source || edit) to store function (base on keep / discard prompt)                                         // KEEP / DISCARD
     $('#storeBtn').on('click', function (e) {
         e.preventDefault();
         // if (keep === true) {store(edits[edits.length - 1]);} else {...
         store(blobs[blobs.length - 1]);
     });
 
-    // pass (source || edit) to upload function (base on keep / discard prompt)                                         // KEEP / DISCARD
+    // pass (source || edit) to upload function (base on keep / discard prompt)                                        // KEEP / DISCARD
     $('#upBtn').on('click', function (e) {
         e.preventDefault();
         // if (keep === true) {upload(edits[edits.length - 1]);} else {...
@@ -859,6 +848,18 @@ var Main = (function () {
     init();
 })();
 /* 
+                /*
+                    $('#timeHandle').on('focus', function () {
+                        console.log('focused');
+                    });
+                    interval maps currentTime onto slider via timeValue...
+                    this function maps ui.values[2] back to currentTime...
+                    I guess this is the UI issue: two competing functions.
+                    but why does this push timeHandle to the left?
+                    why does moving left/rightHandle affect the timeHandle?
+                
+
+
  * 1) define the 'create audio' DOM (class=”toolIconButton” for authoring)
  * 2) call $(Main.init) on click of data-action="Media.CreateAudio" button
  * 3) run init function to test API + device compatability (msg user or hide?)
