@@ -281,10 +281,10 @@ var Main = (function () {
 
         // reveal DOM slider
         $('#slider').slider({
-            step   : 1,
+            step   : 0.1,
             range  : false,
             animate: true,
-            values : [0, 100, 0], // (jquery gives lowest index value precedence upon overlap)
+            values : [0.0, 100.0, 0.0], // (jquery gives lowest index value precedence upon overlap)
 
             // define convienient handle id's to target for editing and playback
             create: function () {
@@ -309,6 +309,11 @@ var Main = (function () {
                 if ((ui.values[0] >= (ui.values[1] - 1)) || (ui.values[1] <= (ui.values[0] + 1))) {
                     console.log('[collision]');
                     return false;
+                }
+
+                // should stop timeHandle lagging behind when leftHandle is sliding
+                if (ui.values[0] > ui.values[2]) {
+                    ui.values[2] = ui.values[0];
                 }
             },
 
@@ -344,7 +349,7 @@ var Main = (function () {
         log.prepend('<li>initPlayerUI fired</li>');
 
         // prepare player
-        $('#pause').css('display', 'none');
+        $('#pause').hide();
         $('#duration').html('0:00');
         
         //volume vontrol
@@ -354,23 +359,19 @@ var Main = (function () {
 
         //play button
         $('#play').on('click', function () {
-            
+            $('#play, #pause').toggle();
             source.play().then(function() {
                 log.prepend('<li>Yay! Video is playing!</li>');
             }).catch(function(e) {
                 log.prepend('<li>Error: ' + e + '</li>');
+                $('#play, #pause').toggle();
             });
-
-            $('#play').css('display', 'none');
-            $('#pause').css('display', 'inline-block');
-            // $('#duration').fadeIn(400);
         });
 
         //pause button
         $('#pause').on('click', function () {
             source.pause();
-            $('#play').css('display', 'inline-block');
-            $('#pause').css('display', 'none');
+            $('#play, #pause').toggle();
         });
     }
 
@@ -384,26 +385,26 @@ var Main = (function () {
             // only runs if interval has some audio to affect
             if (source) {
                 // timeValue (int) is given to both timeHandle value & CSS position
-                timeValue = parseInt((source.currentTime / source.duration) * 100);
+                timeValue = ((source.currentTime / source.duration) * 100).toFixed(1);
                 // add percentage and update position
                 $('#timeHandle').css('left', (timeValue  + '\%'));
                 // assigns up-to-date timeValue to timeHandle
                 $('#slider').slider('values', 2, timeValue);
 
                 // set lower-bound of currentTime to wherever leftHandle currently is
-                if (source.currentTime <= (source.duration / 100) * leftHandle) {
-                    source.currentTime = ((source.duration / 100) * leftHandle) + 0.01; // temp fix, better to re-position leftHandle
-                    $('#pause').css('display', 'none');
-                    $('#play').css('display', 'inline-block');
-                    source.pause();
+                if (source.currentTime < (source.duration / 100) * leftHandle) {
+                    source.pause();                      
+                    source.currentTime = ((source.duration / 100) * leftHandle) + 0.001; // temp fix, better to re-position leftHandle
+                    $('#play').show();
+                    $('#pause').hide();
                 }
 
                 // set upper-bound of currentTime to wherever rightHandle currently is
                 if (source.currentTime >= (source.duration / 100) * rightHandle) {
-                    source.currentTime = ((source.duration / 100) * leftHandle) + 0.01; // temp fix, better to re-position leftHandle
-                    $('#pause').css('display', 'none');
-                    $('#play').css('display', 'inline-block');
                     source.pause();
+                    source.currentTime = ((source.duration / 100) * leftHandle) + 0.001; // temp fix, better to re-position leftHandle
+                    $('#play').show();
+                    $('#pause').hide();
                 }
 
                 //Get hours and minutes
@@ -422,8 +423,7 @@ var Main = (function () {
                 if (source.currentTime === source.duration) {
                     source.currentTime = 0; // issue: leftHandle = 0, therefore inits other interval loops (worse when sliders have moved)
                     source.pause();
-                    $('#pause').css('display', 'none');
-                    $('#play').css('display', 'inline-block');
+                    $('#play, #pause').toggle();
                 }
             }
         }, 26); // 26 ms is both the exact frame length and the fastest possible 'timeupdate' event that I am circumventing
@@ -707,14 +707,30 @@ var Main = (function () {
         var btn = $(this);
 
         recorder.start(function () {
+            $('#timer').css('visibility', 'visible');
             // start timer
-            var seconds = 0, updateTimer = function () {
-                $('#timer').text(seconds < 10 ? '0' + seconds : seconds);
-            };
+            var start = 0, s = 0, m = 0;
+            //Add 0 if seconds less than 10
+            if (s < 10) {
+                s = '0' + s;
+            }
+
             timer = setInterval(function () {
-                seconds++;
+                start++;
+                //Get hours and minutes
+                s = parseInt(start % 60);
+                m = parseInt((start / 60) % 60);
+                //Add 0 if seconds less than 10
+                if (s < 10) {
+                    s = '0' + s;
+                }
                 updateTimer();
             }, 1000);
+
+            var updateTimer = function () {
+                $('#timer').text(m + ':' + s);
+            };
+
             updateTimer();
             $('#stopBtn').removeAttr('disabled');
 
@@ -726,8 +742,7 @@ var Main = (function () {
         });
 
         // swap out start button for stop button
-        $('#startBtn').css('display', 'none');
-        $('#stopBtn').css('display', 'inline-block');
+        $('#startBtn, #stopBtn').toggle();
     });
 
     $('#stopBtn').on('click', function (e) {
@@ -774,8 +789,8 @@ var Main = (function () {
                                 totalFrames = source.duration * 38.28125;
 
                                 // append the same blobURL as a download link
-                                $('#download').html('<a href="' + blobURL + 
-                                '"download class="btn btn-primary">⇩</a>'); // Chrome = no 'save as' prompt (does in firefox)
+                                $('#download').html('<button><a href="' + blobURL + 
+                                '"download class="btn btn-primary">⇩</a></button>'); // Chrome = no 'save as' prompt (does in firefox)
 
                                 // refresh / reset authoring values for new source
                                 leftHandle  = 0;
@@ -811,7 +826,7 @@ var Main = (function () {
         $('#storeBtn, #upBtn').removeAttr('disabled');
         // reveal UI elements
         log.prepend('<li>about to reveal UI</li>');
-        $('#slider, #playerUI, #storeBtn, #upBtn, #editBtn').css('visibility', 'visible');
+        $('#slide-wrap, #slider, #playerUI, #storeBtn, #upBtn, #editBtn').css('visibility', 'visible');
     });
 
 /** warn user to save progress before unloading resources *************************************************************/

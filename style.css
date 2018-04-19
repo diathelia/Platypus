@@ -1,94 +1,77 @@
-/* Slider */
-.slide-wrap {
-    background-color: white;
-    color: white;
-    padding: 0 0.6em;
-    margin: 0;
-}
-
-#slider, #playerUI {
-    height: 2.75em;
-    border: none;
-    margin: 0;
-    padding: 0;
-}
-
-#leftHandle, #rightHandle, #timeHandle {
-    top: 0.0018em; /* centered within slider hieght */
-    height: 100%;
-    outline: none;
-    border: none;
-    padding: 0;
+/* general page styling */
+body {
+    height: 100vh;
+    width: 100vw;
+    background-image: url('monotreme.jpg');
+	background-size: cover;
     background-position: center;
-    background-size: auto;
-    cursor: pointer;
+    background-repeat: repeat;
+    overflow-y: hidden;
+    margin: 0;
+    padding: 0;
+    border: 0;
 }
 
-#leftHandle, #rightHandle {
-    background: transparent url('editHandle.svg') no-repeat border-box scroll;
-}
-
-#timeHandle {
-    background: transparent url('timeHandle.svg') no-repeat border-box scroll;
-}
-
-/* setup and hide features */
-#edited, #slider, #playerUI, #editBtn, #storeBtn, #upBtn {
-    visibility: hidden;
-}
-
-#stopBtn {
-    display: none;
-}
-
-/* hiding via margin due to a Firefox playback bug:
-   if audio element is hidden on not displayed then
-   the custom JavaScript control play(); will break */
-#source {
-    margin-left: -9999px;
+#container {
+    width: 98%;
+    margin-top: 1%;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* define tool appearance */
-.slide-wrap, #playerUI, #canvas, audio {
-    margin-left: auto;
-    margin-right: auto;
-    width: 90%;
+#slide-wrap, #playerUI, audio {
     padding: 0 0.6em;
 }
 
 #playerUI {
     background-color: rgba(94, 217, 191, 0.3);
     color: auto;
+    padding-top: 10px;
 }
 
 #canvas {
-    height: 50vh;
+    height: 60vh;
+    width: 100%;
     background-color: transparent;
-    margin-left: auto;
-    margin-right: auto;
+    color: auto;
 }
 
-/* general page styling */
-body {
-    background-image: url('monotreme.jpg');
-	background-size: cover;
+/* Slider */
+#slide-wrap {
+    background-color: white;
+    color: white;
+}
+
+#slider, #playerUI {
+    height: 2.75rem;
+    border: 0;
+}
+
+#leftHandle, #rightHandle, #timeHandle {
+    top: 0.0018rem; /* centered within custom slider hieght */
+    height: 100%;
+    outline: none;
+    border: 0;
     background-position: center;
-    background-repeat: repeat;
-    height: 100vh;
-    width: 100vw;
-    overflow-x: hidden;
-    margin: 0;
-    padding: 0;
-    border: none;
+    background-size: auto;
+    cursor: pointer;
 }
 
-#startStop, #console {
-    margin-top: 20px;
+#leftHandle {
+    background: transparent url('leftHandle.svg') no-repeat border-box scroll;
+}
+
+#rightHandle {
+    background: transparent url('rightHandle.svg') no-repeat border-box scroll;
+}
+
+#timeHandle {
+    background: transparent url('timeHandle.svg') no-repeat border-box scroll;
 }
 
 #consolelog {
     background-color: rgba(94, 217, 191, 0.3);
-    height: 100vh;
 }
 
 #download a {
@@ -96,11 +79,34 @@ body {
 }
 
 p, ol, h3 {
+    font-family: 'Roboto', sans-serif;
+    background-color: auto;
     color: white;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+/* setup and hide features */
+#edited, #slide-wrap, #slider, #playerUI, #editBtn, #storeBtn, #upBtn, #timer {
+    visibility: hidden;
+}
+
+#stopBtn {
+    display: none;
 }
 
 #duration {
     display: inline-block;
+    background-color: auto;
+    color: white;
+}
+
+/* hiding via margin due to a Firefox playback bug:
+   if audio element is hidden on not displayed then
+   the custom JavaScript control play(); will break */
+#source {
+    margin-left: -9999px;
 }
 
 /* styling the volume thumb for Chrome, Firefox, Edge * /
