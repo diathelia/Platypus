@@ -366,6 +366,7 @@ var Main = (function () {
                 log.prepend('<li>Error: ' + e + '</li>');
                 $('#play, #pause').toggle();
             });
+            $('#play').blur();
         });
 
         //pause button

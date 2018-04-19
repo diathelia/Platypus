@@ -21,17 +21,17 @@ body {
 
 /* define tool appearance */
 #slide-wrap, #playerUI, audio {
-    padding: 0 0.6em;
+    padding: 0 0.9em;
 }
 
 #playerUI {
     background-color: rgba(94, 217, 191, 0.3);
     color: auto;
-    padding-top: 10px;
+    padding-top: 1em;
 }
 
 #canvas {
-    height: 60vh;
+    height: 50vh;
     width: 100%;
     background-color: transparent;
     color: auto;
@@ -39,24 +39,26 @@ body {
 
 /* Slider */
 #slide-wrap {
-    background-color: white;
-    color: white;
+    background-color: pink;
+    color: auto;
 }
 
 #slider, #playerUI {
-    height: 2.75rem;
+    height: 5em;
     border: 0;
 }
 
 #leftHandle, #rightHandle, #timeHandle {
-    top: 0.0018rem; /* centered within custom slider hieght */
+    top: 0.0018em; /* centered within custom slider hieght */
     height: 100%;
-    outline: none;
+    width: 2.12em;
+    /* outline: none; */
     border: 0;
     background-position: center;
     background-size: auto;
     cursor: pointer;
 }
+
 
 #leftHandle {
     background: transparent url('leftHandle.svg') no-repeat border-box scroll;
