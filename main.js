@@ -308,19 +308,16 @@ var Main = (function () {
                 // if left/right Handles get too close to overlapping, return false to stop slide
                 if ((ui.values[0] >= (ui.values[1] - 1)) || (ui.values[1] <= (ui.values[0] + 1))) {
                     console.log('[collision]');
+                    // force mouseup so timeHandle is not dragged past its bounds
+                    $('#leftHandle').trigger('mouseup');
                     return false;
-                }
-
-                // should stop timeHandle lagging behind when leftHandle is sliding
-                if (ui.values[0] > ui.values[2]) {
-                    ui.values[2] = ui.values[0];
                 }
             },
 
             // refresh frame values when handles are explicitly moved by the user
-            stop: function () {
+            stop: function (event, ui) {
                 checkFrames();
-                // fixes a removing-your-finger bug on some touch screens (investigate: some mobiles ignore this)
+                // fixes a removing-your-finger bug on some touch screens
                 $('.ui-slider-handle').blur();
             }
         });
@@ -386,11 +383,11 @@ var Main = (function () {
             // only runs if interval has some audio to affect
             if (source) {
                 // timeValue (int) is given to both timeHandle value & CSS position
-                timeValue = ((source.currentTime / source.duration) * 100).toFixed(1);
+                timeValue = ((source.currentTime / source.duration) * 100);
                 // add percentage and update position
                 $('#timeHandle').css('left', (timeValue  + '\%'));
                 // assigns up-to-date timeValue to timeHandle
-                $('#slider').slider('values', 2, timeValue);
+                $('#slider').slider('values', 2, timeValue.toFixed(1));
 
                 // set lower-bound of currentTime to wherever leftHandle currently is
                 if (source.currentTime < (source.duration / 100) * leftHandle) {
@@ -791,7 +788,7 @@ var Main = (function () {
 
                                 // append the same blobURL as a download link
                                 $('#download').html('<button><a href="' + blobURL + 
-                                '"download class="btn btn-primary">⇩</a></button>'); // Chrome = no 'save as' prompt (does in firefox)
+                                '"download class="btn btn-primary"><img src="img/ic_file_download_white_24px.svg"></button>'); // Chrome = no 'save as' prompt (does in firefox)
 
                                 // refresh / reset authoring values for new source
                                 leftHandle  = 0;

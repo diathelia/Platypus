@@ -1,39 +1,64 @@
 /* general page styling */
-body {
-    height: 100vh;
-    width: 100vw;
-    background-image: url('monotreme.jpg');
-	background-size: cover;
-    background-position: center;
-    background-repeat: repeat;
-    overflow-y: hidden;
+html, body {
     margin: 0;
     padding: 0;
     border: 0;
 }
 
+body {
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    background-color: #096268;
+    background-image: url('img/monotreme.jpg');
+	background-size: cover;
+    background-position: center;
+    background-repeat: repeat;
+}
+
 #container {
     width: 98%;
-    margin-top: 1%;
+    height: 100%;
     margin-left: auto;
     margin-right: auto;
 }
 
 /* define tool appearance */
-#slide-wrap, #playerUI, audio {
-    padding: 0 0.9em;
+#canvas {
+    height: 50%;
+    width: 100%;
+    background-color: transparent;
+    color: auto;
+}
+
+.floatbar {
+    background-color: crimson;
+    color: auto;
+    height: 5%;
+    text-align: center;
+}
+
+.float {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+#playerUI img, .floatbar img {
+    width: 10%;
+    max-height: 100%;
 }
 
 #playerUI {
     background-color: rgba(94, 217, 191, 0.3);
     color: auto;
-    padding-top: 1em;
+    height: 10%;
+    width: 100%;
+    text-align: center;
 }
 
-#canvas {
-    height: 50vh;
-    width: 100%;
-    background-color: transparent;
+#keep-discard {
+    height: 15%;
+    background-color: aqua;
     color: auto;
 }
 
@@ -41,17 +66,21 @@ body {
 #slide-wrap {
     background-color: pink;
     color: auto;
+    padding: 0 1.25em;
+    min-height: 5em;
+    max-height: 10%;
 }
 
-#slider, #playerUI {
-    height: 5em;
+#slider {
+    min-height: 5em;
+    max-height: 10%;
     border: 0;
 }
 
 #leftHandle, #rightHandle, #timeHandle {
     top: 0.0018em; /* centered within custom slider hieght */
     height: 100%;
-    width: 2.12em;
+    width: 2.5em;
     /* outline: none; */
     border: 0;
     background-position: center;
@@ -59,28 +88,23 @@ body {
     cursor: pointer;
 }
 
-
 #leftHandle {
-    background: transparent url('leftHandle.svg') no-repeat border-box scroll;
+    background: transparent url('img/leftHandle.svg') no-repeat border-box scroll;
 }
 
 #rightHandle {
-    background: transparent url('rightHandle.svg') no-repeat border-box scroll;
+    background: transparent url('img/rightHandle.svg') no-repeat border-box scroll;
 }
 
 #timeHandle {
-    background: transparent url('timeHandle.svg') no-repeat border-box scroll;
+    background: transparent url('img/timeHandle.svg') no-repeat border-box scroll;
 }
 
 #consolelog {
     background-color: rgba(94, 217, 191, 0.3);
 }
 
-#download a {
-    text-decoration-line: underline;
-}
-
-p, ol, h3 {
+p, ol, h1, h2, h3 {
     font-family: 'Roboto', sans-serif;
     background-color: auto;
     color: white;
@@ -99,9 +123,13 @@ p, ol, h3 {
 }
 
 #duration {
-    display: inline-block;
     background-color: auto;
     color: white;
+}
+
+#volume {
+    min-width: 70px;
+    width: 10%;
 }
 
 /* hiding via margin due to a Firefox playback bug:
@@ -111,37 +139,5 @@ p, ol, h3 {
     margin-left: -9999px;
 }
 
-/* styling the volume thumb for Chrome, Firefox, Edge * /
-
-input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    border: 1px solid #000000;
-    height: 36px;
-    width: 16px;
-    border-radius: 3px;
-    background: #ffffff;
-    cursor: pointer;
-    margin-top: -14px;
-    box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
-  }
+/* styling the volume thumb for Chrome, Firefox, Edge */
   
-input[type=range]::-moz-range-thumb {
-    box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
-    border: 1px solid #000000;
-    height: 36px;
-    width: 16px;
-    border-radius: 3px;
-    background: #ffffff;
-    cursor: pointer;
-}
-  
-input[type=range]::-ms-thumb {
-    box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
-    border: 1px solid #000000;
-    height: 36px;
-    width: 16px;
-    border-radius: 3px;
-    background: #ffffff;
-    cursor: pointer;
-}
-*/
