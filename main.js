@@ -86,8 +86,8 @@ var Main = (function () {
 
         // Initializes LAME so that we can record
         this.initialize = function () {
-            // let context decide best (usually 44100, sometimes 48000)
-            config.sampleRate = 44100; // audioCtx.sampleRate;
+            // let context decide (usually 44100, iOS prefers 48000)
+            config.sampleRate = audioCtx.sampleRate; // 44100;
             realTimeWorker.postMessage({cmd: 'init', config: config});
         };
         // This function finalizes LAME output and saves the MP3 data to a file
@@ -99,14 +99,10 @@ var Main = (function () {
             // Settings a bufferSize of 0 instructs the browser to choose the best bufferSize
             // Webkit version 31 requires that a valid bufferSize be passed when calling this method
 
-            // createMediaStreamSource likes to go after processor code for iOS
-            microphone = audioCtx.createMediaStreamSource(stream);
-
             // Add all buffers from LAME into an array
             processor = audioCtx.createScriptProcessor(0, 1, 1);
 
             analyser = audioCtx.createAnalyser();
-            microphone.connect(analyser);
 
             processor.onaudioprocess = function (event) {
                 // immediately update canvas, then send off buffer 
@@ -116,7 +112,11 @@ var Main = (function () {
                 realTimeWorker.postMessage({cmd: 'encode', buf: array});
             };
 
+            // iOS likes createMediaStreamSource to go after processor code...arbitrarily AFAIK
+            microphone = audioCtx.createMediaStreamSource(stream);
+
             // Begin retrieving microphone data
+            microphone.connect(analyser);
             microphone.connect(processor);
             processor.connect(audioCtx.destination);
         }
@@ -535,11 +535,13 @@ var Main = (function () {
         // 'bits / frame = frame_size * bit_rate / sample_rate' - http://lame.sourceforge.net/tech-FAQ.txt
         //  417.95918367 = 144        * 128000   / 44100
 
-        // [improvement]:
-        // if i turn this equation into JavaScript, I could maintain edit functionality at different bitrates
+        var bitsPerFrame = 144 * (128000 / audioCtx.sampleRate);
+        
+        log.prepend('<li>audioCtx.sampleRate =' + audioCtx.sampleRate + '</li>');
+        log.prepend('<li>bitsPerFrame = ' + bitsPerFrame + '</li>');
 
-        var leftBytes = Math.round(leftFrames * 417.95918367);
-        var rightBytes = Math.round(rightFrames * 417.95918367);
+        var leftBytes = Math.round(leftFrames * bitsPerFrame);
+        var rightBytes = Math.round(rightFrames * bitsPerFrame);
 
         // protect from slicing by -0
         if (rightBytes === 0) {
@@ -698,14 +700,14 @@ var Main = (function () {
         edit(blobs[blobs.length - 1]);
     });
 
-    // pass (source || edit) to store function (base on keep / discard prompt)                                         // KEEP / DISCARD
+    // pass (source || edit) to store function (base on keep / discard prompt)
     $('#storeBtn').on('click', function (e) {
         e.preventDefault();
         // if (keep === true) {store(edits[edits.length - 1]);} else {...
         store(blobs[blobs.length - 1]);
     });
 
-    // pass (source || edit) to upload function (base on keep / discard prompt)                                        // KEEP / DISCARD
+    // pass (source || edit) to upload function (base on keep / discard prompt)
     $('#upBtn').on('click', function (e) {
         e.preventDefault();
         // if (keep === true) {upload(edits[edits.length - 1]);} else {...
