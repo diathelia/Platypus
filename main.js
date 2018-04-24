@@ -332,10 +332,10 @@ var Main = (function () {
         log.prepend('<li>frames  = [' + leftFrames + ', ' + rightFrames + ']</li>');
 
         // check for meaningful values, enable/disable edit button
-        if ((leftFrames === 0) && (rightFrames === 0)) { // why frames? would slides be better to check against?
-            $('#editBtn').attr('disabled', true);
+        if ((leftFrames === 0) && (rightFrames === 0)) {
+            $('#editBtn').css('pointer-events', 'none');
         } else {
-            $('#editBtn').attr('disabled', false);
+            $('#editBtn').css('pointer-events', 'auto');
         }
     }
 
@@ -535,7 +535,8 @@ var Main = (function () {
         // 'bits / frame = frame_size * bit_rate / sample_rate' - http://lame.sourceforge.net/tech-FAQ.txt
         //  417.95918367 = 144        * 128000   / 44100
 
-        // if i turn this equation into JavaScript, I could maintain edit functionality at different bitrates!
+        // [improvement]:
+        // if i turn this equation into JavaScript, I could maintain edit functionality at different bitrates
 
         var leftBytes = Math.round(leftFrames * 417.95918367);
         var rightBytes = Math.round(rightFrames * 417.95918367);
@@ -554,23 +555,51 @@ var Main = (function () {
         try {
             // first check for previous blob URL to revoke
             if (edits[edits.length - 2]) {
-                handledURL.revokeObjectURL(edits[edits.length - 2]);   // could also delete this blob from array here...
+                handledURL.revokeObjectURL(edits[edits.length - 2]);
                 log.prepend('<li>revoked old edit URL</li>');
             } else {
                 log.prepend('<li>nothing to revoke yet</li>');
             }
 
+            var editURL = handledURL.createObjectURL(edits[edits.length - 1]);
+
             // attach new src and reveal audio element
-            $('#edited').attr('src', handledURL.createObjectURL(edits[edits.length - 1]))
+            $('#edited').attr('src', editURL)
                         .css('visibility', 'visible')
                         .on('error', function (e) {
                             log.prepend('<li>media error: ' + e.code + ': ' + e.message + '</li>');
-                        });
+            });
+            
+            // attach download link in case HTML5 default controls does not have one
+            $('#download-edit').attr('href', editURL);
+
+            // present 'Keep / Discard' dialog modal
+            $('#keep-discard').dialog({
+                title: 'Your Edited Audio',
+                modal: true,
+                closeOnEscape: true,
+                minWidth: 400,
+                buttons: [
+                            { 
+                                text: 'Keep', click: function() {
+                                    console.log('kept');
+                                    upload(edits[edits.length - 1]);
+                                    $('#keep-discard').dialog('close');
+                                }
+                            },
+                            { 
+                                text: 'Discard', click: function() {
+                                    console.log('discarded');
+                                    $('#keep-discard').dialog('close');
+                                }
+                            }
+                         ]
+            });
         }
         catch (e) {
-            log.prepend('<li>createObjectURL failed (from edit), error: ' + e + '</li>');
+            log.prepend('<li>failed to display recording URL (from edit), error: ' + e + '</li>');
         }
-    }                                                                                                                  // KEEP / DISCARD
+    }
 
     function store(blob2store) {
         // 'use strict'; will break store function
@@ -700,7 +729,7 @@ var Main = (function () {
 
         // forces user to resolve getUserMedia prompt before allowing more start clicks:
         // stops possibility of qeueing multiple recordings at once (functionality works but breaks UI)
-        $('#startBtn').attr('disabled', true);
+        $('#startBtn').attr('pointer-events', 'none');
 
         var btn = $(this);
 
@@ -730,7 +759,8 @@ var Main = (function () {
             };
 
             updateTimer();
-            $('#stopBtn').removeAttr('disabled');
+
+            $('#startBtn').attr('pointer-events', 'auto');
 
             // kick-off drawing: requestAnimationFrame callback drives animation from within draw();
             draw();
@@ -755,8 +785,8 @@ var Main = (function () {
         recorder.stop();
 
         // swap out stop button for start button
-        $(this).attr('disabled', true).css('display', 'none');
-        $('#startBtn').removeAttr('disabled').css('display', 'inline-block');
+        $(this).css('display', 'none');
+        $('#startBtn').css('display', 'inline-block');
 
         recorder.getMp3Blob(function (blob) {
 
@@ -820,10 +850,7 @@ var Main = (function () {
             log.prepend('<li>audio context was not running (from stopBtn)</li>');
         }
         
-        // enable store and upload buttons (not edit which is enabled when an editHandle is moved)
-        $('#storeBtn, #upBtn').removeAttr('disabled');
         // reveal UI elements
-        log.prepend('<li>about to reveal UI</li>');
         $('#slide-wrap, #slider, #playerUI, #storeBtn, #upBtn, #editBtn').css('visibility', 'visible');
     });
 

@@ -9,11 +9,11 @@
     <meta http-equiv="X-UA-Compatible"
           content="ie=edge">
     <!-- jquery -->
-    <script src="jquery/jquery-1.8.2.js"></script>
-    <script src="jquery/jquery-ui-1.9.1.custom(added-slider).js"></script>
-    <script src="jquery/jquery.ui.touch-punch.js"></script>
-    <link rel="stylesheet" href="normalize.css">
-    <link rel="stylesheet" href="jquery/jquery-ui-1.9.2.custom.css">
+    <script src="jquery/js/jquery-1.8.2.js"></script>
+    <script src="jquery/js/jquery-ui-1.9.1.custom(added-widgets).js"></script>
+    <script src="jquery/js/jquery.ui.touch-punch.js"></script>
+    <!-- <link rel="stylesheet" href="normalize.css"> -->
+    <link rel="stylesheet" href="jquery/css/jquery-ui-1.9.2.custom.css">
     <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/1.0.9/jquery.mobile-events.min.js"></script>-->
     <script src="mediaDevices-getUserMedia-polyfill.js"></script>
     <script src="AudioContextMonkeyPatch.js"></script>
@@ -41,32 +41,37 @@
         </div>
         
         <div id="playerUI">
-            <h3 class="float" id="duration"></h3>
+            <h2 class="float" id="duration"></h2>
             <img src="img/ic_play_arrow_white_24px.svg" class="float" id="play">
             <img src="img/ic_pause_white_24px.svg" class="float" id="pause">
-            <img src="img/ic_edit_white_24px.svg" class="float" id="editBtn" disabled="true">
-            <img src="img/ic_file_upload_white_24px.svg" class="float" id="upBtn" disabled="true">
+            <img src="img/ic_edit_white_24px.svg" class="float" id="editBtn">
+            <img src="img/ic_file_upload_white_24px.svg" class="float" id="upBtn">
             <img src="img/ic_file_download_white_24px.svg" class="float" id="download">
             <img src="img/ic_volume_up_white_24px.svg" class="float">
             <input class="float" id="volume" type="range" min="0" max="10" value="5" />
         </div>
 
         <div id="keep-discard">
-            <audio id="edited" controls></audio>
+            <p class="float">Keep will upload your recording to your Media Manager</p>
+            <p class="float">Discard will allow you to continue editing your recording</p>
+            <audio class="float" id="edited" controls controlsList="nodownload"></audio>
+            <a id="download-edit" href="" download><img class="float" src="img/ic_file_download_black_24px.svg"></a>
         </div>
-        <!-- <button id="storeBtn" disabled="true">Store</button>
-        <div id="store"></div> -->
 
-        <!-- placed at bottom to avoid any interference when revealing UI elements and also
-        banished to the far ends of the negative left-margin to both hide and manipulate:
-        this is due to a bug in Firefox if display: none or visibility: hidden are set -->
-        <audio controls preload="auto" id="source"></audio>
+        <!-- <button id="storeBtn">Store</button>
+        <div id="store"></div> -->
 
         <div id="consolelog">
             <h3 id="console">console.log:</h3>
             <ol id="log"></ol>
         </div>
+
+        <!-- placed at bottom to avoid any interference when revealing UI elements and also
+        banished to the far ends of the negative left-margin to both hide and manipulate:
+        this is due to a bug in Firefox if display: none or visibility: hidden are set -->
+        <audio controls preload="auto" id="source"></audio>
     </div>
+    
     <script src="main.js"></script>
 </body>
 </html>
