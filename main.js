@@ -346,12 +346,31 @@ var Main = (function () {
         log.prepend('<li>initPlayerUI fired</li>');
 
         // prepare player
-        $('#pause').hide();
+        $('#pause, #muted').hide();
         $('#duration').html('0:00');
         
         //volume vontrol
         $('#volume').on('input', function () {
             source.volume = parseFloat(this.value / 10);
+            // if (source.volume === 0) {
+            //     $('#volume-btn, #muted').toggle();
+            // }
+        });
+
+        // remembers pre-muted volume value
+        // var preMuted;
+
+        $('#volume-btn').on('click', function () {
+            // preMuted = source.volume;
+            // $('#volume').value = 0;
+            $('#source').attr('muted');
+            $('#volume-btn, #muted').toggle();
+        });
+
+        $('#muted').on('click', function () {
+            // source.volume = preMuted;
+            $('#source').removeAttr('muted');
+            $('#volume-btn, #muted').toggle();
         });
 
         //play button
