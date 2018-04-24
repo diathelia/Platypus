@@ -31,10 +31,38 @@ p, ol, h1, h2, h3 {
     border: 0;
 }
 
+/* centered objects */
+#timebar {
+    height: 5%;
+    text-align: center;
+}
+
+#startbar {
+    height: 10%;
+    text-align: center;
+}
+
+.float {
+    height: 100%;
+    width: auto;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* keep / discard modal */
+#keep-discard {
+    overflow: hidden;
+}
+
 #keep-discard p {
     background-color: auto;
     color: black;
     margin-bottom: 1em;
+}
+
+#edited {
+    margin-top: 1em;
+    margin-left: -0.7em; /* pulls visible part of <audio> back in-line with text */
 }
 
 /* Buttons */
@@ -46,23 +74,16 @@ p, ol, h1, h2, h3 {
     display: none;
 }
 
-.floatbar {
-    background-color: crimson;
-    color: auto;
-    height: 5%;
-    text-align: center;
+#download {
+    height: 100%;
+    width: auto;
 }
 
-.float {
-    display: inline-block;
-    vertical-align: middle;
-}
-
-#playerUI img, .floatbar img {
+#playerUI img {
     /* min-width: 5%; */
     min-height: 100%;
-    margin-left: 3vw;
     cursor: pointer;
+    margin-left: 3vw;
 }
 
 #duration {
@@ -71,13 +92,13 @@ p, ol, h1, h2, h3 {
 }
 
 #volume {
-    min-width: 70px;
+    min-width: 0.9em;
     width: 10%;
 }
 
 /* features */
 #canvas {
-    height: 50%;
+    height: 60%;
     width: 100%;
     background-color: transparent;
     color: auto;
@@ -141,4 +162,3 @@ p, ol, h1, h2, h3 {
 }
 
 /* styling the volume thumb for Chrome, Firefox, Edge */
-  

@@ -25,13 +25,13 @@
 <body>
     <div id="container">
 
-        <div class="floatbar">
-            <h2 class="float" id="timer">0:00</h2>
+        <div id="timebar">
+            <h1 class="float" id="timer">0:00</h1>
         </div>
 
         <canvas id="canvas">add fallback content here</canvas>
 
-        <div class="floatbar">
+        <div id="startbar">
             <img src="img/ic_keyboard_voice_white_24px.svg" class="float" id="startBtn">
             <img src="img/ic_stop_white_24px.svg" class="float" id="stopBtn">
         </div>
@@ -46,16 +46,17 @@
             <img src="img/ic_pause_white_24px.svg" class="float" id="pause">
             <img src="img/ic_edit_white_24px.svg" class="float" id="editBtn">
             <img src="img/ic_file_upload_white_24px.svg" class="float" id="upBtn">
-            <img src="img/ic_file_download_white_24px.svg" class="float" id="download">
+            <div class="float" id="download"></div>
             <img src="img/ic_volume_up_white_24px.svg" class="float">
             <input class="float" id="volume" type="range" min="0" max="10" value="5" />
         </div>
 
         <div id="keep-discard">
-            <p class="float">Keep will upload your recording to your Media Manager</p>
-            <p class="float">Discard will allow you to continue editing your recording</p>
-            <audio class="float" id="edited" controls controlsList="nodownload"></audio>
-            <a id="download-edit" href="" download><img class="float" src="img/ic_file_download_black_24px.svg"></a>
+            <p     class="float"><b>Keep</b> will upload your recording to your Media Manager</p>
+            <p     class="float"><b>Discard</b> will allow you to continue editing your recording</p>
+            <span  class="float"><b>Download</b> your recording here:  </span>
+            <a     class="float" id="download-edit" href="#" download><img src="img/ic_file_download_black_24px.svg"></a>
+            <audio id="edited" controls controlsList="nodownload"></audio>
         </div>
 
         <!-- <button id="storeBtn">Store</button>

@@ -536,7 +536,7 @@ var Main = (function () {
         //  417.95918367 = 144        * 128000   / 44100
 
         var bitsPerFrame = 144 * (128000 / audioCtx.sampleRate);
-        
+
         log.prepend('<li>audioCtx.sampleRate =' + audioCtx.sampleRate + '</li>');
         log.prepend('<li>bitsPerFrame = ' + bitsPerFrame + '</li>');
 
@@ -563,24 +563,25 @@ var Main = (function () {
                 log.prepend('<li>nothing to revoke yet</li>');
             }
 
+            // use a single URL object for download link and playback
             var editURL = handledURL.createObjectURL(edits[edits.length - 1]);
+
+            // attach download link in case HTML5 default controls does not have one
+            $('#download-edit').attr('href', editURL);
 
             // attach new src and reveal audio element
             $('#edited').attr('src', editURL)
-                        .css('visibility', 'visible')
+                        .css('display', 'block')
                         .on('error', function (e) {
                             log.prepend('<li>media error: ' + e.code + ': ' + e.message + '</li>');
             });
-            
-            // attach download link in case HTML5 default controls does not have one
-            $('#download-edit').attr('href', editURL);
 
             // present 'Keep / Discard' dialog modal
             $('#keep-discard').dialog({
                 title: 'Your Edited Audio',
                 modal: true,
                 closeOnEscape: true,
-                minWidth: 400,
+                minWidth: 320,
                 buttons: [
                             { 
                                 text: 'Keep', click: function() {
@@ -597,6 +598,10 @@ var Main = (function () {
                             }
                          ]
             });
+
+            // odd auto-highlighting bug
+            $('#download-edit').blur();
+            // $('#edited').focus();
         }
         catch (e) {
             log.prepend('<li>failed to display recording URL (from edit), error: ' + e + '</li>');
@@ -819,10 +824,11 @@ var Main = (function () {
                                 totalFrames = source.duration * 38.28125;
 
                                 // append the same blobURL as a download link
-                                $('#download').html('<button><a href="' + blobURL + 
-                                '"download class="btn btn-primary"><img src="img/ic_file_download_white_24px.svg"></button>'); // Chrome = no 'save as' prompt (does in firefox)
+                                $('#download').html('<a href="' + blobURL +
+                                  '" download><img src="img/ic_file_download_white_24px.svg"></a>');
+                                  // Chrome = no 'save as' prompt (does in firefox)
 
-                                // refresh / reset authoring values for new source
+                                // refresh / reset authoring values for new source                                      [PULL THIS OUT AND MAKE INTO NEW FUNCTION]
                                 leftHandle  = 0;
                                 $('#slider').slider('values', 0, 0);
                                 rightHandle = 100;
