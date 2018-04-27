@@ -18,6 +18,9 @@ var IsMicSupported = (function () {
     // logs semantic results to screen
     var featureLog = $('#log');
 
+    // flag for blobURL feature test (delayed due to XHR)
+    var urlReady = null;
+
     // asks if the getUserMedia object hangs off navigator(.mediaDevices) and is defined
     function isGetUserMedia(featureResults) {
         'use strict';
@@ -39,8 +42,6 @@ var IsMicSupported = (function () {
             // featureLog.append('gUM is NOT in mediaDevices NOR navigator<br>');
             featureResults.push(false);
         }
-        // if (('getUserMedia' in navigator) || ('getUserMedia' in navigator.mediaDevices)) {
-        // featureLog.append('gUM is in navigator somewhere<br>');
     }
 
     // constructs, tests and closes the asynchronous Web Audio Environment promise
@@ -63,7 +64,8 @@ var IsMicSupported = (function () {
                 }
                 testContext.close().then(console.log('context closed'))
                     .catch(function(){console.log('context not closed')});
-                // .close resolves to void, will this .catch run? MDN uses 'await' which I can't use (unsupported ES6)
+                // .close resolves to void, will this .catch work?
+                // MDN uses 'await' which I can't use (unsupported ES6)
             }
         }
     }
@@ -79,64 +81,107 @@ var IsMicSupported = (function () {
         }
     }
 
-    // tests a Blob that is then referenced to test BlobURL
+    // tests a Blob that is then referenced to test a BlobURL
     function isBlobAndURL(featureResults) {
         'use strict';
-        var aFileParts = ['testBlobString'];
-        var testBlob = new Blob(aFileParts, {type : 'application/octet-binary'});
+        // var aFileParts = ['testBlobString'];
+        // var testBlob = new Blob(aFileParts, {type : 'application/octet-binary'});
 
-        if (testBlob instanceof Blob) {
-            // featureLog.append('Blob support<br>');
+        // Blob object supported, so test URL API
+        var testURL = window.URL || window.webkitURL;
+        
+        // set here so the finally block can revoke the URL
+        var urlToBlob;
 
-            // Blob object supported, so test URL API
-            var testURL = window.URL || window.webkitURL;
+        if (testURL) {
+            // featureLog.append('URL support<br>');
 
-            if (testURL) {
-                // featureLog.append('URL support<br>');
+            // URL API supported, so test BlobURL
+            try {
+                // Create XHR, Blob and FileReader objects
+                var xhr = new XMLHttpRequest(),
+                    blob,
+                    fileReader = new FileReader();
 
-                // URL API supported, so test BlobURL
-                try {
-                    var urlToBlob = testURL.createObjectURL(testBlob);
-                    // featureLog.append(urlToBlob, '<br>');
-                }
-                catch (e) {
-                    featureLog.append(e, '<br>');
-                }
-                finally {
-                    if (urlToBlob.toString().startsWith('blob')) {
-                        featureResults.push('yesBlobURL');
+                // open local blob mp3 test (4179 bytes)
+                xhr.open('GET', 'blobURL_test.mp3', true);
+                // load as arraybuffer for broadest compatability
+                xhr.responseType = 'arraybuffer';
+
+                xhr.addEventListener('load', function () {
+
+                    if (xhr.status === 200) {
+                        // set flag for featureAnswer to be determined
+                        urlReady === true;
+
+                        // recreate blob from the arraybuffer response
+                        blob = new Blob([xhr.response], {type: 'audio/mpeg'});
+
+                        urlToBlob = testURL.createObjectURL(blob);
+
+                        $('#test').attr('src', urlToBlob);
+    
+                        if (urlToBlob.toString().startsWith('blob')) {
+                            featureResults.push('yesBlobURL');
+                            console.log(urlToBlob);
+                        }
                     }
-                    testURL.revokeObjectURL(testBlob);
-                }
+                }, false);
+
+                // Send XHR
+                xhr.send();
             }
+            catch (e) {
+                featureLog.append(e, '<br>');
+            }
+            // finally {
+            //     testURL.revokeObjectURL(urlToBlob);
+            // }
         }
     }
 
-    // expect a string indicating level of dependency support (to return to Module)
-    var featureAnswer = null;
+    // expect a string indicating level of dependency support (to return to window.Module)
+    var featureAnswer = 'unknown support';
 
-    (function() {
-        // query is-X-Supported functions and log results in array
-
-        isGetUserMedia(featureResults); // expect true / false
-        isAudioContext(featureResults); // expect true / false
-        isWebWorker(featureResults);    // expect true / false
-        isBlobAndURL(featureResults);   // expect 'yesBlobURL'
-
-        // featureLog.append(featureResults.join(), '<br>');
-
-        if (featureResults.includes(false)) {
-            // not all core dependencies can be handled, prompt user / don't insert any HTML
-            featureAnswer = ('no support');
-        } else if (featureResults.includes('yesBlobURL')) {
-            // send Main two thumbs up
-            featureAnswer = ('full support');
+    // second flag: set when script is ready to return featureAnswer
+    var returnReady = null;
+    // (function() {
+    // query is-X-Supported functions and log results in array
+    isGetUserMedia(featureResults);   // expect true / false
+    isAudioContext(featureResults);   // expect true / false
+    isWebWorker(featureResults);      // expect true / false
+    // will be delayed due to XHR
+    try {
+        isBlobAndURL(featureResults);     // expect 'yesBlobURL'
+    }
+    catch (e) {
+        console.log('idk');
+    }
+    finally {
+    // setTimeout(function() {
+        if (urlReady === true) {
+            // featureLog.append(featureResults.join(), '<br>');
+            if (featureResults.includes(false)) {
+                // not all core dependencies can be handled, prompt user / don't insert any HTML
+                featureAnswer = ('no support');
+            } else if (featureResults.includes('yesBlobURL')) {
+                // send Main two thumbs up
+                featureAnswer = ('full support');
+            } else {
+                // BlobURLs not reliable so use dataURLs eg: <Opera & Samsung>
+                featureAnswer = ('partial support'); 
+            }
+            // ready to return featureAnswer flag set
+            returnReady === true;
         } else {
-            featureAnswer = ('partial support'); // BlobURLs not reliable so use dataURLs eg: <Opera & Samsung>
+            console.log('urlReady = ', urlReady);
         }
-    })();
-
-    return featureAnswer;
+    // }, 500);
+    }
+    if (returnReady === true) {
+        return featureAnswer;
+    }
+    // })();
 })();
 
 // exception due to revokeObjectURL failure on Edge

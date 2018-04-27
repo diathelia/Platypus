@@ -8,12 +8,13 @@ var Main = (function () {
         analyser,                                       // set-up by mic.js, connected by on.startBtn, used by draw()
         source,                                         // for current source <audio>: defined by 'this' when loaded
     //  sourceNode,                                     // audioContext node for HTML audio element, not microphone
-        canvas = document.getElementById('canvas'),     // jQuery object canvas causes issues when painting
+        canvas = document.getElementById('canvas'),     // avoided jQuery object due to canvas issues when painting
         canvasCtx,                                      // single session canvasContext used in MP3Recorder and draw()
         drawVisual,                                     // requestAnimationFrame id to cancel callback loop
         handledURL = window.URL || window.webkitURL,    // alias to avoid overwriting the window objects themselves
         random = Math.random,                           // a sheer convenience for using random() within canvas
         log = $('#log'),                                // a sheer convenience for using a HTML console.log for mobile
+        uploadCount = 0,                                // keeps track of uploads to determine if beforeunload prompt appears
 
     //  authoring values:
         leftHandle,         // sliding percentage to trim from audio start
@@ -44,7 +45,6 @@ var Main = (function () {
         // config recorder and connect to audio and canvas contexts
         try {
             recorder = new MP3Recorder({bitRate: 128});
-            // log.prepend('<li>recorder constructed: ' + recorder + '</li>');
         }
         catch (e) {
             alert(e + ': recorder was not instanced, could be a MP3Recorder, Web Worker or Browser issue');
@@ -87,7 +87,7 @@ var Main = (function () {
         // Initializes LAME so that we can record
         this.initialize = function () {
             // let context decide (usually 44100, iOS prefers 48000)
-            config.sampleRate = audioCtx.sampleRate; // 44100;
+            config.sampleRate = audioCtx.sampleRate;
             realTimeWorker.postMessage({cmd: 'init', config: config});
         };
         // This function finalizes LAME output and saves the MP3 data to a file
@@ -101,12 +101,12 @@ var Main = (function () {
 
             // Add all buffers from LAME into an array
             processor = audioCtx.createScriptProcessor(0, 1, 1);
+            // debugging iOS attempt
+            log.prepend('<li>' + processor.bufferSize + '</li>');
 
             analyser = audioCtx.createAnalyser();
 
             processor.onaudioprocess = function (event) {
-                // immediately update canvas, then send off buffer 
-                // draw(); // seems to only work here, the only on-repeat processing function (others are mostly inits)
                 // Send microphone data to LAME for MP3 encoding while recording
                 var array = event.inputBuffer.getChannelData(0);
                 realTimeWorker.postMessage({cmd: 'encode', buf: array});
@@ -570,7 +570,7 @@ var Main = (function () {
             rightBytes = -rightBytes;
         }
 
-        // trim n bytes, equal to the nearest n of mp3 frames, equal to the slider percent values, set by the user
+        // trim n bytes, equal to the nearest n mp3 frames, equal to the sliding percent values set by the user
         edits.push(blob2edit.slice(leftBytes, rightBytes, 'audio/mpeg'));
 
         try {
@@ -708,6 +708,7 @@ var Main = (function () {
             contentType: false, // tell jQuery not to set a contentType
             success: function (data) {
                 log.prepend('<li>onSuccess data: ' + data + '\n</li>');
+                uploadCount++;
             },
             error: function (error) {
                 log.prepend('<li>Could not upload audio, please try again or contact us.' +
@@ -727,14 +728,12 @@ var Main = (function () {
     // pass (source || edit) to store function (base on keep / discard prompt)
     $('#storeBtn').on('click', function (e) {
         e.preventDefault();
-        // if (keep === true) {store(edits[edits.length - 1]);} else {...
         store(blobs[blobs.length - 1]);
     });
 
     // pass (source || edit) to upload function (base on keep / discard prompt)
     $('#upBtn').on('click', function (e) {
         e.preventDefault();
-        // if (keep === true) {upload(edits[edits.length - 1]);} else {...
         upload(blobs[blobs.length - 1]);
     });
 
@@ -754,7 +753,7 @@ var Main = (function () {
         }
 
         // forces user to resolve getUserMedia prompt before allowing more start clicks:
-        // stops possibility of qeueing multiple recordings at once (functionality works but breaks UI)
+        // this stops possibility of qeueing multiple overlapping recordings at once
         $('#startBtn').attr('pointer-events', 'none');
 
         var btn = $(this);
@@ -793,6 +792,9 @@ var Main = (function () {
 
         }, function (e) {
             alert(e, 'Could not make use of your microphone, please check your hardware is working:');
+            // reset context and buttons
+            suspendAudioCtx();
+            $('#startBtn, #stopBtn').toggle();
         });
 
         // swap out start button for stop button
@@ -883,9 +885,12 @@ var Main = (function () {
 
 /** warn user to save progress before unloading resources *************************************************************/
 
-    // $(window).on('beforeunload', function () {
-    //     return 'Are you sure you want to leave? Any unsaved recordings will be lost';
-    // });
+    $(window).on('beforeunload', function () {
+        // if the user has made a recording but has not uploaded, offer a 'are you sure'
+        if (blobs.length !== 0 && uploadCount === 0) {
+            return 'Are you sure you want to leave? Any unsaved recordings will be lost';
+        }
+    });
 
     $(window).on('unload', function () {
         // unload URL objects
@@ -896,10 +901,10 @@ var Main = (function () {
         blobs = [];
         edits = [];
         
-        // empty localStorage (til I find an actual implementation for it)
+        // empty localStorage
         localStorage.clear();
 
-        // force stop --> disconnect nodes (Zhuker warns this may not empty all buffers (some might still be in Worker?)
+        // force stop --> disconnect nodes (Zhuker warns this may not empty Web Worker buffers
         recorder.stop();
        
         // close audio context
@@ -907,7 +912,7 @@ var Main = (function () {
         // await audioCtx.close();
         // .catch(function (e) {console.log('context not closed', e)});
 
-        // terminate worker, somehow trigger it to empty its buffer first (postMessage!)
+        // terminate worker, somehow trigger it to empty its buffer first (postMessage)
         // event.returnValue = '';
     });
 
