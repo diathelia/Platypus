@@ -20,7 +20,7 @@ body {
     background-image: url('img/monotreme.jpg');
 	background-size: cover;
     background-position: center;
-    background-repeat: no-repeat;
+    background-repeat: repeat;
 }
 
 #container {

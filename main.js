@@ -102,7 +102,7 @@ var Main = (function () {
             // Add all buffers from LAME into an array
             processor = audioCtx.createScriptProcessor(0, 1, 1);
             // debugging iOS attempt
-            log.prepend('<li>' + processor.bufferSize + '</li>');
+            log.prepend('<li>bufferSize = ' + processor.bufferSize + '</li>');
 
             analyser = audioCtx.createAnalyser();
 
@@ -556,7 +556,7 @@ var Main = (function () {
 
         var bitsPerFrame = 144 * (128000 / audioCtx.sampleRate);
 
-        log.prepend('<li>audioCtx.sampleRate =' + audioCtx.sampleRate + '</li>');
+        log.prepend('<li>audioCtx.sampleRate = ' + audioCtx.sampleRate + '</li>');
         log.prepend('<li>bitsPerFrame = ' + bitsPerFrame + '</li>');
 
         var leftBytes = Math.round(leftFrames * bitsPerFrame);
