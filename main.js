@@ -26,9 +26,6 @@ var Main = (function () {
         totalFrames;        // a constant per each audio recording
     //  wasPlayed = false;  // Only used within the playback restrict section to control looping playback
 
-    // grab feature detection string from isMicSupported.js Module
-    log.prepend('<li>' + IsMicSupported + '</li>');
-
     // initiate application resources
     function init () {
         'use strict';
@@ -60,7 +57,8 @@ var Main = (function () {
 
         // init canvas 2d context
         if (canvas.getContext) {
-            canvasCtx = canvas.getContext('2d'); 
+            canvasCtx = canvas.getContext('2d');
+            canvasCtx.fillStyle = 'rgb(' + 10 + ',' + 211 + ',' + (256 >> 0) + ')';
         } else {
             log.prepend('<li>canvas context unsupported</li>');
         }
@@ -86,7 +84,7 @@ var Main = (function () {
 
         // Initializes LAME so that we can record
         this.initialize = function () {
-            // let context decide (usually 44100, iOS prefers 48000)
+            // let context decide (usually 44100, I have read iOS prefers 48000...)
             config.sampleRate = audioCtx.sampleRate;
             realTimeWorker.postMessage({cmd: 'init', config: config});
         };
@@ -100,9 +98,9 @@ var Main = (function () {
             // Webkit version 31 requires that a valid bufferSize be passed when calling this method
 
             // Add all buffers from LAME into an array
-            processor = audioCtx.createScriptProcessor(0, 1, 1);
+            processor = audioCtx.createScriptProcessor(4096, 1, 1);
             // debugging iOS attempt
-            log.prepend('<li>bufferSize = ' + processor.bufferSize + '</li>');
+            log.prepend('<li>processor bufferSize = ' + processor.bufferSize + '</li>');
 
             analyser = audioCtx.createAnalyser();
 
@@ -193,7 +191,9 @@ var Main = (function () {
 
     function getRandomColor () {
         'use strict';
-        return (random() * 256) >> 0;
+        var color = (random() * 256) >> 0;
+        // console.log(color);
+        return color;
     }
 
     // repeatedly called from on.audioprocess
@@ -205,7 +205,6 @@ var Main = (function () {
 
         // clear canvas before drawing
         canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-        // canvasCtx.fillStyle = 'rgb(0, 0, 0)';
         
         // get time-based array data for particles
         var particles = new Uint8Array(analyser.frequencyBinCount);
@@ -218,8 +217,6 @@ var Main = (function () {
                 _height = canvas.height * percent,
                 offset = canvas.height - _height - 1,
                 barWidth = canvas.width / particles.length;
-
-            canvasCtx.fillStyle = 'white';
             canvasCtx.fillRect(i * barWidth, offset, 1, 1);
         }
 
@@ -227,12 +224,13 @@ var Main = (function () {
         var bytes = new Uint8Array(analyser.frequencyBinCount);
         analyser.getByteFrequencyData(bytes);
 
+        // canvasCtx.rotate(i * Math.PI / 180);
+        // canvasCtx.strokeStyle = 'rgba(256, 256, 256, 0.6)';
+
         // create some misc blocks and crap [currently]
         for (var i = 1; i < bytes.length; i++) {
-            // canvasCtx.rotate(i * Math.PI / 180);    (this change made the palette blue/purple) ↓
-            canvasCtx.fillStyle = 'rgb(' + getRandomColor() + ',' + getRandomColor() + ',' + (256 >> 0) + ')';
-            canvasCtx.strokeStyle = 'rgba(256, 256, 256, 0.6)';
-            // coloured bouncing city-scape
+            // bouncing city-scape
+            canvasCtx.fillStyle = 'rgb(' + i + ',' + 211 + ',' + (256 >> 0) + ')';
             canvasCtx.strokeRect(i, canvas.height - bytes[i] * 0.5, 10, canvas.height);
             canvasCtx.fillRect(i, canvas.height - bytes[i] / 2, 10, canvas.height);
         }
@@ -554,6 +552,7 @@ var Main = (function () {
         // 'bits / frame = frame_size * bit_rate / sample_rate' - http://lame.sourceforge.net/tech-FAQ.txt
         //  417.95918367 = 144        * 128000   / 44100
 
+        // Web Audio API sampleRate can be changed according to hardware detection, so use audioCtx value
         var bitsPerFrame = 144 * (128000 / audioCtx.sampleRate);
 
         log.prepend('<li>audioCtx.sampleRate = ' + audioCtx.sampleRate + '</li>');
@@ -577,6 +576,7 @@ var Main = (function () {
             // first check for previous blob URL to revoke
             if (edits[edits.length - 2]) {
                 handledURL.revokeObjectURL(edits[edits.length - 2]);
+                edits.splice(edits.length - 2, 1);
                 log.prepend('<li>revoked old edit URL</li>');
             } else {
                 log.prepend('<li>nothing to revoke yet</li>');
@@ -612,13 +612,15 @@ var Main = (function () {
                             { 
                                 text: 'Discard', click: function() {
                                     console.log('discarded');
+                                    edits.pop();
+                                    // add revokeURL
                                     $('#keep-discard').dialog('close');
                                 }
                             }
                          ]
             });
 
-            // odd auto-highlighting bug
+            // odd auto-highlighting bug on download button that won't fix (without removing <a> highlighting)
             $('#download-edit').blur();
             // $('#edited').focus();
         }
@@ -709,9 +711,10 @@ var Main = (function () {
             success: function (data) {
                 log.prepend('<li>onSuccess data: ' + data + '\n</li>');
                 uploadCount++;
+                alert('Your recording has been sent to your Media Manager');
             },
             error: function (error) {
-                log.prepend('<li>Could not upload audio, please try again or contact us.' +
+                alert('<li>Could not upload your audio, please try again or contact us.' +
                     'Error message: ' + error + '\n</li>');
             }
         });
@@ -725,13 +728,13 @@ var Main = (function () {
         edit(blobs[blobs.length - 1]);
     });
 
-    // pass (source || edit) to store function (base on keep / discard prompt)
+    // pass (source || edit) to store function
     $('#storeBtn').on('click', function (e) {
         e.preventDefault();
         store(blobs[blobs.length - 1]);
     });
 
-    // pass (source || edit) to upload function (base on keep / discard prompt)
+    // pass (source || edit) to upload function
     $('#upBtn').on('click', function (e) {
         e.preventDefault();
         upload(blobs[blobs.length - 1]);
@@ -828,7 +831,8 @@ var Main = (function () {
             try {
                 // first check for previous blob URL to revoke
                 if (blobs[blobs.length-2]) {
-                    handledURL.revokeObjectURL(blobs[blobs.length-2]); // could also delete this blob from array here...
+                    handledURL.revokeObjectURL(blobs[blobs.length-2]);
+                    blobs.splice(blobs.length - 2, 1);
                     log.prepend('<li>revoked old source URL</li>');
                 } else {
                     log.prepend('<li>nothing to revoke yet</li>');
@@ -885,17 +889,31 @@ var Main = (function () {
 
 /** warn user to save progress before unloading resources *************************************************************/
 
-    $(window).on('beforeunload', function () {
+    // jQuery appears to have removed their beforeunload API entries, so using vanilla JS to be safe
+    window.addEventListener("beforeunload", function (e) {
+        // these loops may require array.pop() as we go approach on start.click and inside edit function.
+
         // if the user has made a recording but has not uploaded, offer a 'are you sure'
-        if (blobs.length !== 0 && uploadCount === 0) {
-            return 'Are you sure you want to leave? Any unsaved recordings will be lost';
+        // [not robust]: if array lengths are high and upload count is low but not 0, work will be lost.
+        if (blobs.length !== 0 && uploadCount === 0 && edits.length !== 0) {
+            // if either array is higher than number of uploads return a 'are you sure'
+            if ((blobs.length || edits.length) > uploadCount) {
+                var confirmationMessage = 'Are you sure you want to leave? Any unsaved recordings will be lost';
+
+                e.returnValue = confirmationMessage;     // Gecko, Trident, Chrome 34+
+                return confirmationMessage;              // Gecko, WebKit, Chrome <34
+            }
         }
     });
 
     $(window).on('unload', function () {
         // unload URL objects
-        handledURL.revokeObjectURL(blobs[blobs.length-1]);
-        handledURL.revokeObjectURL(edits[edits.length-1]);
+        for (var i = 0; i < blobs.length; i++) {
+            handledURL.revokeObjectURL(blobs[i]);
+        }
+        for (var i = 0; i < edits.length; i++) {
+            handledURL.revokeObjectURL(edits[i]);
+        }
         
         // delete session array blobs
         blobs = [];
@@ -916,8 +934,12 @@ var Main = (function () {
         // event.returnValue = '';
     });
 
+    // grab feature detection string from isMicSupported.js Module
+    log.prepend('<li>' + IsMicSupported + '</li>');
+    
     // initiate required resources
     init();
+
 })();
 /* 
                 /*
