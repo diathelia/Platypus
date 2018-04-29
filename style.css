@@ -2,9 +2,16 @@
     #playerUI img {
         margin-left: 0;
         min-height: 1em;
-        width: 2em;
+        width: 2.5em;
     }
 }
+
+@media only screen and (max-width: 456px) {
+    #playerUI img {
+        width: 1.7em;
+    }
+}
+
 
 /* general page styling */
 html, body {
@@ -16,7 +23,7 @@ html, body {
 body {
     height: 100vh;
     width: 100vw;
-    overflow-x: hidden;
+    overflow: hidden;
     background-image: url('img/monotreme.jpg');
 	background-size: cover;
     background-position: center;
@@ -24,8 +31,9 @@ body {
 }
 
 #container {
-    width: 95%;
-    height: 100%;
+    width: 95vw;
+    height: 95vh;
+    margin-top: 5vh;
     margin-left: auto;
     margin-right: auto;
 }
@@ -44,7 +52,6 @@ p, ol, h1, h2, h3 {
     color: auto;
     padding: 0.3em 0;
     padding-bottom: 0.5em;
-    visibility: hidden;
 }
 
 /* centered objects */
@@ -85,7 +92,7 @@ p, ol, h1, h2, h3 {
 }
 
 /* Buttons */
-#slide-wrap, #slider, #playerUI, #editBtn, #storeBtn, #upBtn, #timer {
+#slide-wrap, #slider, #playerUI, #editBtn, #storeBtn, #upBtn, #timer, #bg {
     visibility: hidden;
 }
 
@@ -99,7 +106,6 @@ p, ol, h1, h2, h3 {
 }
 
 #playerUI img {
-    /* min-width: 5%; */
     min-height: 100%;
     cursor: pointer;
     margin-left: 3vw;
@@ -108,6 +114,7 @@ p, ol, h1, h2, h3 {
 #duration {
     background-color: auto;
     color: white;
+    text-align: justify !important;
 }
 
 #volume {
@@ -129,6 +136,8 @@ p, ol, h1, h2, h3 {
     height: 10%;
     width: 100%;
     text-align: center;
+    border-radius: 0.8em;
+    margin-top: 0.3em;
 }
 
 /* slider */
@@ -138,7 +147,7 @@ p, ol, h1, h2, h3 {
     padding: 0 1.5em;
     min-height: 5em;
     max-height: 10%;
-    border-radius: 10px;
+    border-radius: 0.8em;
 }
 
 #slider {

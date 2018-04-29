@@ -7,7 +7,6 @@ var Main = (function () {
         audioCtx,                                       // single session audioContext that is used in many places
         analyser,                                       // set-up by mic.js, connected by on.startBtn, used by draw()
         source,                                         // for current source <audio>: defined by 'this' when loaded
-    //  sourceNode,                                     // audioContext node for HTML audio element, not microphone
         canvas = document.getElementById('canvas'),     // avoided jQuery object due to canvas issues when painting
         canvasCtx,                                      // single session canvasContext used in MP3Recorder and draw()
         drawVisual,                                     // requestAnimationFrame id to cancel callback loop
@@ -19,12 +18,10 @@ var Main = (function () {
     //  authoring values:
         leftHandle,         // sliding percentage to trim from audio start
         rightHandle,        // sliding percentage to trim from audio end
-    //  #timeHandle         // the DOM element (created & defined later)
         timeValue,          // current audio time in int percentage
         leftFrames,         // discrete n frames to trim (requires leftHandle)
         rightFrames,        // discrete n frames to trim (requires rightHandle)
         totalFrames;        // a constant per each audio recording
-    //  wasPlayed = false;  // Only used within the playback restrict section to control looping playback
 
     // initiate application resources
     function init () {
@@ -351,28 +348,52 @@ var Main = (function () {
         // prepare player
         $('#pause, #muted').hide();
         $('#duration').html('0:00');
+
+        // remembers pre-muted volume value
+        var preMuted;
+        console.log(source);
+
+        $('#source').on('canplaythrough', function() {
+            preMuted = parseFloat(source.volume);
+            console.log(preMuted);
+        });
         
         //volume vontrol
         $('#volume').on('input', function () {
             source.volume = parseFloat(this.value / 10);
-            // if (source.volume === 0) {
-            //     $('#volume-btn, #muted').toggle();
-            // }
+
+            if (source.volume === 0) {
+                $('#volume-btn, #muted').toggle();
+                $('#source').attr('muted', true);
+
+                if (source.volume !== 0) {
+                    $('#volume-btn, #muted').toggle();
+                    $('#source').removeAttr('muted');
+                    console.log(source.muted);
+                }
+            }
         });
 
-        // remembers pre-muted volume value
-        // var preMuted;
+        $('#source').on('volumechange', function() {
+            $('#volume').value = source.volume * 10;
+        });
 
         $('#volume-btn').on('click', function () {
-            // preMuted = source.volume;
-            // $('#volume').value = 0;
-            $('#source').attr('muted');
+            preMuted = parseFloat(source.volume);
+            console.log(preMuted, typeof preMuted);
+            source.volume = parseFloat(0);
+            $('#volume').value = 0;
+            $('#source').attr('muted', true);
+            console.log(source.muted);
             $('#volume-btn, #muted').toggle();
         });
 
         $('#muted').on('click', function () {
-            // source.volume = preMuted;
+            console.log(preMuted, typeof preMuted);
+            source.volume = preMuted;
+            $('#volume').value = preMuted * 10;
             $('#source').removeAttr('muted');
+            console.log(source.muted);
             $('#volume-btn, #muted').toggle();
         });
 
@@ -426,6 +447,10 @@ var Main = (function () {
         setInterval(function () {
             // only runs if interval has some audio to affect
             if (source) {
+                if (source.muted === false) {
+                    console.log('OMFalseG! : ', source.muted);
+                }
+
                 // timeValue (int) is given to both timeHandle value & CSS position
                 timeValue = ((source.currentTime / source.duration) * 100);
                 // add percentage and update position
