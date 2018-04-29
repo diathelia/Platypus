@@ -91,7 +91,7 @@ var Main = (function () {
         // Initializes LAME so that we can record
         this.initialize = function () {
             // let context decide (usually 44100, I have read iOS prefers 48000...)
-            config.sampleRate = 48000;
+            config.sampleRate = 44100;
             log.prepend('<li>audioCtx.sampleRate (not being used) = ' + audioCtx.sampleRate + '</li>');
             log.prepend('<li>config.sampleRate = ' + config.sampleRate + '</li>');
 
@@ -411,11 +411,11 @@ var Main = (function () {
         source.pause();
 
         // refresh / reset handle values
-        leftHandle  = 0;
-        $('#slider').slider('values', 0, 0);
-        rightHandle = 100;
-        $('#slider').slider('values', 1, 100);
-        source.currentTime = 0;
+        // leftHandle  = 0;
+        // $('#slider').slider('values', 0, 0);
+        // rightHandle = 100;
+        // $('#slider').slider('values', 1, 100);
+        // source.currentTime = 0;
 
         // return previous handle positions
         leftHandle  = left;
@@ -424,7 +424,7 @@ var Main = (function () {
         $('#slider').slider('values', 1, right);
 
         // bump timeHandle
-        source.currentTime = source.currentTime + 0.005;
+        // source.currentTime = source.currentTime;
         
         // refresh frame values
         checkFrames();
@@ -453,18 +453,18 @@ var Main = (function () {
                 // set lower-bound of currentTime to wherever leftHandle currently is
                 if (source.currentTime < (source.duration / 100) * leftHandle) {
                     source.currentTime = (((source.duration / 100) * leftHandle) + 0.005);
+                    resetSlider(leftHandle, rightHandle);
                     $('#play').show();
                     $('#pause').hide();
-                    source.pause();
                     log.prepend('<li>[lower]</li>');                     
                 }
 
                 // set upper-bound of currentTime to wherever rightHandle currently is
                 if (source.currentTime > (source.duration / 100) * rightHandle) {
                     source.currentTime = (((source.duration / 100) * leftHandle) + 0.005);
+                    resetSlider(leftHandle, rightHandle);
                     $('#play').show();
                     $('#pause').hide();
-                    source.pause();
                     log.prepend('<li>[upper]</li>');                     
 
                 }
@@ -611,9 +611,8 @@ var Main = (function () {
         //  417.95918367 = 144        * 128000   / 44100
 
         // Web Audio API sampleRate can be changed according to hardware detection, so use audioCtx value
-        var bitsPerFrame = 144 * (128000 / audioCtx.sampleRate);
+        var bitsPerFrame = 144 * (128000 / config.sampleRate);
 
-        log.prepend('<li>audioCtx.sampleRate = ' + audioCtx.sampleRate + '</li>');
         log.prepend('<li>bitsPerFrame = ' + bitsPerFrame + '</li>');
 
         var leftBytes = Math.round(leftFrames * bitsPerFrame);
