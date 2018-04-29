@@ -405,6 +405,8 @@ var Main = (function () {
                         console.log('time === source.currentTime');
                         resetSlider(leftHandle, rightHandle);
                         checkFrames();
+                        resumePlay();
+
                     }
                 }, 30); // > 26ms allows setInterval to update time value
             }).catch(function(e) {
@@ -421,6 +423,13 @@ var Main = (function () {
         });
     }
 
+    // attempt to distance repeat play() calls when timeHandle gets stuck
+    function resumePlay () {
+        source.play().then(function() {
+            log.prepend('<li>[resume]source.play().then()</li>');
+        });
+    }
+
     // tries to re-calibrate the slider if playerUI gets stuck / loses track
     function resetSlider (left, right) {
         source.pause();
@@ -430,10 +439,6 @@ var Main = (function () {
         $('#slider').slider('values', 0, left);
         rightHandle = right;
         $('#slider').slider('values', 1, right);
-
-        source.play().then(function() {
-            log.prepend('<li>[reset]source.play().then()</li>');
-        });
     }
 
     // runs once on repeat to keep handle values up to date and within range
