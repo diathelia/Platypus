@@ -216,7 +216,7 @@ var Main = (function () {
             // bouncing city-scape
             canvasCtx.fillStyle = 'rgb(' + i + ',' + 211 + ',' + (256 >> 0) + ')';
             canvasCtx.strokeRect(i, canvas.height - bytes[i], 10, canvas.height);
-            canvasCtx.fillRect(i, canvas.height - bytes[i] * 1.5, 10, canvas.height);
+            canvasCtx.fillRect(i, canvas.height - bytes[i] * 1.3, 10, canvas.height);
         }
     }
 
