@@ -58,8 +58,13 @@ var Main = (function () {
         // init canvas 2d context
         if (canvas.getContext) {
             canvasCtx = canvas.getContext('2d');
-            // set color here instead of inside draw() callback to avoid flickering
+
+            // set colors here instead of inside draw() callback to avoid flickering
             canvasCtx.fillStyle = 'rgb(' + 10 + ',' + 211 + ',' + (256 >> 0) + ')';
+            var gradient = canvasCtx.createLinearGradient(0, 0, 0, 200);
+            gradient.addColorStop(0, 'white');
+            gradient.addColorStop(1, 'red');
+            canvasCtx.strokeStyle = gradient;
         } else {
             log.prepend('<li>canvas context unsupported</li>');
         }
@@ -202,6 +207,24 @@ var Main = (function () {
         // clear canvas before drawing
         canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
         
+        // get byte-based array data
+        var bytes = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(bytes);
+
+        // create some misc blocks and crap [currently]
+        for (var i = 1; i < bytes.length; i++) {
+            // bouncing city-scape
+            canvasCtx.fillStyle = 'rgb(' + i + ',' + 211 + ',' + (256 >> 0) + ')';
+            canvasCtx.strokeRect(i, canvas.height - bytes[i], 10, canvas.height);
+            canvasCtx.fillRect(i, canvas.height - bytes[i] * 1.5, 10, canvas.height);
+        }
+    }
+
+/** [experimental & historical canvas mappings] ***********************************************************************/
+    
+        // canvasCtx.rotate(i * Math.PI / 180);
+        // canvasCtx.strokeStyle = 'rgba(256, 256, 256, 0.6)';
+        
         // get time-based array data for particles
         // var particles = new Uint8Array(analyser.frequencyBinCount);
         // analyser.getByteTimeDomainData(particles);
@@ -214,25 +237,8 @@ var Main = (function () {
         //         offset = canvas.height - _height - 1,
         //         barWidth = canvas.width / particles.length;
         //     canvasCtx.fillRect(i * barWidth, offset, 1, 1);
-        // }
+        // }    
 
-        // get byte-based array data
-        var bytes = new Uint8Array(analyser.frequencyBinCount);
-        analyser.getByteFrequencyData(bytes);
-
-        // canvasCtx.rotate(i * Math.PI / 180);
-        // canvasCtx.strokeStyle = 'rgba(256, 256, 256, 0.6)';
-
-        // create some misc blocks and crap [currently]
-        for (var i = 1; i < bytes.length; i++) {
-            // bouncing city-scape
-            canvasCtx.fillStyle = 'rgb(' + i + ',' + 211 + ',' + (256 >> 0) + ')';
-            canvasCtx.strokeRect(i, canvas.height - bytes[i], 10, canvas.height);
-            canvasCtx.fillRect(i, canvas.height - bytes[i] * 2, 10, canvas.height);
-        }
-    }
-
-/** [experimental & historical canvas mappings] ***********************************************************************/
     /*
     // function getRandomColor () {
     //     'use strict';
@@ -304,7 +310,7 @@ var Main = (function () {
 
                 // if left/right Handles get too close to overlapping, return false to stop slide
                 if ((ui.values[0] + 2 >= (ui.values[1])) || (ui.values[1] <= (ui.values[0] + 2))) {
-                    console.log('[collision]');
+                    log.prepend('<li>[collision]</li>');                     
                     // force mouseup so timeHandle is not dragged past its bounds
                     $('#leftHandle').trigger('mouseup');
                     return false;
@@ -418,7 +424,7 @@ var Main = (function () {
         $('#slider').slider('values', 1, right);
 
         // bump timeHandle
-        source.currentTime = source.currentTime + 0.001;
+        source.currentTime = source.currentTime + 0.005;
         
         // refresh frame values
         checkFrames();
@@ -446,20 +452,20 @@ var Main = (function () {
             
                 // set lower-bound of currentTime to wherever leftHandle currently is
                 if (source.currentTime < (source.duration / 100) * leftHandle) {
-                    source.currentTime = (((source.duration / 100) * leftHandle) + 0.001);
+                    source.currentTime = (((source.duration / 100) * leftHandle) + 0.005);
                     $('#play').show();
                     $('#pause').hide();
                     source.pause();
-                    console.log('[lower]');                     
+                    log.prepend('<li>[lower]</li>');                     
                 }
 
                 // set upper-bound of currentTime to wherever rightHandle currently is
                 if (source.currentTime > (source.duration / 100) * rightHandle) {
-                    source.currentTime = (((source.duration / 100) * leftHandle) + 0.001);
+                    source.currentTime = (((source.duration / 100) * leftHandle) + 0.005);
                     $('#play').show();
                     $('#pause').hide();
                     source.pause();
-                    console.log('[upper]');                     
+                    log.prepend('<li>[upper]</li>');                     
 
                 }
 
@@ -763,8 +769,8 @@ var Main = (function () {
                 alert('Your recording has been sent to your Media Manager');
             },
             error: function (error) {
-                alert('<li>Could not upload your audio, please try again or contact us.' +
-                    'Error message: ' + error + '\n</li>');
+                alert('Could not upload your audio, please try again or contact us.');
+                console.log('Upload error message: ' + error);
             }
         });
     }
@@ -811,7 +817,7 @@ var Main = (function () {
         var btn = $(this);
 
         recorder.start(function () {
-            $('#timer').css('visibility', 'visible');
+            $('#timer, #bg').css('visibility', 'visible');
             // start timer
             var start = 0, s = 0, m = 0;
             //Add 0 if seconds less than 10
@@ -943,30 +949,21 @@ var Main = (function () {
 
     // jQuery appears to have removed their beforeunload API entries, so using vanilla JS to be safe
     window.addEventListener("beforeunload", function (e) {
-        // these loops may require array.pop() as we go approach on start.click and inside edit function.
 
         // if the user has made a recording but has not uploaded, offer a 'are you sure'
-        // [not robust]: if array lengths are high and upload count is low but not 0, work will be lost.
-        if (blobs.length !== 0 && uploadCount === 0 && edits.length !== 0) {
-            // if either array is higher than number of uploads return a 'are you sure'
-            if ((blobs.length || edits.length) > uploadCount) {
-                var confirmationMessage = 'Are you sure you want to leave? Any unsaved recordings will be lost';
+        if (blobs.length !== 0 && uploadCount === 0) {
+            var confirmationMessage = 'Are you sure you want to leave? Any unsaved recordings will be lost';
 
-                e.returnValue = confirmationMessage;     // Gecko, Trident, Chrome 34+
-                return confirmationMessage;              // Gecko, WebKit, Chrome <34
-            }
+            e.returnValue = confirmationMessage;     // Gecko, Trident, Chrome 34+
+            return confirmationMessage;              // Gecko, WebKit, Chrome <34
         }
     });
 
     $(window).on('unload', function () {
         // unload URL objects
-        for (var i = 0; i < blobs.length; i++) {
-            handledURL.revokeObjectURL(blobs[i]);
-        }
-        for (var i = 0; i < edits.length; i++) {
-            handledURL.revokeObjectURL(edits[i]);
-        }
-        
+        handledURL.revokeObjectURL(edits[edits.length - 1]);
+        handledURL.revokeObjectURL(blobs[blobs.length - 1]);
+
         // delete session array blobs
         blobs = [];
         edits = [];
@@ -974,16 +971,11 @@ var Main = (function () {
         // empty localStorage
         localStorage.clear();
 
-        // force stop --> disconnect nodes (Zhuker warns this may not empty Web Worker buffers
+        // force stop --> disconnect nodes (Zhuker warns this may not empty Web Worker buffers)
         recorder.stop();
        
         // close audio context
         audioCtx.close().then(console.log('context closed'));
-        // await audioCtx.close();
-        // .catch(function (e) {console.log('context not closed', e)});
-
-        // terminate worker, somehow trigger it to empty its buffer first (postMessage)
-        // event.returnValue = '';
     });
 
     // grab feature detection string from isMicSupported.js Module

@@ -24,14 +24,16 @@
 
 <body>
     <!-- <audio controls id="test"></audio> -->
-    <span>blobs.length = <em id="blength"></em></span>
+    <!-- <span>blobs.length = <em id="blength"></em></span>
     <br>
-    <span> edits.length = <em id="elength"></em></span>
+    <span> edits.length = <em id="elength"></em></span> -->
 
     <div id="container">
 
         <div id="timebar">
-            <h1 class="float" id="timer">0:00</h1>
+            <span id="bg">
+                <h1 class="float" id="timer">0:00</h1>
+            </span>
         </div>
 
         <canvas id="canvas">add fallback content here</canvas>
@@ -59,7 +61,7 @@
 
         <div id="keep-discard">
             <p     class="float"><b>Keep</b> will upload your recording to your Media Manager</p>
-            <p     class="float"><b>Discard</b> will allow you to continue editing your recording</p>
+            <p     class="float"><b>Discard</b> allows you to continue editing your recording</p>
             <span  class="float"><b>Download</b> your recording here:  </span>
             <a     class="float" id="download-edit" href="#" download><img src="img/ic_file_download_black_24px.svg"></a>
             <audio id="edited" controls controlsList="nodownload"></audio>

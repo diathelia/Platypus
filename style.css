@@ -16,8 +16,8 @@ html, body {
 body {
     height: 100vh;
     width: 100vw;
-    /* overflow: hidden; */
-    background-image: url('img/monotreme2.jpg');
+    overflow-x: hidden;
+    background-image: url('img/monotreme.jpg');
 	background-size: cover;
     background-position: center;
     background-repeat: repeat;
@@ -37,6 +37,14 @@ p, ol, h1, h2, h3 {
     margin: 0;
     padding: 0;
     border: 0;
+}
+
+#bg {
+    background-color: rgba(0, 82, 100, 0.5);
+    color: auto;
+    padding: 0.3em 0;
+    padding-bottom: 0.5em;
+    visibility: hidden;
 }
 
 /* centered objects */
@@ -125,11 +133,12 @@ p, ol, h1, h2, h3 {
 
 /* slider */
 #slide-wrap {
-    background-color: pink;
+    background-color: white;
     color: auto;
-    padding: 0 1.25em;
+    padding: 0 1.5em;
     min-height: 5em;
     max-height: 10%;
+    border-radius: 10px;
 }
 
 #slider {
@@ -139,9 +148,10 @@ p, ol, h1, h2, h3 {
 }
 
 #leftHandle, #rightHandle, #timeHandle {
-    top: 0.0018em; /* centered within custom slider hieght */
+    top: -0.001em; /* centered within custom slider height */
     height: 100%;
-    width: 2.5em;
+    width: 3em;
+    margin-left: -1.5em;
     /* outline: none; */
     border: 0;
     background-position: center;
@@ -170,6 +180,5 @@ p, ol, h1, h2, h3 {
 
 #consolelog {
     background-color: rgba(94, 217, 191, 0.3);
+    color: auto;
 }
-
-/* styling the volume thumb for Chrome, Firefox, Edge */
