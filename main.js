@@ -14,7 +14,7 @@ var Main = (function () {
         handledURL = window.URL || window.webkitURL,    // alias to avoid overwriting the window objects themselves
         random = Math.random,                           // a sheer convenience for using random() within canvas
         log = $('#log'),                                // a sheer convenience for using a HTML console.log for mobile
-        uploadCount = 0,                                // keeps track of uploads to determine if beforeunload prompt appears
+        uploadCount = 0,                                // counts uploads to determine if beforeunload prompt appears
 
     //  authoring values:
         leftHandle,         // sliding percentage to trim from audio start
@@ -49,7 +49,7 @@ var Main = (function () {
         finally {
             // suspend audioContext until user starts recording
             if (recorder && audioCtx.state === 'running') {
-                suspendAudioCtx(); // warning: iOS may not like this function reference...
+                suspendAudioCtx();
             } else {
                 log.prepend('<li>audio context was not running (from init)</li>');
             }
@@ -58,6 +58,7 @@ var Main = (function () {
         // init canvas 2d context
         if (canvas.getContext) {
             canvasCtx = canvas.getContext('2d');
+            // set color here instead of inside draw() callback to avoid flickering
             canvasCtx.fillStyle = 'rgb(' + 10 + ',' + 211 + ',' + (256 >> 0) + ')';
         } else {
             log.prepend('<li>canvas context unsupported</li>');
@@ -85,7 +86,10 @@ var Main = (function () {
         // Initializes LAME so that we can record
         this.initialize = function () {
             // let context decide (usually 44100, I have read iOS prefers 48000...)
-            config.sampleRate = audioCtx.sampleRate;
+            config.sampleRate = 48000;
+            log.prepend('<li>audioCtx.sampleRate (not being used) = ' + audioCtx.sampleRate + '</li>');
+            log.prepend('<li>config.sampleRate = ' + config.sampleRate + '</li>');
+
             realTimeWorker.postMessage({cmd: 'init', config: config});
         };
         // This function finalizes LAME output and saves the MP3 data to a file
@@ -101,7 +105,6 @@ var Main = (function () {
             processor = audioCtx.createScriptProcessor(4096, 1, 1);
             // debugging iOS attempt
             log.prepend('<li>processor bufferSize = ' + processor.bufferSize + '</li>');
-
             analyser = audioCtx.createAnalyser();
 
             processor.onaudioprocess = function (event) {
@@ -163,7 +166,7 @@ var Main = (function () {
             switch (e.data.cmd) {
                 case 'end':
                     if (mp3ReceiveSuccess) {
-                        mp3ReceiveSuccess(new Blob(e.data.buf, {type: 'audio/mpeg'}));       // application/octet-binary
+                        mp3ReceiveSuccess(new Blob(e.data.buf, {type: 'audio/mpeg'}));
                     }
                     break;
                 case 'error':
@@ -187,14 +190,7 @@ var Main = (function () {
         });
     }
 
-/** canvas visualisation functions ************************************************************************************/
-
-    function getRandomColor () {
-        'use strict';
-        var color = (random() * 256) >> 0;
-        // console.log(color);
-        return color;
-    }
+/** canvas visualisation function *************************************************************************************/
 
     // repeatedly called from on.audioprocess
     function draw () {
@@ -207,18 +203,18 @@ var Main = (function () {
         canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
         
         // get time-based array data for particles
-        var particles = new Uint8Array(analyser.frequencyBinCount);
-        analyser.getByteTimeDomainData(particles);
+        // var particles = new Uint8Array(analyser.frequencyBinCount);
+        // analyser.getByteTimeDomainData(particles);
 
         // create a white-particle oscilloscope
-        for (var i = 0; i < particles.length; i++) {            
-            var value = particles[i],
-                percent = value / 156, // 256 = centered
-                _height = canvas.height * percent,
-                offset = canvas.height - _height - 1,
-                barWidth = canvas.width / particles.length;
-            canvasCtx.fillRect(i * barWidth, offset, 1, 1);
-        }
+        // for (var i = 0; i < particles.length; i++) {            
+        //     var value = particles[i],
+        //         percent = value / 156, // 256 = centered
+        //         _height = canvas.height * percent,
+        //         offset = canvas.height - _height - 1,
+        //         barWidth = canvas.width / particles.length;
+        //     canvasCtx.fillRect(i * barWidth, offset, 1, 1);
+        // }
 
         // get byte-based array data
         var bytes = new Uint8Array(analyser.frequencyBinCount);
@@ -231,13 +227,20 @@ var Main = (function () {
         for (var i = 1; i < bytes.length; i++) {
             // bouncing city-scape
             canvasCtx.fillStyle = 'rgb(' + i + ',' + 211 + ',' + (256 >> 0) + ')';
-            canvasCtx.strokeRect(i, canvas.height - bytes[i] * 0.5, 10, canvas.height);
-            canvasCtx.fillRect(i, canvas.height - bytes[i] / 2, 10, canvas.height);
+            canvasCtx.strokeRect(i, canvas.height - bytes[i], 10, canvas.height);
+            canvasCtx.fillRect(i, canvas.height - bytes[i] * 2, 10, canvas.height);
         }
     }
 
 /** [experimental & historical canvas mappings] ***********************************************************************/
     /*
+    // function getRandomColor () {
+    //     'use strict';
+    //     var color = (random() * 256) >> 0;
+    //     // console.log(color);
+    //     return color;
+    // }
+
     // get time-based array data for waveform
     var waveform = new Float32Array(analyser.frequencyBinCount);
     analyser.getFloatTimeDomainData(waveform);
@@ -293,10 +296,6 @@ var Main = (function () {
 
             // restrict handles from sliding over each other update editing values
             slide: function (event, ui) {
-                // keep these top-scope variables up-to-date for other authoring/playback functions
-                leftHandle  = ui.values[0];
-                rightHandle = ui.values[1];
-
                 // force mapping timeHandle ⇌ currentTime while user is dragging timeHandle
                 if ($('#timeHandle').hasClass('ui-state-active')) {
                     source.currentTime = (source.duration / 100) * ui.values[2];
@@ -304,7 +303,7 @@ var Main = (function () {
                 }
 
                 // if left/right Handles get too close to overlapping, return false to stop slide
-                if ((ui.values[0] >= (ui.values[1] - 1)) || (ui.values[1] <= (ui.values[0] + 1))) {
+                if ((ui.values[0] + 2 >= (ui.values[1])) || (ui.values[1] <= (ui.values[0] + 2))) {
                     console.log('[collision]');
                     // force mouseup so timeHandle is not dragged past its bounds
                     $('#leftHandle').trigger('mouseup');
@@ -371,10 +370,20 @@ var Main = (function () {
             $('#volume-btn, #muted').toggle();
         });
 
-        //play button
+        // play button
         $('#play').on('click', function () {
+            var time = source.currentTime;
+            console.log(source.currentTime);
             $('#play, #pause').toggle();
+
             source.play().then(function() {
+                setTimeout(function () {
+                    console.log(source.currentTime);
+                    if (time === source.currentTime) {
+                        console.log('time === source.currentTime');
+                        resetSlider(leftHandle, rightHandle);
+                    }
+                }, 27); // > 26ms allows interval to update values
                 log.prepend('<li>Yay! Video is playing!</li>');
             }).catch(function(e) {
                 log.prepend('<li>Error: ' + e + '</li>');
@@ -388,6 +397,31 @@ var Main = (function () {
             source.pause();
             $('#play, #pause').toggle();
         });
+    }
+
+    // tries to re-calibrate the slider if playerUI gets stuck / loses track
+    function resetSlider (left, right) {
+        // could not pause?
+        source.pause();
+
+        // refresh / reset handle values
+        leftHandle  = 0;
+        $('#slider').slider('values', 0, 0);
+        rightHandle = 100;
+        $('#slider').slider('values', 1, 100);
+        source.currentTime = 0;
+
+        // return previous handle positions
+        leftHandle  = left;
+        $('#slider').slider('values', 0, left);
+        rightHandle = right;
+        $('#slider').slider('values', 1, right);
+
+        // bump timeHandle
+        source.currentTime = source.currentTime + 0.001;
+        
+        // refresh frame values
+        checkFrames();
     }
 
     // runs once on repeat to keep handle values up to date and within range
@@ -406,20 +440,27 @@ var Main = (function () {
                 // assigns up-to-date timeValue to timeHandle
                 $('#slider').slider('values', 2, timeValue.toFixed(1));
 
+                // keep these top-scope variables up-to-date for other authoring/playback functions
+                leftHandle  = $('#slider').slider('values')[0];
+                rightHandle = $('#slider').slider('values')[1];
+            
                 // set lower-bound of currentTime to wherever leftHandle currently is
                 if (source.currentTime < (source.duration / 100) * leftHandle) {
-                    source.pause();                      
-                    source.currentTime = ((source.duration / 100) * leftHandle) + 0.001; // temp fix, better to re-position leftHandle
+                    source.currentTime = (((source.duration / 100) * leftHandle) + 0.001);
                     $('#play').show();
                     $('#pause').hide();
+                    source.pause();
+                    console.log('[lower]');                     
                 }
 
                 // set upper-bound of currentTime to wherever rightHandle currently is
-                if (source.currentTime >= (source.duration / 100) * rightHandle) {
-                    source.pause();
-                    source.currentTime = ((source.duration / 100) * leftHandle) + 0.001; // temp fix, better to re-position leftHandle
+                if (source.currentTime > (source.duration / 100) * rightHandle) {
+                    source.currentTime = (((source.duration / 100) * leftHandle) + 0.001);
                     $('#play').show();
                     $('#pause').hide();
+                    source.pause();
+                    console.log('[upper]');                     
+
                 }
 
                 //Get hours and minutes
@@ -436,12 +477,13 @@ var Main = (function () {
 
                 // if playback ends, reset currentTime and buttons
                 if (source.currentTime === source.duration) {
-                    source.currentTime = 0; // issue: leftHandle = 0, therefore inits other interval loops (worse when sliders have moved)
+                    // issue: leftHandle = 0, therefore inits other interval loops (worse when sliders have moved)
+                    source.currentTime = 0;
                     source.pause();
                     $('#play, #pause').toggle();
                 }
             }
-        }, 26); // 26 ms is both the exact frame length and the fastest possible 'timeupdate' event that I am circumventing
+        }, 26); // ms is exactly 1 mp3 frame and the fastest possible event rate of 'timeupdate' that I am circumventing
     }
     
 /** [restricting playback experimental section] ***********************************************************************/
@@ -544,6 +586,16 @@ var Main = (function () {
 
     function edit(blob2edit) {
         'use strict';
+
+        // check for previous blob to revoke URL and then delete
+        if (edits.length > 0) {
+            handledURL.revokeObjectURL(edits[edits.length - 1]);
+            edits.splice(edits.length - 1, 1);
+            log.prepend('<li>revoked old edit URL</li>');
+        } else {
+            log.prepend('<li>nothing to revoke yet</li>');
+        }
+
         // mp3 seconds per frame = 0.026             (constant)
         // CBR mp3 at a 128,000 bitRate              (constant)
         // 1152 samples per frame                    (constant)
@@ -572,60 +624,57 @@ var Main = (function () {
         // trim n bytes, equal to the nearest n mp3 frames, equal to the sliding percent values set by the user
         edits.push(blob2edit.slice(leftBytes, rightBytes, 'audio/mpeg'));
 
-        try {
-            // first check for previous blob URL to revoke
-            if (edits[edits.length - 2]) {
-                handledURL.revokeObjectURL(edits[edits.length - 2]);
-                edits.splice(edits.length - 2, 1);
-                log.prepend('<li>revoked old edit URL</li>');
-            } else {
-                log.prepend('<li>nothing to revoke yet</li>');
+        if (edits.length > 0) {
+            try {
+                // use a single URL object for download link and playback
+                var editURL = handledURL.createObjectURL(edits[edits.length - 1]);
+
+                // attach download link in case HTML5 default controls does not have one
+                $('#download-edit').attr('href', editURL);
+
+                // attach new src and reveal audio element
+                $('#edited').attr('src', editURL)
+                            .css('display', 'block')
+                            .on('error', function (e) {
+                                log.prepend('<li>media error: ' + e.code + ': ' + e.message + '</li>');
+                });
+
+                // present 'Keep / Discard' dialog modal
+                $('#keep-discard').dialog({
+                    title: 'Your Edited Audio',
+                    modal: true,
+                    closeOnEscape: true,
+                    minWidth: 320,
+                    buttons: [
+                                { 
+                                    text: 'Keep', click: function() {
+                                        console.log('kept');
+                                        upload(edits[edits.length - 1]);
+                                        $('#elength').html(edits.length.toString());
+                                        $('#keep-discard').dialog('close');
+                                    }
+                                },
+                                { 
+                                    text: 'Discard', click: function() {
+                                        console.log('discarded');
+                                        handledURL.revokeObjectURL(edits[edits.length - 1]);
+                                        edits.pop();
+                                        $('#elength').html(edits.length.toString());
+                                        $('#keep-discard').dialog('close');
+                                    }
+                                }
+                            ]
+                });
+
+                // odd auto-highlighting bug on download button that won't fix (without removing <a> highlighting)
+                $('#download-edit').blur();
+                $('#edited').focus();
             }
-
-            // use a single URL object for download link and playback
-            var editURL = handledURL.createObjectURL(edits[edits.length - 1]);
-
-            // attach download link in case HTML5 default controls does not have one
-            $('#download-edit').attr('href', editURL);
-
-            // attach new src and reveal audio element
-            $('#edited').attr('src', editURL)
-                        .css('display', 'block')
-                        .on('error', function (e) {
-                            log.prepend('<li>media error: ' + e.code + ': ' + e.message + '</li>');
-            });
-
-            // present 'Keep / Discard' dialog modal
-            $('#keep-discard').dialog({
-                title: 'Your Edited Audio',
-                modal: true,
-                closeOnEscape: true,
-                minWidth: 320,
-                buttons: [
-                            { 
-                                text: 'Keep', click: function() {
-                                    console.log('kept');
-                                    upload(edits[edits.length - 1]);
-                                    $('#keep-discard').dialog('close');
-                                }
-                            },
-                            { 
-                                text: 'Discard', click: function() {
-                                    console.log('discarded');
-                                    edits.pop();
-                                    // add revokeURL
-                                    $('#keep-discard').dialog('close');
-                                }
-                            }
-                         ]
-            });
-
-            // odd auto-highlighting bug on download button that won't fix (without removing <a> highlighting)
-            $('#download-edit').blur();
-            // $('#edited').focus();
-        }
-        catch (e) {
-            log.prepend('<li>failed to display recording URL (from edit), error: ' + e + '</li>');
+            catch (e) {
+                log.prepend('<li>failed to display recording URL (from edit), error: ' + e + '</li>');
+            }
+        } else {
+            log.prepend('<li>edit.length = 0</li>');
         }
     }
 
@@ -746,7 +795,7 @@ var Main = (function () {
         'use strict';
         e.preventDefault();
 
-        // clicking start directly resumes context but doesn't wastefully create a new audioCtx
+        // iOS will only allow recording in direct response to a user gesture
         if (audioCtx.state === 'suspended') {
             audioCtx.resume().then(function () {
                 log.prepend('<li>audio context resumed</li>');
@@ -755,8 +804,8 @@ var Main = (function () {
             log.prepend('<li>context was not suspended when resume ran</li>');
         }
 
-        // forces user to resolve getUserMedia prompt before allowing more start clicks:
-        // this stops possibility of qeueing multiple overlapping recordings at once
+        // this stops possibility of qeueing multiple overlapping recordings at once by
+        // forcing users to resolve getUserMedia prompt before allowing more start clicks
         $('#startBtn').attr('pointer-events', 'none');
 
         var btn = $(this);
@@ -788,6 +837,7 @@ var Main = (function () {
 
             updateTimer();
 
+            // return clickable property to start button
             $('#startBtn').attr('pointer-events', 'auto');
 
             // kick-off drawing: requestAnimationFrame callback drives animation from within draw();
@@ -821,23 +871,25 @@ var Main = (function () {
 
         recorder.getMp3Blob(function (blob) {
 
-            // check if the blob itself is broken
+            // check for previous blob to revoke URL and then delete
+            if (blobs.length > 0) {
+                handledURL.revokeObjectURL(blobs[blobs.length-1]);
+                blobs.splice(blobs.length - 1, 1);
+                $('#blength').html(blobs.length.toString());
+                log.prepend('<li>revoked old source URL</li>');
+            } else {
+                log.prepend('<li>nothing to revoke yet</li>');
+            }
+
+            // check if the recording is broken via empty buffers
             if (blob.size === 0) {
                 log.prepend('<li>blob.size was zero</li>');
             } else {
                 blobs.push(blob);
+                $('#blength').html(blobs.length.toString());
             }
 
             try {
-                // first check for previous blob URL to revoke
-                if (blobs[blobs.length-2]) {
-                    handledURL.revokeObjectURL(blobs[blobs.length-2]);
-                    blobs.splice(blobs.length - 2, 1);
-                    log.prepend('<li>revoked old source URL</li>');
-                } else {
-                    log.prepend('<li>nothing to revoke yet</li>');
-                }
-
                 // create a single blobURL for the audio element and the download button to share
                 var blobURL = handledURL.createObjectURL(blobs[blobs.length - 1]);
 
@@ -851,9 +903,9 @@ var Main = (function () {
                                 // append the same blobURL as a download link
                                 $('#download').html('<a href="' + blobURL +
                                   '" download><img src="img/ic_file_download_white_24px.svg"></a>');
-                                  // Chrome = no 'save as' prompt (does in firefox)
+                                // Chrome = no 'save as' prompt (does in firefox)
 
-                                // refresh / reset authoring values for new source                                      [PULL THIS OUT AND MAKE INTO NEW FUNCTION]
+                                // refresh / reset authoring values for new source
                                 leftHandle  = 0;
                                 $('#slider').slider('values', 0, 0);
                                 rightHandle = 100;
@@ -878,7 +930,7 @@ var Main = (function () {
         });
 
         if (audioCtx.state === 'running') {
-            suspendAudioCtx(); // warning: iOS may not like this function reference...
+            suspendAudioCtx();
         } else {
             log.prepend('<li>audio context was not running (from stopBtn)</li>');
         }
