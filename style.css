@@ -23,7 +23,7 @@ html, body {
 body {
     height: 100vh;
     width: 100vw;
-    overflow: hidden;
+    overflow-x: hidden;
     background-image: url('img/monotreme.jpg');
 	background-size: cover;
     background-position: center;
@@ -148,6 +148,7 @@ p, ol, h1, h2, h3 {
     min-height: 5em;
     max-height: 10%;
     border-radius: 0.8em;
+    margin-top: 0.3em;
 }
 
 #slider {

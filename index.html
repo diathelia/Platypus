@@ -23,10 +23,9 @@
 </head>
 
 <body>
-    <!-- <audio controls id="test"></audio> -->
-    <!-- <span>blobs.length = <em id="blength"></em></span>
-    <br>
-    <span> edits.length = <em id="elength"></em></span> -->
+    <!-- <audio controls id="test"></audio>
+    <p>blobs.length = <em id="blength"></em></p>
+    <p> edits.length = <em id="elength"></em></p> -->
 
     <!-- this container is designed to hold all visible elements within 95(vh/vw) -->
     <div id="container">
@@ -59,14 +58,14 @@
             <img src="img/ic_volume_off_white_24px.svg" id="muted" class="float">
             <input class="float" id="volume" type="range" min="0" max="10" value="5" />
         </div>
-    </div>
 
-    <div id="keep-discard">
-        <p     class="float"><b>Keep</b> will upload your recording to your Media Manager</p>
-        <p     class="float"><b>Discard</b> allows you to continue editing your recording</p>
-        <span  class="float"><b>Download</b> your recording here:  </span>
-        <a     class="float" id="download-edit" href="#" download><img src="img/ic_file_download_black_24px.svg"></a>
-        <audio id="edited" controls controlsList="nodownload"></audio>
+        <div id="keep-discard">
+            <p     class="float"><b>Keep</b> will upload your recording to your Media Manager</p>
+            <p     class="float"><b>Discard</b> allows you to continue editing your recording</p>
+            <span  class="float"><b>Download</b> your recording here:  </span>
+            <a     class="float" id="download-edit" href="#" download><img src="img/ic_file_download_black_24px.svg"></a>
+            <audio id="edited" controls controlsList="nodownload"></audio>
+        </div>
     </div>
 
     <!-- <button id="storeBtn">Store</button>
@@ -81,7 +80,7 @@
     <!-- placed at bottom to avoid any interference when revealing UI elements and also
     banished to the far ends of the negative left-margin to both hide and manipulate:
     this is due to a bug in Firefox if display: none or visibility: hidden are set -->
-    <audio controls muted="false" preload="auto" id="source"></audio>
+    <audio controls preload="auto" id="source"></audio>
     
     <script src="main.js"></script>
 </body>

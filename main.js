@@ -2,7 +2,7 @@ var Main = (function () {
     //  audio + canvas environment variables:
     var blobs = [],                                     // array to hold recordings for the session
         edits = [],                                     // array to load edited recordings for the session
-        timer,                                          // needed by startBtn and stopBtn (replace with [m:ss])
+        timer,                                          // needed by startBtn and stopBtn
         recorder,                                       // single instance constructed, used in many places
         audioCtx,                                       // single session audioContext that is used in many places
         analyser,                                       // set-up by mic.js, connected by on.startBtn, used by draw()
@@ -14,6 +14,7 @@ var Main = (function () {
         random = Math.random,                           // a sheer convenience for using random() within canvas
         log = $('#log'),                                // a sheer convenience for using a HTML console.log for mobile
         uploadCount = 0,                                // counts uploads to determine if beforeunload prompt appears
+        configSampleRate,                               // shares dynamic sampleRate between audioCtx and edit equation
 
     //  authoring values:
         leftHandle,         // sliding percentage to trim from audio start
@@ -89,6 +90,8 @@ var Main = (function () {
         this.initialize = function () {
             // let context decide (usually 44100, I have read iOS prefers 48000...)
             config.sampleRate = 44100;
+            // save sampleRate to global to share with edit equation
+            configSampleRate = config.sampleRate;
             log.prepend('<li>audioCtx.sampleRate (not being used) = ' + audioCtx.sampleRate + '</li>');
             log.prepend('<li>config.sampleRate = ' + config.sampleRate + '</li>');
 
@@ -102,12 +105,13 @@ var Main = (function () {
             // Set up Web Audio API to process data from the media stream (microphone)
             // Settings a bufferSize of 0 instructs the browser to choose the best bufferSize
             // Webkit version 31 requires that a valid bufferSize be passed when calling this method
-
             // Add all buffers from LAME into an array
-            processor = audioCtx.createScriptProcessor(4096, 1, 1);
-            // debugging iOS attempt
-            log.prepend('<li>processor bufferSize = ' + processor.bufferSize + '</li>');
+            // set bufferSize to 8192 (to avoid noise artifacts on iOS at expense of latency)
+            processor = audioCtx.createScriptProcessor(8192, 1, 1);
+            // debugging iOS attempt: log audioCtx's preferred bufferSize
+            log.prepend('<li>audioCtx.bufferSize = ' + processor.bufferSize + '</li>');
             analyser = audioCtx.createAnalyser();
+
 
             processor.onaudioprocess = function (event) {
                 // Send microphone data to LAME for MP3 encoding while recording
@@ -194,7 +198,7 @@ var Main = (function () {
 
 /** canvas visualisation function *************************************************************************************/
 
-    // repeatedly called from on.audioprocess
+    // repeatedly called from requestAnimationFrame callback
     function draw () {
         'use strict';
 
@@ -212,8 +216,8 @@ var Main = (function () {
         for (var i = 1; i < bytes.length; i++) {
             // bouncing city-scape
             canvasCtx.fillStyle = 'rgb(' + i + ',' + 211 + ',' + (256 >> 0) + ')';
-            canvasCtx.strokeRect(i, canvas.height - bytes[i], 10, canvas.height);
-            canvasCtx.fillRect(i, canvas.height - bytes[i] * 1.3, 10, canvas.height);
+            canvasCtx.strokeRect(i, canvas.height - bytes[i] / 2, 10, canvas.height);
+            canvasCtx.fillRect(i, canvas.height - bytes[i] / 1.8, 10, canvas.height);
         }
     }
 
@@ -349,51 +353,47 @@ var Main = (function () {
         $('#pause, #muted').hide();
         $('#duration').html('0:00');
 
-        // remembers pre-muted volume value
-        var preMuted;
-        console.log(source);
+        // remembers pre-muted volume value and muted status
+        var preMuted, muted;
 
-        $('#source').on('canplaythrough', function() {
+        $('#source').on('loadedmetadata', function() {
             preMuted = parseFloat(source.volume);
-            console.log(preMuted);
         });
         
         //volume vontrol
         $('#volume').on('input', function () {
             source.volume = parseFloat(this.value / 10);
 
-            if (source.volume === 0) {
+            if (source.volume !== 0 && muted === true) {
+                muted = false;
                 $('#volume-btn, #muted').toggle();
-                $('#source').attr('muted', true);
-
-                if (source.volume !== 0) {
-                    $('#volume-btn, #muted').toggle();
-                    $('#source').removeAttr('muted');
-                    console.log(source.muted);
-                }
+                source.volume = parseFloat(this.value / 10);
             }
-        });
+            // logic does not account for muting via button click as well as muting via dragging input to 0
+            // a combination of the two will become out of step with the actual muted / not muted status
 
-        $('#source').on('volumechange', function() {
-            $('#volume').value = source.volume * 10;
+            // if (source.volume === 0 && muted === false) {
+            //     muted = true;
+            //     $('#volume-btn, #muted').toggle();
+            // }
         });
 
         $('#volume-btn').on('click', function () {
+            muted = true;
             preMuted = parseFloat(source.volume);
             console.log(preMuted, typeof preMuted);
             source.volume = parseFloat(0);
             $('#volume').value = 0;
             $('#source').attr('muted', true);
-            console.log(source.muted);
             $('#volume-btn, #muted').toggle();
         });
 
         $('#muted').on('click', function () {
+            muted = false;
             console.log(preMuted, typeof preMuted);
             source.volume = preMuted;
             $('#volume').value = preMuted * 10;
             $('#source').removeAttr('muted');
-            console.log(source.muted);
             $('#volume-btn, #muted').toggle();
         });
 
@@ -431,7 +431,7 @@ var Main = (function () {
     function resetSlider (left, right) {
         source.pause();
 
-        // return previous handle positions
+        // refresh handle positions
         leftHandle  = left;
         $('#slider').slider('values', 0, left);
         rightHandle = right;
@@ -447,10 +447,6 @@ var Main = (function () {
         setInterval(function () {
             // only runs if interval has some audio to affect
             if (source) {
-                if (source.muted === false) {
-                    console.log('OMFalseG! : ', source.muted);
-                }
-
                 // timeValue (int) is given to both timeHandle value & CSS position
                 timeValue = ((source.currentTime / source.duration) * 100);
                 // add percentage and update position
@@ -623,7 +619,7 @@ var Main = (function () {
         //  417.95918367 = 144        * 128000   / 44100
 
         // Web Audio API sampleRate can be changed according to hardware detection, so use audioCtx value
-        var bitsPerFrame = 144 * (128000 / config.sampleRate);
+        var bitsPerFrame = 144 * (128000 / configSampleRate);
 
         log.prepend('<li>bitsPerFrame = ' + bitsPerFrame + '</li>');
 
@@ -639,59 +635,65 @@ var Main = (function () {
         }
 
         // trim n bytes, equal to the nearest n mp3 frames, equal to the sliding percent values set by the user
-        edits.push(blob2edit.slice(leftBytes, rightBytes, 'audio/mpeg'));
+        try {
+            edits.push(blob2edit.slice(leftBytes, rightBytes, 'audio/mpeg'));
+        }
+        catch (e) {
+            log.prepend('<li>failed to create edit, error: ' + e + '</li>');
+        }
+        finally {
+            if (edits.length > 0) {
+                try {
+                    // use a single URL object for download link and playback
+                    var editURL = handledURL.createObjectURL(edits[edits.length - 1]);
+    
+                    // attach download link in case HTML5 default controls does not have one
+                    $('#download-edit').attr('href', editURL);
+    
+                    // attach new src and reveal audio element
+                    $('#edited').attr('src', editURL)
+                                .css('display', 'block')
+                                .on('error', function (e) {
+                                    log.prepend('<li>media error: ' + e.code + ': ' + e.message + '</li>');
+                    });
 
-        if (edits.length > 0) {
-            try {
-                // use a single URL object for download link and playback
-                var editURL = handledURL.createObjectURL(edits[edits.length - 1]);
-
-                // attach download link in case HTML5 default controls does not have one
-                $('#download-edit').attr('href', editURL);
-
-                // attach new src and reveal audio element
-                $('#edited').attr('src', editURL)
-                            .css('display', 'block')
-                            .on('error', function (e) {
-                                log.prepend('<li>media error: ' + e.code + ': ' + e.message + '</li>');
-                });
-
-                // present 'Keep / Discard' dialog modal
-                $('#keep-discard').dialog({
-                    title: 'Your Edited Audio',
-                    modal: true,
-                    closeOnEscape: true,
-                    minWidth: 320,
-                    buttons: [
-                                { 
-                                    text: 'Keep', click: function() {
-                                        console.log('kept');
-                                        upload(edits[edits.length - 1]);
-                                        $('#elength').html(edits.length.toString());
-                                        $('#keep-discard').dialog('close');
+                    // present 'Keep / Discard' dialog modal
+                    $('#keep-discard').dialog({
+                        title: 'Your Edited Audio',
+                        modal: true,
+                        closeOnEscape: true,
+                        minWidth: 320,
+                        buttons: [
+                                    { 
+                                        text: 'Keep', click: function() {
+                                            console.log('kept');
+                                            upload(edits[edits.length - 1]);
+                                            $('#elength').html(edits.length.toString());
+                                            $('#keep-discard').dialog('close');
+                                        }
+                                    },
+                                    { 
+                                        text: 'Discard', click: function() {
+                                            console.log('discarded');
+                                            handledURL.revokeObjectURL(edits[edits.length - 1]);
+                                            edits.pop();
+                                            $('#elength').html(edits.length.toString());
+                                            $('#keep-discard').dialog('close');
+                                        }
                                     }
-                                },
-                                { 
-                                    text: 'Discard', click: function() {
-                                        console.log('discarded');
-                                        handledURL.revokeObjectURL(edits[edits.length - 1]);
-                                        edits.pop();
-                                        $('#elength').html(edits.length.toString());
-                                        $('#keep-discard').dialog('close');
-                                    }
-                                }
-                            ]
-                });
+                                ]
+                    });
 
-                // odd auto-highlighting bug on download button that won't fix (without removing <a> highlighting)
-                $('#download-edit').blur();
-                $('#edited').focus();
+                    // odd auto-highlighting bug on download button that won't fix (without removing <a> highlighting)
+                    $('#download-edit').blur();
+                    $('#edited').focus();
+                }
+                catch (e) {
+                    log.prepend('<li>failed to display recording URL (from edit), error: ' + e + '</li>');
+                }
+            } else {
+                log.prepend('<li>edits.length = 0</li>');
             }
-            catch (e) {
-                log.prepend('<li>failed to display recording URL (from edit), error: ' + e + '</li>');
-            }
-        } else {
-            log.prepend('<li>edit.length = 0</li>');
         }
     }
 
