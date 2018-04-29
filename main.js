@@ -371,7 +371,6 @@ var Main = (function () {
             }
             // logic does not account for muting via button click as well as muting via dragging input to 0
             // a combination of the two will become out of step with the actual muted / not muted status
-
             // if (source.volume === 0 && muted === false) {
             //     muted = true;
             //     $('#volume-btn, #muted').toggle();
@@ -381,19 +380,15 @@ var Main = (function () {
         $('#volume-btn').on('click', function () {
             muted = true;
             preMuted = parseFloat(source.volume);
-            console.log(preMuted, typeof preMuted);
             source.volume = parseFloat(0);
             $('#volume').value = 0;
-            $('#source').attr('muted', true);
             $('#volume-btn, #muted').toggle();
         });
 
         $('#muted').on('click', function () {
             muted = false;
-            console.log(preMuted, typeof preMuted);
             source.volume = preMuted;
             $('#volume').value = preMuted * 10;
-            $('#source').removeAttr('muted');
             $('#volume-btn, #muted').toggle();
         });
 
@@ -411,7 +406,7 @@ var Main = (function () {
                         resetSlider(leftHandle, rightHandle);
                         checkFrames();
                     }
-                }, 27); // > 26ms allows setInterval to update time value
+                }, 30); // > 26ms allows setInterval to update time value
                 log.prepend('<li>source.play().then()</li>');
             }).catch(function(e) {
                 log.prepend('<li>Error: ' + e + '</li>');
