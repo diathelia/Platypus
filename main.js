@@ -407,7 +407,6 @@ var Main = (function () {
                         checkFrames();
                     }
                 }, 30); // > 26ms allows setInterval to update time value
-                log.prepend('<li>source.play().then()</li>');
             }).catch(function(e) {
                 log.prepend('<li>Error: ' + e + '</li>');
                 $('#play, #pause').toggle();
@@ -431,6 +430,10 @@ var Main = (function () {
         $('#slider').slider('values', 0, left);
         rightHandle = right;
         $('#slider').slider('values', 1, right);
+
+        source.play().then(function() {
+            log.prepend('<li>[reset]source.play().then()</li>');
+        });
     }
 
     // runs once on repeat to keep handle values up to date and within range
