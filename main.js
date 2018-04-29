@@ -388,9 +388,10 @@ var Main = (function () {
                     if (time === source.currentTime) {
                         console.log('time === source.currentTime');
                         resetSlider(leftHandle, rightHandle);
+                        checkFrames();
                     }
-                }, 27); // > 26ms allows interval to update values
-                log.prepend('<li>Yay! Video is playing!</li>');
+                }, 27); // > 26ms allows setInterval to update time value
+                log.prepend('<li>source.play().then()</li>');
             }).catch(function(e) {
                 log.prepend('<li>Error: ' + e + '</li>');
                 $('#play, #pause').toggle();
@@ -407,27 +408,13 @@ var Main = (function () {
 
     // tries to re-calibrate the slider if playerUI gets stuck / loses track
     function resetSlider (left, right) {
-        // could not pause?
         source.pause();
-
-        // refresh / reset handle values
-        // leftHandle  = 0;
-        // $('#slider').slider('values', 0, 0);
-        // rightHandle = 100;
-        // $('#slider').slider('values', 1, 100);
-        // source.currentTime = 0;
 
         // return previous handle positions
         leftHandle  = left;
         $('#slider').slider('values', 0, left);
         rightHandle = right;
         $('#slider').slider('values', 1, right);
-
-        // bump timeHandle
-        // source.currentTime = source.currentTime;
-        
-        // refresh frame values
-        checkFrames();
     }
 
     // runs once on repeat to keep handle values up to date and within range
