@@ -453,6 +453,10 @@ var Main = (function () {
                                     alert('media error: ' + e.code + ': ' + e.message);
                     });
 
+                    if (!source.paused) {
+                        source.pause;
+                    }
+                    
                     // present 'Keep / Discard' dialog modal
                     $('#keep-discard').dialog({
                         title: 'Your Edited Audio',
