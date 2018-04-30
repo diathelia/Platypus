@@ -406,7 +406,6 @@ var Main = (function () {
                         resetSlider(leftHandle, rightHandle);
                         checkFrames();
                         resumePlay();
-
                     }
                 }, 30); // > 26ms allows setInterval to update time value
             }).catch(function(e) {

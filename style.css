@@ -120,6 +120,8 @@ p, ol, h1, h2, h3 {
 #volume {
     min-width: 0.9em;
     width: 10%;
+    background-color: transparent;
+    color: auto;
 }
 
 /* features */
