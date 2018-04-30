@@ -25,7 +25,7 @@ body {
     width: 100vw;
     overflow: hidden;
     background-image: url('img/monotreme.jpg');
-	background-size: cover;
+    background-size: cover;
     background-position: center;
     background-repeat: repeat;
 }
@@ -62,13 +62,15 @@ p, ol, h1, h2, h3 {
 
 #startbar img {
     height: 100%;
+    cursor: pointer;
 }
 
 #startbar {
     height: 10%;
+    min-height: 5em;
     text-align: center;
     background-image: url('img/circlebar.svg');
-	background-size: cover;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     
