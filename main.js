@@ -84,7 +84,8 @@ var Main = (function () {
         // Initializes LAME so that we can record
         this.initialize = function () {
             // let context decide (usually 44100, I have read iOS prefers 48000...)
-            config.sampleRate = 48000;
+            config.sampleRate = audioCtx.sampleRate;
+
             // save sampleRate to global to share with edit equation
             configSampleRate = config.sampleRate;
 
@@ -99,8 +100,11 @@ var Main = (function () {
             // Settings a bufferSize of 0 instructs the browser to choose the best bufferSize
             // Webkit version 31 requires that a valid bufferSize be passed when calling this method
             // Add all buffers from LAME into an array
-            // set bufferSize to an absurd 8192 bytes (to try avoid noise artifacts on iOS at expense of latency)
-            processor = audioCtx.createScriptProcessor(1024, 1, 1);
+
+            // set bufferSize to a fixed large size (to try avoid noise artifacts on iOS at expense of latency)
+            processor = audioCtx.createScriptProcessor(0, 1, 1);
+            // test for browser/device preferred values
+            $('#log').append(processor.bufferSize, ' ', audioCtx.sampleRate);
             analyser = audioCtx.createAnalyser();
 
             processor.onaudioprocess = function (event) {
@@ -125,10 +129,8 @@ var Main = (function () {
                 microphone.disconnect();
                 processor.disconnect();
                 analyser.disconnect();
+                // Return the buffers array. Note that there may be more buffers pending here
                 processor.onaudioprocess = null;
-                // [Zhuker] "Return the buffers array. Note that there may be more buffers pending here"
-                // so I added custom buffer clearance message (iOS fix attempt)
-                realTimeWorker.postMessage({cmd: 'finish'});
             }
         };
 
