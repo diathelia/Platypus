@@ -84,7 +84,7 @@ var Main = (function () {
         // Initializes LAME so that we can record
         this.initialize = function () {
             // let context decide (usually 44100, I have read iOS prefers 48000...)
-            config.sampleRate = 44100;
+            config.sampleRate = 48000;
             // save sampleRate to global to share with edit equation
             configSampleRate = config.sampleRate;
 
@@ -100,7 +100,7 @@ var Main = (function () {
             // Webkit version 31 requires that a valid bufferSize be passed when calling this method
             // Add all buffers from LAME into an array
             // set bufferSize to an absurd 8192 bytes (to try avoid noise artifacts on iOS at expense of latency)
-            processor = audioCtx.createScriptProcessor(8192, 1, 1);
+            processor = audioCtx.createScriptProcessor(1024, 1, 1);
             analyser = audioCtx.createAnalyser();
 
             processor.onaudioprocess = function (event) {
@@ -126,7 +126,9 @@ var Main = (function () {
                 processor.disconnect();
                 analyser.disconnect();
                 processor.onaudioprocess = null;
-                // Return the buffers array. Note that there may be more buffers pending here
+                // [Zhuker] "Return the buffers array. Note that there may be more buffers pending here"
+                // so I added custom buffer clearance message (iOS fix attempt)
+                realTimeWorker.postMessage({cmd: 'finish'});
             }
         };
 
@@ -310,6 +312,7 @@ var Main = (function () {
                     if (time === source.currentTime) {
                         resetSlider(leftHandle, rightHandle);
                         checkFrames();
+                        // seperate function to try avoid a ...play().then().play()... loop when timeHandle gets stuck
                         resumePlay();
                     }
                 }, 30); // > 26ms allows setInterval to update time value
@@ -326,7 +329,7 @@ var Main = (function () {
         });
     }
 
-    // attempt to distance repeat play() calls when timeHandle gets stuck
+    // seperate function to try avoid a ...play().then().play()... loop when timeHandle gets stuck
     function resumePlay () {
         source.play();
     }
@@ -339,6 +342,8 @@ var Main = (function () {
         $('#slider').slider('values', 0, left);
         rightHandle = right;
         $('#slider').slider('values', 1, right);
+        
+        // bump timeHandle off of leftHandle to stop Firefox Mobile getting stuck
         source.currentTime = source.currentTime + 0.001;
     }
 
