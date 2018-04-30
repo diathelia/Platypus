@@ -454,7 +454,7 @@ var Main = (function () {
                     });
 
                     if (!source.paused) {
-                        source.pause;
+                        source.pause();
                     }
                     
                     // present 'Keep / Discard' dialog modal
