@@ -66,7 +66,7 @@ p, ol, h1, h2, h3 {
 }
 
 #startbar {
-    height: 3em;
+    height: 10%;
     text-align: center;
     background-image: url('img/circlebar.svg');
     background-size: cover;
