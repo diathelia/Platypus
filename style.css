@@ -114,7 +114,7 @@ p, ol, h1, h2, h3 {
 #duration {
     background-color: auto;
     color: white;
-    text-align: justify !important;
+    /* text-align: justify !important; */
 }
 
 #volume {
@@ -122,6 +122,7 @@ p, ol, h1, h2, h3 {
     width: 10%;
     background-color: transparent;
     color: auto;
+    text-decoration: none;
 }
 
 /* features */
