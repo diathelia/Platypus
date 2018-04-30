@@ -14,7 +14,6 @@
     <script src="jquery/js/jquery.ui.touch-punch.js"></script>
     <link rel="stylesheet" href="normalize.css">
     <link rel="stylesheet" href="jquery/css/jquery-ui-1.9.2.custom.css">
-    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/1.0.9/jquery.mobile-events.min.js"></script>-->
     <script src="mediaDevices-getUserMedia-polyfill.js"></script>
     <script src="AudioContextMonkeyPatch.js"></script>
     <script src="isMicSupported.js"></script>
@@ -23,7 +22,6 @@
 </head>
 
 <body>
-    <audio controls id="test"></audio>
     <!-- <p>blobs.length = <em id="blength"></em></p>
     <p> edits.length = <em id="elength"></em></p> -->
 
@@ -39,6 +37,7 @@
         <canvas id="canvas">your browser or device does not support the Canvas element and will</canvas>
 
         <div id="startbar">
+            <!-- <img src="img/circlebar.svg" class="float" id="circlebar"> -->
             <img src="img/ic_keyboard_voice_white_24px.svg" class="float" id="startBtn">
             <img src="img/ic_stop_white_24px.svg" class="float" id="stopBtn">
         </div>

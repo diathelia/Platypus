@@ -1,3 +1,7 @@
+/*
+This main thread script does the bulk of the 
+*/
+
 var Main = (function () {
     //  audio + canvas environment variables:
     var blobs = [],                                     // array to hold recordings for the session
@@ -369,12 +373,6 @@ var Main = (function () {
                 $('#volume-btn, #muted').toggle();
                 source.volume = parseFloat(this.value / 10);
             }
-            // logic does not account for muting via button click as well as muting via dragging input to 0
-            // a combination of the two will become out of step with the actual muted / not muted status
-            // if (source.volume === 0 && muted === false) {
-            //     muted = true;
-            //     $('#volume-btn, #muted').toggle();
-            // }
         });
 
         $('#volume-btn').on('click', function () {
@@ -993,8 +991,10 @@ var Main = (function () {
         audioCtx.close().then(console.log('context closed'));
     });
 
-    // grab feature detection string from isMicSupported.js Module
-    log.prepend('<li>' + IsMicSupported + '</li>');
+    // grab feature detection string from isMicSupported.js Module (needs a short delay for XHR to fulfill)
+    setTimeout(function () {
+        log.prepend('<li>' + IsMicSupported + '</li>');
+    }, 300);
     
     // initiate required resources
     init();
