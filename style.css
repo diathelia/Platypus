@@ -123,6 +123,7 @@ p, ol, h1, h2, h3 {
     background-color: transparent;
     color: auto;
     outline: none;
+    border: 0;
 }
 
 /* features */
