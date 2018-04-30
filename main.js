@@ -83,7 +83,7 @@ var Main = (function () {
 
         // Initializes LAME so that we can record
         this.initialize = function () {
-            // let context decide (usually 44100, I have read iOS prefers 48000...)
+            // let context decide sampleRate informed by browser / hardware 
             config.sampleRate = audioCtx.sampleRate;
 
             // save sampleRate to global to share with edit equation
@@ -102,7 +102,7 @@ var Main = (function () {
             // Add all buffers from LAME into an array
 
             // set bufferSize to a fixed large size (to try avoid noise artifacts on iOS at expense of latency)
-            processor = audioCtx.createScriptProcessor(0, 1, 1);
+            processor = audioCtx.createScriptProcessor(2048, 1, 1);
             // test for browser/device preferred values
             $('#log').append(processor.bufferSize, ' ', audioCtx.sampleRate);
             analyser = audioCtx.createAnalyser();
