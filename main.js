@@ -455,6 +455,7 @@ var Main = (function () {
 
                     if (!source.paused) {
                         source.pause();
+                        $('#play, #pause').toggle();
                     }
                     
                     // present 'Keep / Discard' dialog modal
