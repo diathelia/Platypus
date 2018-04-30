@@ -122,7 +122,7 @@ p, ol, h1, h2, h3 {
     width: 10%;
     background-color: transparent;
     color: auto;
-    text-decoration: none;
+    outline: none;
 }
 
 /* features */
