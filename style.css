@@ -31,9 +31,9 @@ body {
 }
 
 #container {
-    width: 95vw;
-    height: 95vh;
-    margin-top: 5vh;
+    width: 95%;
+    height: 97vh;
+    margin-top: 3vh;
     margin-left: auto;
     margin-right: auto;
 }
