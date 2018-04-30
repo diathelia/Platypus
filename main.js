@@ -339,6 +339,7 @@ var Main = (function () {
         $('#slider').slider('values', 0, left);
         rightHandle = right;
         $('#slider').slider('values', 1, right);
+        source.currentTime = source.currentTime + 0.001;
     }
 
     // runs once on repeat to keep handle values up to date and within range
