@@ -1,7 +1,3 @@
-/*
-This main thread script does the bulk of the 
-*/
-
 var Main = (function () {
     //  audio + canvas environment variables:
     var blobs = [],                                     // array to hold recordings for the session
@@ -16,7 +12,6 @@ var Main = (function () {
         drawVisual,                                     // requestAnimationFrame id to cancel callback loop
         handledURL = window.URL || window.webkitURL,    // alias to avoid overwriting the window objects themselves
         random = Math.random,                           // a sheer convenience for using random() within canvas
-        log = $('#log'),                                // a sheer convenience for using a HTML console.log for mobile
         uploadCount = 0,                                // counts uploads to determine if beforeunload prompt appears
         configSampleRate,                               // shares dynamic sampleRate between audioCtx and edit equation
 
@@ -35,10 +30,9 @@ var Main = (function () {
         // init Web Audio API context (prefixed by AudioContextMonkeyPatch.js)
         try {
             audioCtx = new window.AudioContext();
-            log.prepend('<li>audio context constructed: ' + audioCtx.state + '</li>');
         }
         catch (e) {
-            alert(e + ': Web Audio API not supported, please try updating or switching browsers to continue');
+            alert('Web Audio API not supported, please try updating or switching browsers to continue. Error: ', e);
         }
 
         // config recorder and connect to audio and canvas contexts
@@ -46,21 +40,18 @@ var Main = (function () {
             recorder = new MP3Recorder({bitRate: 128});
         }
         catch (e) {
-            alert(e + ': recorder was not instanced, could be a MP3Recorder, Web Worker or Browser issue');
+            alert('Recorder not supported, please try updating or switching browsers to continue. Error: ', e);
         }
         finally {
             // suspend audioContext until user starts recording
             if (recorder && audioCtx.state === 'running') {
-                suspendAudioCtx();
-            } else {
-                log.prepend('<li>audio context was not running (from init)</li>');
-            }
+                    audioCtx.suspend();
+                }
         }
 
         // init canvas 2d context
         if (canvas.getContext) {
             canvasCtx = canvas.getContext('2d');
-
             // set colors here instead of inside draw() callback to avoid flickering
             canvasCtx.fillStyle = 'rgb(' + 10 + ',' + 211 + ',' + (256 >> 0) + ')';
             var gradient = canvasCtx.createLinearGradient(0, 0, 0, 200);
@@ -68,7 +59,7 @@ var Main = (function () {
             gradient.addColorStop(1, 'red');
             canvasCtx.strokeStyle = gradient;
         } else {
-            log.prepend('<li>canvas context unsupported</li>');
+            alert('canvas context unsupported, please try updating or switching browsers to see visualisations');
         }
 
         // construct slider once (updated dynamically)
@@ -81,7 +72,7 @@ var Main = (function () {
         initPlayerUI();
     }
 
-/** audioContext and microphone functions *****************************************************************************/
+/** audioContext and microphone function ******************************************************************************/
 
     // inits recorder object, populate AudioContext & prepares Worker communication
     var MP3Recorder = function (config) {
@@ -96,8 +87,6 @@ var Main = (function () {
             config.sampleRate = 44100;
             // save sampleRate to global to share with edit equation
             configSampleRate = config.sampleRate;
-            log.prepend('<li>audioCtx.sampleRate (not being used) = ' + audioCtx.sampleRate + '</li>');
-            log.prepend('<li>config.sampleRate = ' + config.sampleRate + '</li>');
 
             realTimeWorker.postMessage({cmd: 'init', config: config});
         };
@@ -110,12 +99,9 @@ var Main = (function () {
             // Settings a bufferSize of 0 instructs the browser to choose the best bufferSize
             // Webkit version 31 requires that a valid bufferSize be passed when calling this method
             // Add all buffers from LAME into an array
-            // set bufferSize to 8192 (to avoid noise artifacts on iOS at expense of latency)
+            // set bufferSize to an absurd 8192 bytes (to try avoid noise artifacts on iOS at expense of latency)
             processor = audioCtx.createScriptProcessor(8192, 1, 1);
-            // debugging iOS attempt: log audioCtx's preferred bufferSize
-            log.prepend('<li>audioCtx.bufferSize = ' + processor.bufferSize + '</li>');
             analyser = audioCtx.createAnalyser();
-
 
             processor.onaudioprocess = function (event) {
                 // Send microphone data to LAME for MP3 encoding while recording
@@ -150,7 +136,6 @@ var Main = (function () {
             window.navigator.mediaDevices.getUserMedia({audio: true}).then(function (stream) {
                 // Begin recording and get a function that stops the recording
                 var stopRecording = beginRecording(stream);
-                //log.prepend('<li>UUID for getUserMedia(stream): ' + stream.id + '</li>');
                 recorder.startTime = Date.now();
                 if (onSuccess && typeof onSuccess === 'function') {
                     onSuccess();
@@ -160,7 +145,6 @@ var Main = (function () {
                 if (onError && typeof onError === 'function') {
                     onError(error);
                 }
-                log.prepend('<li>' + error + '</li>');
             });
         };
 
@@ -185,20 +169,12 @@ var Main = (function () {
                     }
                     break;
                 default :
-                log.prepend('<li>Web Worker received a message it does not know how to handle: ' +
-                e.data + '</li>');
+                alert('Web Worker received a message it does not know how to handle: ' +
+                e.data);
             }
         };
         this.initialize();
     };
-
-    // suspends context until required by start button
-    function suspendAudioCtx () {
-        'use strict';
-        audioCtx.suspend().then(function() {
-            log.prepend('<li>audio context suspended</li>');
-        });
-    }
 
 /** canvas visualisation function *************************************************************************************/
 
@@ -225,71 +201,11 @@ var Main = (function () {
         }
     }
 
-/** [experimental & historical canvas mappings] ***********************************************************************/
-    
-        // canvasCtx.rotate(i * Math.PI / 180);
-        // canvasCtx.strokeStyle = 'rgba(256, 256, 256, 0.6)';
-        
-        // get time-based array data for particles
-        // var particles = new Uint8Array(analyser.frequencyBinCount);
-        // analyser.getByteTimeDomainData(particles);
-
-        // create a white-particle oscilloscope
-        // for (var i = 0; i < particles.length; i++) {            
-        //     var value = particles[i],
-        //         percent = value / 156, // 256 = centered
-        //         _height = canvas.height * percent,
-        //         offset = canvas.height - _height - 1,
-        //         barWidth = canvas.width / particles.length;
-        //     canvasCtx.fillRect(i * barWidth, offset, 1, 1);
-        // }    
-
-    /*
-    // function getRandomColor () {
-    //     'use strict';
-    //     var color = (random() * 256) >> 0;
-    //     // console.log(color);
-    //     return color;
-    // }
-
-    // get time-based array data for waveform
-    var waveform = new Float32Array(analyser.frequencyBinCount);
-    analyser.getFloatTimeDomainData(waveform);
-
-    // draw black-lined oscilloscope
-    canvasCtx.beginPath();
-    for (i = 0; i < waveform.length; i++) {
-        var x = i;
-        var y = (0.5 + waveform[i] / 2) * canvas.height;
-        if (i == 0) {
-            canvasCtx.moveTo(x, y);
-        } else {
-            canvasCtx.lineTo(x, y);
-        }
-    }
-    canvasCtx.stroke();
-
-    // short color lines dance overtop oscilloscope 
-    canvasCtx.fillRect(x, canvas.height - bytes[x] * 0.666, 0.666, canvas.height / 13);
-
-    // black bullets rain down from top of canvas
-    canvasCtx.strokeRect(i, canvas.height - (bytes[i] / 0.03), 0.001, canvas.height / 25);
-
-    // misc
-    canvasCtx.fillRect(i++, canvas.height - dataArray[i], 10, canvas.height);
-    canvasCtx.strokeRect(i, i, canvas.width, canvas.height / 500);
-    canvasCtx.fillRect(i++, canvas.height - dataArray[i], 10, canvas.height);
-
-    // for resetting a transform (like rotate)
-    canvasCtx.setTransform(1, 0, 0, 1, 0, 0);
-    */
 /** slider and playback functions *************************************************************************************/
 
     // init jquery-ui slider
     function initSlider () {
         'use strict';
-
-        log.prepend('<li>initSlider fired</li>');
 
         // reveal DOM slider
         $('#slider').slider({
@@ -310,12 +226,10 @@ var Main = (function () {
                 // force mapping timeHandle ⇌ currentTime while user is dragging timeHandle
                 if ($('#timeHandle').hasClass('ui-state-active')) {
                     source.currentTime = (source.duration / 100) * ui.values[2];
-                    console.log('timeHandle is active');
                 }
 
                 // if left/right Handles get too close to overlapping, return false to stop slide
                 if ((ui.values[0] + 2 >= (ui.values[1])) || (ui.values[1] <= (ui.values[0] + 2))) {
-                    log.prepend('<li>[collision]</li>');                     
                     // force mouseup so timeHandle is not dragged past its bounds
                     $('#leftHandle').trigger('mouseup');
                     return false;
@@ -337,8 +251,6 @@ var Main = (function () {
         leftFrames = (totalFrames / 100) * leftHandle;
         rightFrames = (totalFrames / 100) * (100 - rightHandle);
 
-        log.prepend('<li>frames  = [' + leftFrames + ', ' + rightFrames + ']</li>');
-
         // check for meaningful values, enable/disable edit button
         if ((leftFrames === 0) && (rightFrames === 0)) {
             $('#editBtn').css('pointer-events', 'none');
@@ -350,8 +262,6 @@ var Main = (function () {
     // set up playerUI
     function initPlayerUI () {
         'use strict';
-
-        log.prepend('<li>initPlayerUI fired</li>');
 
         // prepare player
         $('#pause, #muted').hide();
@@ -393,21 +303,17 @@ var Main = (function () {
         // play button
         $('#play').on('click', function () {
             var time = source.currentTime;
-            console.log(source.currentTime);
             $('#play, #pause').toggle();
 
             source.play().then(function() {
                 setTimeout(function () {
-                    console.log(source.currentTime);
                     if (time === source.currentTime) {
-                        console.log('time === source.currentTime');
                         resetSlider(leftHandle, rightHandle);
                         checkFrames();
                         resumePlay();
                     }
                 }, 30); // > 26ms allows setInterval to update time value
             }).catch(function(e) {
-                log.prepend('<li>Error: ' + e + '</li>');
                 $('#play, #pause').toggle();
             });
             $('#play').blur();
@@ -422,16 +328,13 @@ var Main = (function () {
 
     // attempt to distance repeat play() calls when timeHandle gets stuck
     function resumePlay () {
-        source.play().then(function() {
-            log.prepend('<li>[resume]source.play().then()</li>');
-        });
+        source.play();
     }
 
     // tries to re-calibrate the slider if playerUI gets stuck / loses track
     function resetSlider (left, right) {
-        source.pause();
-
         // refresh handle positions
+        source.pause();
         leftHandle  = left;
         $('#slider').slider('values', 0, left);
         rightHandle = right;
@@ -441,8 +344,6 @@ var Main = (function () {
     // runs once on repeat to keep handle values up to date and within range
     function initInterval () {
         'use strict';
-
-        log.prepend('<li>initInterval fired</li>');
 
         setInterval(function () {
             // only runs if interval has some audio to affect
@@ -464,7 +365,6 @@ var Main = (function () {
                     resetSlider(leftHandle, rightHandle);
                     $('#play').show();
                     $('#pause').hide();
-                    log.prepend('<li>[lower]</li>');                     
                 }
 
                 // set upper-bound of currentTime to wherever rightHandle currently is
@@ -473,8 +373,6 @@ var Main = (function () {
                     resetSlider(leftHandle, rightHandle);
                     $('#play').show();
                     $('#pause').hide();
-                    log.prepend('<li>[upper]</li>');                     
-
                 }
 
                 //Get hours and minutes
@@ -491,7 +389,6 @@ var Main = (function () {
 
                 // if playback ends, reset currentTime and buttons
                 if (source.currentTime === source.duration) {
-                    // issue: leftHandle = 0, therefore inits other interval loops (worse when sliders have moved)
                     source.currentTime = 0;
                     source.pause();
                     $('#play, #pause').toggle();
@@ -500,102 +397,6 @@ var Main = (function () {
         }, 26); // ms is exactly 1 mp3 frame and the fastest possible event rate of 'timeupdate' that I am circumventing
     }
     
-/** [restricting playback experimental section] ***********************************************************************/
-
-    // (these aren't stopping timeHandle, nor pausing rn... but is immobilising [L/R]handles instead)
-    // sets leftHandle as lower limit for timeHandle
-    // if (timeValue < leftHandle) {
-    //     console.log('[lower]');
-    //     source.pause();
-    //     return false;
-    // }
-    // sets rightHandle as upper limit for timeHandle
-    // if (timeValue > rightHandle) {
-    //     console.log('[upper]');
-    //     source.pause();
-    //     return false;
-    // }
-
-
-    // yet another way to call draw() repeatedly. works without connecting sourceNode (colors change, no motion)
-    // if (!source.paused) {
-    //     draw();
-    // }
-
-    // strange visual bug: when source becomes a sourceNode, playback breaks.
-    // maybe the added task is slowing playback such that timeIntervals are breaking? doubt it. connection/piping issue.
-    /*$('#source').on('loadedmetadata', function () {
-        // 'use strict';
-        sourceNode = audioCtx.createMediaElementSource(source);
-        sourceNode.connect(analyser);
-        navigator.mediaDevices.enumerateDevices()
-            .then(function(devices) {
-                devices.forEach(function(device) {
-                    console.log(device.kind + ": " + device.label +
-                        " id = " + device.deviceId);
-                });
-            })
-            .catch(function(err) {
-                console.log(err.name + ": " + err.message);
-            });
-        sourceNode.connect(audioCtx.destination);
-    }).on('timeupdate', function () {
-        console.log('shouldDraw');
-        draw();
-    })*/
-    // .on('play', function() {
-        // uses a boolean 'wasPlayed' to indicate currentTime was stopped at rightHandle when play() event fired
-        // fires if play is resumed from pause, and the loop only catches when play should resume from the leftHandle
-        // cannot use play/pause within this listener because it will call itself mid-execution, so it inits shouldPlay.
-        // 'use strict';
-        // if shouldPlay wasn't just fulfilled (which can only be requested from this loop), react normally to play();
-        // if (wasPlayed === false) {
-
-            // this loop play's from a non-zero L position, so if the leftHandle is not at 0%, continue
-            // if ((leftHandle || rightHandle) !== 0) {
-
-                // merely helps to clean up calculation below
-                // var rMax = (source.duration / 100) * (rightHandle);
-
-                // approximates if currentTime is the near position of the rightHandle and sets currentTime to the left
-    //             if (((source.currentTime >= (rMax - .075)) && (source.currentTime <= (rMax + .075))) || rightHandle === 100) {
-
-    //                 source.currentTime = ((source.duration / 100) * leftHandle);
-    //                 log.prepend('<li>loop</li>');
-    //                 console.log('shouldPlay(1)');
-    //                 shouldPlay();
-    //             } else {
-    //                 log.prepend('<li>~loop</li>');
-    //             }
-    //         } else {
-    //             console.log('leftHandle || rightHandle === 0');
-    //         }
-
-    //     } else {
-    //         console.log('wasPlayed = true');
-    //         wasPlayed = false;
-    //     }
-    // });
-
-    // only called from on.play(): handles kicking off play() with a boolean and delay to avoid re-initiating on.play()
-    // function shouldPlay () {
-    //     'use strict';
-    //     var lMax = (source.duration / 100) * (leftHandle);
-    //     if ((source.currentTime >= (lMax - 0.075)) && (source.currentTime <= (lMax + 0.075))) {
-    //         console.log('shouldPlay in 250ms (2)');
-    //         setTimeout(function() {
-    //             console.log('inside (4)');
-    //             source.play();
-    //             wasPlayed = false;
-    //         }, 250);
-    //         console.log('afterward (3)');
-    //         wasPlayed = true;
-    //     } else {
-    //         console.log('was not at L%');
-    //         wasPlayed = false;
-    //     }
-    // }
-
 /** edit / store / upload button functions ****************************************************************************/
 
     function edit(blob2edit) {
@@ -605,9 +406,6 @@ var Main = (function () {
         if (edits.length > 0) {
             handledURL.revokeObjectURL(edits[edits.length - 1]);
             edits.splice(edits.length - 1, 1);
-            log.prepend('<li>revoked old edit URL</li>');
-        } else {
-            log.prepend('<li>nothing to revoke yet</li>');
         }
 
         // mp3 seconds per frame = 0.026             (constant)
@@ -621,14 +419,11 @@ var Main = (function () {
         // Web Audio API sampleRate can be changed according to hardware detection, so use audioCtx value
         var bitsPerFrame = 144 * (128000 / configSampleRate);
 
-        log.prepend('<li>bitsPerFrame = ' + bitsPerFrame + '</li>');
-
         var leftBytes = Math.round(leftFrames * bitsPerFrame);
         var rightBytes = Math.round(rightFrames * bitsPerFrame);
 
         // protect from slicing by -0
         if (rightBytes === 0) {
-            log.prepend('<li>rightBytes would equal -0 and break math itself, so set R to blob.size</li>');
             rightBytes = blob2edit.size;
         } else {
             rightBytes = -rightBytes;
@@ -639,7 +434,7 @@ var Main = (function () {
             edits.push(blob2edit.slice(leftBytes, rightBytes, 'audio/mpeg'));
         }
         catch (e) {
-            log.prepend('<li>failed to create edit, error: ' + e + '</li>');
+            alert('failed to create edit, please try again. error: ' + e);
         }
         finally {
             if (edits.length > 0) {
@@ -654,7 +449,7 @@ var Main = (function () {
                     $('#edited').attr('src', editURL)
                                 .css('display', 'block')
                                 .on('error', function (e) {
-                                    log.prepend('<li>media error: ' + e.code + ': ' + e.message + '</li>');
+                                    alert('media error: ' + e.code + ': ' + e.message);
                     });
 
                     // present 'Keep / Discard' dialog modal
@@ -666,18 +461,14 @@ var Main = (function () {
                         buttons: [
                                     { 
                                         text: 'Keep', click: function() {
-                                            console.log('kept');
                                             upload(edits[edits.length - 1]);
-                                            $('#elength').html(edits.length.toString());
                                             $('#keep-discard').dialog('close');
                                         }
                                     },
                                     { 
                                         text: 'Discard', click: function() {
-                                            console.log('discarded');
                                             handledURL.revokeObjectURL(edits[edits.length - 1]);
                                             edits.pop();
-                                            $('#elength').html(edits.length.toString());
                                             $('#keep-discard').dialog('close');
                                         }
                                     }
@@ -689,71 +480,12 @@ var Main = (function () {
                     $('#edited').focus();
                 }
                 catch (e) {
-                    log.prepend('<li>failed to display recording URL (from edit), error: ' + e + '</li>');
+                    alert('failed to display edit, error: ' + e);
                 }
             } else {
-                log.prepend('<li>edits.length = 0</li>');
+                alert('problem with storing your edit, please try again');
             }
         }
-    }
-
-    function store(blob2store) {
-        // 'use strict'; will break store function
-        // feature detection snippet for web storage from Mozilla Documentation:
-        // https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API
-
-        var storageAvailable = function (type) {
-            try {
-                var storage = window[type],
-                    x = '__storage_test__';
-                storage.setItem(x, x);
-                storage.removeItem(x);
-                return true;
-            }
-            catch (e) {
-                return e instanceof DOMException && (
-                        // everything except Firefox
-                    e.code === 22 ||
-                    // Firefox
-                    e.code === 1014 ||
-                    // test name field too, because code might not be present
-                    // everything except Firefox
-                    e.name === 'QuotaExceededError' ||
-                    // Firefox
-                    e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
-                    // acknowledge QuotaExceededError only if there's something already stored
-                    storage.length !== 0;
-            }
-        };
-
-        var reader = new FileReader();
-
-        // on load end of the readAs method which is written below this function, run this loop
-        reader.onloadend = function () {
-            // check storage availability and store the blob via file reader result
-            if (storageAvailable('localStorage')) {
-                try {
-                    localStorage.setItem('blob2store', reader.result);
-                    log.prepend('<li>' + localStorage + '</li>');
-                    // if the key we just set is not null (ie it worked), then display html
-                    if (localStorage.getItem('blob2store') !== null) {
-                        // get blob from storage & display
-                        $('#store').append('<audio controls src="' + localStorage.getItem('blob2store') + '"></audio>');
-                    } else {
-                        log.prepend('<li>blob2store from localStorage could not be found</li>');
-                    }
-                }
-                catch (e) {
-                    log.prepend('<li>Item could not be stored: ' + e + '</li>');
-                }
-            } else {
-                log.prepend('<li>localStorage is unavailable: If you do not save your audio and' +
-                                 ' this tab is closed, you will lose the audio from this session</li>');
-            }
-        };
-
-        //read blob as X (this must happen before storage can succeed)
-        reader.readAsDataURL(blob2store);
     }
 
     function upload(blob2upload) {
@@ -777,7 +509,6 @@ var Main = (function () {
             processData: false, // tell jQuery not to process the data
             contentType: false, // tell jQuery not to set a contentType
             success: function (data) {
-                log.prepend('<li>onSuccess data: ' + data + '\n</li>');
                 uploadCount++;
                 alert('Your recording has been sent to your Media Manager');
             },
@@ -796,12 +527,6 @@ var Main = (function () {
         edit(blobs[blobs.length - 1]);
     });
 
-    // pass (source || edit) to store function
-    $('#storeBtn').on('click', function (e) {
-        e.preventDefault();
-        store(blobs[blobs.length - 1]);
-    });
-
     // pass (source || edit) to upload function
     $('#upBtn').on('click', function (e) {
         e.preventDefault();
@@ -816,11 +541,7 @@ var Main = (function () {
 
         // iOS will only allow recording in direct response to a user gesture
         if (audioCtx.state === 'suspended') {
-            audioCtx.resume().then(function () {
-                log.prepend('<li>audio context resumed</li>');
-            });
-        } else {
-            log.prepend('<li>context was not suspended when resume ran</li>');
+            audioCtx.resume();
         }
 
         // this stops possibility of qeueing multiple overlapping recordings at once by
@@ -865,7 +586,9 @@ var Main = (function () {
         }, function (e) {
             alert(e, 'Could not make use of your microphone, please check your hardware is working:');
             // reset context and buttons
-            suspendAudioCtx();
+            if (audioCtx.state === 'running') {
+                audioCtx.suspend();
+            }
             $('#startBtn, #stopBtn').toggle();
         });
 
@@ -894,18 +617,13 @@ var Main = (function () {
             if (blobs.length > 0) {
                 handledURL.revokeObjectURL(blobs[blobs.length-1]);
                 blobs.splice(blobs.length - 1, 1);
-                $('#blength').html(blobs.length.toString());
-                log.prepend('<li>revoked old source URL</li>');
-            } else {
-                log.prepend('<li>nothing to revoke yet</li>');
             }
 
             // check if the recording is broken via empty buffers
             if (blob.size === 0) {
-                log.prepend('<li>blob.size was zero</li>');
+                alert('there was a problem with the recording, please try again');
             } else {
                 blobs.push(blob);
-                $('#blength').html(blobs.length.toString());
             }
 
             try {
@@ -916,7 +634,6 @@ var Main = (function () {
                 $('#source').attr('src', blobURL).on('durationchange', function () {
                                 // keep relevant slider values up to date
                                 source = this;
-                                log.prepend('<li>.on durationchange #source = ' + source + '</li>');
                                 totalFrames = source.duration * 38.28125;
 
                                 // append the same blobURL as a download link
@@ -933,25 +650,16 @@ var Main = (function () {
                                 checkFrames();
                             })
                             .on('error', function (e) {
-                                log.prepend('<li>media error: ' + e.code + ': ' + e.message + '</li>');
+                                alert('media error: ' + e.code + ': ' + e.message);
                             });
             }
             catch (e) {
-                log.prepend('<li>createObjectURL failed (from source), error: ' + e + '</li>');
+                alert('could not display your recording please try again. error: ' + e);
             }
-            // }
-            // alternative place to connect to visualisation to playback
-            // console.log(source);
-            // sourceNode = audioCtx.createMediaElementSource(source);
-            // sourceNode.connect(analyser);
-            // sourceNode.connect(audioCtx.destination);
-            // }
         });
 
         if (audioCtx.state === 'running') {
-            suspendAudioCtx();
-        } else {
-            log.prepend('<li>audio context was not running (from stopBtn)</li>');
+            audioCtx.suspend();
         }
         
         // reveal UI elements
@@ -990,65 +698,8 @@ var Main = (function () {
         // close audio context
         audioCtx.close().then(console.log('context closed'));
     });
-
-    // grab feature detection string from isMicSupported.js Module (needs a short delay for XHR to fulfill)
-    setTimeout(function () {
-        log.prepend('<li>' + IsMicSupported + '</li>');
-    }, 300);
     
     // initiate required resources
     init();
 
 })();
-/* 
-                /*
-                    $('#timeHandle').on('focus', function () {
-                        console.log('focused');
-                    });
-                    interval maps currentTime onto slider via timeValue...
-                    this function maps ui.values[2] back to currentTime...
-                    I guess this is the UI issue: two competing functions.
-                    but why does this push timeHandle to the left?
-                    why does moving left/rightHandle affect the timeHandle?
-                
-
-
- * 1) define the 'create audio' DOM (class=”toolIconButton” for authoring)
- * 2) call $(Main.init) on click of data-action="Media.CreateAudio" button
- * 3) run init function to test API + device compatability (msg user or hide?)
- * 4) set flags for dataURL's & other exception handling detected by init
- * 4) offer Web Audio button, or possibly ask to switch browsers to continue
- * 5) (research how to use Bracken's media editors as fallbacks for mine?)
- * 6) watch how data-action="Media.CreateAudio" DOM is altered on click.
- * 7) replicate onInitSuccess and button onclick: insert tool HTML into DOM
- * 8) try more things like function doSmallTask(arg1, arg2) {...return x, y;}
-    tack on (disabled) edit button
-    $('#edit').append(
-        '<button class="btn btn-primary editBtn" disabled="true">' +
-        '<i class="glyphicon glyphicon-edit"></i> Edit</button>'
-    );
-
-    tack on (disabled) store button
-    $('#store').append(
-        '<button class="btn btn-primary storeBtn" disabled="true">' +
-        '<i class="glyphicon glyphicon-save"></i> Store' +
-        '</button>'
-    );
-    the = this;
-    totalFrames = source.duration * 38.28125;
-    leftFrames = (totalFrames / 100) * leftHandle;
-    rightFrames = (totalFrames / 100) * (100 - rightHandle);
-
-    // check for meaningful values
-    if ((leftFrames === 0) && (rightFrames === 0)) {
-        $('#editBtn').attr('disabled', true);
-    } else {
-        $('#editBtn').attr('disabled', false);
-    }
-    // this does nothing, diagnose ACTUAL editing issue wrt defined percentages feeding into frame calculation.
-    // if ((leftHandle === 0) && (rightHandle === 100)) {
-    //     $('#editBtn').attr('disabled', true);
-    // } else {
-    //     $('#editBtn').attr('disabled', false);
-    // }
-    */

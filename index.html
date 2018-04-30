@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>StereoStreme</title>
+    <title>Platypus</title>
     <link rel="icon" href="img/favicon.png">
     <meta charset="utf-8">
     <meta name="viewport"
@@ -16,15 +16,11 @@
     <link rel="stylesheet" href="jquery/css/jquery-ui-1.9.2.custom.css">
     <script src="mediaDevices-getUserMedia-polyfill.js"></script>
     <script src="AudioContextMonkeyPatch.js"></script>
-    <script src="isMicSupported.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <!-- <p>blobs.length = <em id="blength"></em></p>
-    <p> edits.length = <em id="elength"></em></p> -->
-
     <!-- this container is designed to hold all visible elements within 95(vh/vw) -->
     <div id="container">
 
@@ -34,10 +30,9 @@
             </span>
         </div>
 
-        <canvas id="canvas">your browser or device does not support the Canvas element and will</canvas>
+        <canvas id="canvas">your browser or device does not support the Canvas element</canvas>
 
         <div id="startbar">
-            <!-- <img src="img/circlebar.svg" class="float" id="circlebar"> -->
             <img src="img/ic_keyboard_voice_white_24px.svg" class="float" id="startBtn">
             <img src="img/ic_stop_white_24px.svg" class="float" id="stopBtn">
         </div>
@@ -65,15 +60,6 @@
             <a     class="float" id="download-edit" href="#" download><img src="img/ic_file_download_black_24px.svg"></a>
             <audio id="edited" controls controlsList="nodownload"></audio>
         </div>
-    </div>
-
-    <!-- <button id="storeBtn">Store</button>
-    <div id="store"></div> -->
-
-    <div id="consolelog">
-        <h3 id="console">console.log:</h3>
-        <ol id="log"></ol>
-        <p id="featureLog"></p>
     </div>
 
     <!-- placed at bottom to avoid any interference when revealing UI elements and also
