@@ -110,6 +110,10 @@ p, ol, h1, h2, h3 {
     width: auto;
 }
 
+#download-edit {
+    margin-bottom: -4px;
+}
+
 #playerUI img {
     min-height: 100%;
     cursor: pointer;
