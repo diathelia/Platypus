@@ -84,7 +84,7 @@ var Main = (function () {
         // Initializes LAME so that we can record
         this.initialize = function () {
             // let context decide sampleRate informed by browser / hardware 
-            config.sampleRate = audioCtx.sampleRate;
+            config.sampleRate = 48000; // audioCtx.sampleRate;
 
             // save sampleRate to global to share with edit equation
             configSampleRate = config.sampleRate;
@@ -370,18 +370,16 @@ var Main = (function () {
                 if (source.currentTime < (source.duration / 100) * leftHandle) {
                     source.currentTime = (((source.duration / 100) * leftHandle) + 0.005);
                     resetSlider(leftHandle, rightHandle);
-//                     $('#play').show();
-//                     $('#pause').hide();
-                    $('#play, #pause').toggle();
+                    $('#play').show();
+                    $('#pause').hide();
                 }
 
                 // set upper-bound of currentTime to wherever rightHandle currently is
                 if (source.currentTime > (source.duration / 100) * rightHandle) {
                     source.currentTime = (((source.duration / 100) * leftHandle) + 0.005);
                     resetSlider(leftHandle, rightHandle);
-//                     $('#play').show();
-//                     $('#pause').hide();
-                    $('#play, #pause').toggle();
+                    $('#play').show();
+                    $('#pause').hide();
                 }
 
                 //Get hours and minutes
@@ -658,6 +656,7 @@ var Main = (function () {
                                 // Chrome = no 'save as' prompt (does in firefox)
 
                                 // refresh / reset authoring values for new source
+                                $('#play, #pause').toggle();
                                 leftHandle  = 0;
                                 $('#slider').slider('values', 0, 0);
                                 rightHandle = 100;
