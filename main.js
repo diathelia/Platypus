@@ -107,7 +107,6 @@ var Main = (function () {
 
             processor.onaudioprocess = function (event) {
                 // Send microphone data to LAME for MP3 encoding while recording
-                // var array = event.inputBuffer.getChannelData(0);
                 realTimeWorker.postMessage({cmd: 'encode', buf: event.inputBuffer.getChannelData(0)});
             };
 
