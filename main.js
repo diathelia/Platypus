@@ -103,14 +103,12 @@ var Main = (function () {
 
             // set bufferSize to a fixed large size (to try avoid noise artifacts on iOS at expense of latency)
             processor = audioCtx.createScriptProcessor(2048, 1, 1);
-            // test for browser/device preferred values
-            $('#log').append(processor.bufferSize, ' ', audioCtx.sampleRate, ' ');
             analyser = audioCtx.createAnalyser();
 
             processor.onaudioprocess = function (event) {
                 // Send microphone data to LAME for MP3 encoding while recording
-                var array = event.inputBuffer.getChannelData(0);
-                realTimeWorker.postMessage({cmd: 'encode', buf: array});
+                // var array = event.inputBuffer.getChannelData(0);
+                realTimeWorker.postMessage({cmd: 'encode', buf: event.inputBuffer.getChannelData(0)});
             };
 
             // iOS likes createMediaStreamSource to go after processor code...arbitrarily AFAIK
