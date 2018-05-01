@@ -277,7 +277,7 @@ var Main = (function () {
             preMuted = parseFloat(source.volume);
         });
         
-        //volume vontrol
+        // volume vontrol
         $('#volume').on('input', function () {
             source.volume = parseFloat(this.value / 10);
 
@@ -345,7 +345,9 @@ var Main = (function () {
         $('#slider').slider('values', 1, right);
         
         // bump timeHandle off of leftHandle to stop Firefox Mobile getting stuck
+        console.log('pre t = ', source.currentTime, timeValue);
         source.currentTime = source.currentTime + 0.001;
+        console.log('post t = ', source.currentTime, timeValue);
     }
 
     // runs once on repeat to keep handle values up to date and within range
@@ -599,6 +601,7 @@ var Main = (function () {
             
             // swap out start button for stop button
             $('#startBtn, #stopBtn').toggle();
+
         }, function (e) {
             alert(e, 'Could not make use of your microphone, please check your hardware is working:');
             // reset context and buttons
@@ -614,6 +617,12 @@ var Main = (function () {
         'use strict';
         e.preventDefault();
 
+        // if source was playing, toggle pause/play buttons
+        if (source && !source.paused) {
+            console.log('toggled');
+            $('#play, #pause').toggle();
+        }
+
         // cancel animation callback
         window.cancelAnimationFrame(drawVisual);
         // stop timer
@@ -624,6 +633,7 @@ var Main = (function () {
         // swap out stop button for start button
         $(this).css('display', 'none');
         $('#startBtn').css('display', 'inline-block');
+        // why not toggle?
 
         recorder.getMp3Blob(function (blob) {
 
@@ -651,17 +661,18 @@ var Main = (function () {
                                 totalFrames = source.duration * 38.28125;
 
                                 // append the same blobURL as a download link
+                                // (change to svg on html side)
                                 $('#download').html('<a href="' + blobURL +
                                   '" download><img src="img/ic_file_download_white_24px.svg"></a>');
                                 // Chrome = no 'save as' prompt (does in firefox)
 
                                 // refresh / reset authoring values for new source
-                                $('#play, #pause').toggle();
+                                $('#play, #pause').toggle();  // !!!!!!!!
                                 leftHandle  = 0;
                                 $('#slider').slider('values', 0, 0);
                                 rightHandle = 100;
                                 $('#slider').slider('values', 1, 100);
-                                timeValue = source.currentTime;
+                                timeValue = source.currentTime; // necessary?
                                 checkFrames();
                             })
                             .on('error', function (e) {

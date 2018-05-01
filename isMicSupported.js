@@ -14,6 +14,7 @@
 
 var IsMicSupported = (function () {
     'use strict';
+    var pub = {};
     // store results in array, expect booleans (except isBlobURL() which returns a string)
     var featureResults = [],
     // expect a string indicating level of dependency support (to return to window.Module)
@@ -48,6 +49,10 @@ var IsMicSupported = (function () {
         if ('AudioContext' in window) {
             try {
                 var testContext = new window.AudioContext();
+                pub.samples = testContext.sampleRate;
+
+                var testProcessor = testContext.createScriptProcessor(0, 1, 1);
+                pub.buffer = testProcessor.bufferSize;
             }
             catch (e) {
                 featureLog.append('AudioContext error: ', e, '<br>');
@@ -115,6 +120,8 @@ var IsMicSupported = (function () {
                             featureResults.push('no');
                         }
 
+                        $('#blobURL').attr('src', urlToBlob);
+
                         if (featureResults.includes(false)) {
                             // not all core dependencies can be handled, prompt user / don't insert any HTML
                             featureAnswer = ('no support');
@@ -126,11 +133,14 @@ var IsMicSupported = (function () {
                             featureAnswer = ('partial support');
                         }
         
-                        // return featureAnswer
-                        window.IsMicSupported = featureAnswer;
+                        // save featureAnswer
+                        pub.support = featureAnswer;
 
+                        window.IsMicSupported = pub;
+                        console.log(pub);
+                        
                         // revoke URL
-                        testURL.revokeObjectURL(urlToBlob);
+                        // testURL.revokeObjectURL(urlToBlob);
                     }
                 };
 
