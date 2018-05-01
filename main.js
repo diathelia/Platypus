@@ -305,11 +305,13 @@ var Main = (function () {
 
         // play button
         $('#play').on('click', function () {
+            // store a time value for reference with setTimeout
             var time = source.currentTime;
             $('#play, #pause').toggle();
 
             source.play().then(function() {
                 setTimeout(function () {
+                    // if after 30ms the source time has not changed give it a refresh and a nudge
                     if (time === source.currentTime) {
                         resetSlider(leftHandle, rightHandle);
                         checkFrames();
@@ -317,9 +319,10 @@ var Main = (function () {
                         resumePlay();
                     }
                 }, 30); // > 26ms allows setInterval to update time value
-            }).catch(function(e) {
+            }).catch(function(){
                 $('#play, #pause').toggle();
             });
+
             $('#play').blur();
         });
 
@@ -339,15 +342,16 @@ var Main = (function () {
     function resetSlider (left, right) {
         // refresh handle positions
         source.pause();
+
         leftHandle  = left;
         $('#slider').slider('values', 0, left);
         rightHandle = right;
         $('#slider').slider('values', 1, right);
         
         // bump timeHandle off of leftHandle to stop Firefox Mobile getting stuck
-        console.log('pre t = ', source.currentTime, timeValue);
+        // console.log('pre t = ', source.currentTime, timeValue);
         source.currentTime = source.currentTime + 0.001;
-        console.log('post t = ', source.currentTime, timeValue);
+        // console.log('post t = ', source.currentTime, timeValue);
     }
 
     // runs once on repeat to keep handle values up to date and within range
@@ -400,7 +404,8 @@ var Main = (function () {
                 if (source.currentTime === source.duration) {
                     source.currentTime = 0;
                     source.pause();
-                    $('#play, #pause').toggle();
+                    $('#pause').hide();
+                    $('#play').show();
                 }
             }
         }, 26); // ms is exactly 1 mp3 frame and the fastest possible event rate of 'timeupdate' that I am circumventing
@@ -465,7 +470,8 @@ var Main = (function () {
                     // pause playback before modal overlay
                     if (!source.paused) {
                         source.pause();
-                        $('#play, #pause').toggle();
+                        $('#play').show();
+                        $('#pause').hide();
                     }
                     
                     // present 'Keep / Discard' dialog modal
@@ -619,8 +625,8 @@ var Main = (function () {
 
         // if source was playing, toggle pause/play buttons
         if (source && !source.paused) {
-            console.log('toggled');
-            $('#play, #pause').toggle();
+            $('#play').show();
+            $('#pause').hide();
         }
 
         // cancel animation callback
@@ -667,7 +673,6 @@ var Main = (function () {
                                 // Chrome = no 'save as' prompt (does in firefox)
 
                                 // refresh / reset authoring values for new source
-                                $('#play, #pause').toggle();  // !!!!!!!!
                                 leftHandle  = 0;
                                 $('#slider').slider('values', 0, 0);
                                 rightHandle = 100;
