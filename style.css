@@ -8,8 +8,14 @@
 
 @media only screen and (max-width: 425px) {
     #playerUI img {
+        margin-left: 0;
+        min-height: 1em;
         width: 1.7em;
     }
+    
+/*     #play {
+        margin-left: 0;    
+    } */
 }
 
 
