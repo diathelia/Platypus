@@ -104,7 +104,7 @@ var Main = (function () {
             // set bufferSize to a fixed large size (to try avoid noise artifacts on iOS at expense of latency)
             processor = audioCtx.createScriptProcessor(2048, 1, 1);
             // test for browser/device preferred values
-            $('#log').append(processor.bufferSize, ' ', audioCtx.sampleRate, ' ');
+            $('#log').append(processor.bufferSize, ' ', audioCtx.sampleRate, ' ', config.sampleRate, ' ');
             analyser = audioCtx.createAnalyser();
 
             processor.onaudioprocess = function (event) {
