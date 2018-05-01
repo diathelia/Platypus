@@ -1,10 +1,11 @@
 /*
- the original structure of this script came from an
- example used here: https://github.com/zhuker/lamejs
+ the original structure of this script came from here:
+ https://github.com/zhuker/lamejs/tree/master/worker-example
 
- Modifications: 1) added some comments
+ Modifications: 1) removed one intermediary array variable (var data;)
                 2) added use strict
                 3) configured mp3 quality
+                4) added some comments
 
  Although this code is not strictly a part of the LAME library
  here is the appropriate license for modification just in case:
@@ -52,9 +53,9 @@
 
     // creates empty Float32Array for LAME output, creates empty Int16Array for Web Audio API
     var convertBuffer = function(arrayBuffer) {
-        var data = arrayBuffer; // new Float32Array(arrayBuffer);
+        // var data = new Float32Array(arrayBuffer);
         var out = new Int16Array(arrayBuffer.length);
-        floatTo16BitPCM(data, out);
+        floatTo16BitPCM(arrayBuffer, out);
         return out;
     };
 
