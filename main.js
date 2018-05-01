@@ -1,24 +1,23 @@
 var Main = (function () {
     //  audio + canvas environment variables:
-    var blobs = [],                                     // array to hold recordings for the session
-        edits = [],                                     // array to load edited recordings for the session
+    var blobs = [],                                     // array to hold latest recording for the session
+        edits = [],                                     // array to hold latest edited recording for the session
         timer,                                          // needed by startBtn and stopBtn
         recorder,                                       // single instance constructed, used in many places
         audioCtx,                                       // single session audioContext that is used in many places
-        analyser,                                       // set-up by mic.js, connected by on.startBtn, used by draw()
+        analyser,                                       // set-up by mic, connected by on.startBtn, used by draw()
         source,                                         // for current source <audio>: defined by 'this' when loaded
         canvas = document.getElementById('canvas'),     // avoided jQuery object due to canvas issues when painting
         canvasCtx,                                      // single session canvasContext used in MP3Recorder and draw()
-        drawVisual,                                     // requestAnimationFrame id to cancel callback loop
+        drawVisual,                                     // requestAnimationFrame id to cancel draw() callback loop
         handledURL = window.URL || window.webkitURL,    // alias to avoid overwriting the window objects themselves
-        random = Math.random,                           // a sheer convenience for using random() within canvas
-        uploadCount = 0,                                // counts uploads to determine if beforeunload prompt appears
+        uploadCount = 0,                                // counts uploads to help determine if beforeunload prompt appears
         configSampleRate,                               // shares dynamic sampleRate between audioCtx and edit equation
 
     //  authoring values:
         leftHandle,         // sliding percentage to trim from audio start
         rightHandle,        // sliding percentage to trim from audio end
-        timeValue,          // current audio time in int percentage
+        timeValue,          // current audio time in int percentage for timeHandle
         leftFrames,         // discrete n frames to trim (requires leftHandle)
         rightFrames,        // discrete n frames to trim (requires rightHandle)
         totalFrames;        // a constant per each audio recording
@@ -68,7 +67,7 @@ var Main = (function () {
         // start playback/slider interval once (updated dynamically)
         initInterval();
 
-        // init player UI
+        // init audio player controls
         initPlayerUI();
     }
 
@@ -126,12 +125,13 @@ var Main = (function () {
                 microphone.disconnect();
                 processor.disconnect();
                 analyser.disconnect();
-                // Return the buffers array. Note that there may be more buffers pending here
+                // Return the buffers array. Note that there may be more Worker buffers pending
                 processor.onaudioprocess = null;
             }
         };
 
-        // Function for kicking off recording on 'start' click --> refactored for promise-based MediaDevices
+        // Function for kicking off recording on 'start' click
+        // refactored for promise-based MediaDevices and polyfilled
         this.start = function (onSuccess, onError) {
             // Request access to the microphone
             window.navigator.mediaDevices.getUserMedia({audio: true}).then(function (stream) {
@@ -385,6 +385,14 @@ var Main = (function () {
                     $('#pause').hide();
                 }
 
+                // if playback reaches the end, reset currentTime and buttons
+                if (source.currentTime === source.duration) {
+                    source.currentTime = 0;
+                    source.pause();
+                    $('#pause').hide();
+                    $('#play').show();
+                }
+                
                 //Get hours and minutes
                 var s = parseInt(source.currentTime % 60);
                 var m = parseInt((source.currentTime / 60) % 60);
@@ -396,14 +404,6 @@ var Main = (function () {
 
                 // update duration
                 $('#duration').html(m + ':' + s);	
-
-                // if playback ends, reset currentTime and buttons
-                if (source.currentTime === source.duration) {
-                    source.currentTime = 0;
-                    source.pause();
-                    $('#pause').hide();
-                    $('#play').show();
-                }
             }
         }, 26); // ms is exactly 1 mp3 frame and the fastest possible event rate of 'timeupdate' that I am circumventing
     }
@@ -499,10 +499,11 @@ var Main = (function () {
                     $('#edited').focus();
                 }
                 catch (e) {
-                    alert('failed to display edit, error: ' + e);
+                    alert('failed to display your edit, please try again');
+                    console.log('edit blobURL error: ', e);
                 }
             } else {
-                alert('problem with storing your edit, please try again');
+                alert('failed to create an mp3 of your edit, please try again');
             }
         }
     }
