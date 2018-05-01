@@ -196,9 +196,8 @@ var Main = (function () {
         var bytes = new Uint8Array(analyser.frequencyBinCount);
         analyser.getByteFrequencyData(bytes);
 
-        // create some misc blocks and crap [currently]
+        // create bouncing colored bars
         for (var i = 1; i < bytes.length; i++) {
-            // bouncing city-scape
             canvasCtx.fillStyle = 'rgb(' + i + ',' + 211 + ',' + (256 >> 0) + ')';
             canvasCtx.strokeRect(i, canvas.height - bytes[i] / 2, 10, canvas.height);
             canvasCtx.fillRect(i, canvas.height - bytes[i] / 1.8, 10, canvas.height);
@@ -371,16 +370,18 @@ var Main = (function () {
                 if (source.currentTime < (source.duration / 100) * leftHandle) {
                     source.currentTime = (((source.duration / 100) * leftHandle) + 0.005);
                     resetSlider(leftHandle, rightHandle);
-                    $('#play').show();
-                    $('#pause').hide();
+//                     $('#play').show();
+//                     $('#pause').hide();
+                    $('#play, #pause').toggle();
                 }
 
                 // set upper-bound of currentTime to wherever rightHandle currently is
                 if (source.currentTime > (source.duration / 100) * rightHandle) {
                     source.currentTime = (((source.duration / 100) * leftHandle) + 0.005);
                     resetSlider(leftHandle, rightHandle);
-                    $('#play').show();
-                    $('#pause').hide();
+//                     $('#play').show();
+//                     $('#pause').hide();
+                    $('#play, #pause').toggle();
                 }
 
                 //Get hours and minutes
@@ -427,6 +428,7 @@ var Main = (function () {
         // Web Audio API sampleRate can be changed according to hardware detection, so use audioCtx value
         var bitsPerFrame = 144 * (128000 / configSampleRate);
 
+        // get closest corresponding quantity of bits to the nearest byte - http://lame.sourceforge.net/tech-FAQ.txt
         var leftBytes = Math.round(leftFrames * bitsPerFrame);
         var rightBytes = Math.round(rightFrames * bitsPerFrame);
 
@@ -460,6 +462,7 @@ var Main = (function () {
                                     alert('media error: ' + e.code + ': ' + e.message);
                     });
 
+                    // pause playback before modal overlay
                     if (!source.paused) {
                         source.pause();
                         $('#play, #pause').toggle();
@@ -470,7 +473,7 @@ var Main = (function () {
                         title: 'Your Edited Audio',
                         modal: true,
                         closeOnEscape: true,
-                        minWidth: 320,
+                        minWidth: 310,
                         buttons: [
                                     { 
                                         text: 'Keep', click: function() {
@@ -488,7 +491,7 @@ var Main = (function () {
                                 ]
                     });
 
-                    // odd auto-highlighting bug on download button that won't fix (without removing <a> highlighting)
+                    // fixes odd auto-highlighting bug on download button (without removing <a> highlighting)
                     $('#download-edit').blur();
                     $('#edited').focus();
                 }
@@ -519,8 +522,8 @@ var Main = (function () {
             },
             data: formData,
             cache: false,
-            processData: false, // tell jQuery not to process the data
-            contentType: false, // tell jQuery not to set a contentType
+            processData: false,         // tell jQuery not to process the data
+            contentType: false,        // tell jQuery not to set a contentType
             success: function (data) {
                 uploadCount++;
                 alert('Your recording has been sent to your Media Manager');
@@ -595,18 +598,18 @@ var Main = (function () {
 
             // kick-off drawing: requestAnimationFrame callback drives animation from within draw();
             draw();
-
+            
+            // swap out start button for stop button
+            $('#startBtn, #stopBtn').toggle();
         }, function (e) {
             alert(e, 'Could not make use of your microphone, please check your hardware is working:');
             // reset context and buttons
             if (audioCtx.state === 'running') {
                 audioCtx.suspend();
             }
+            // swap out start button for stop button
             $('#startBtn, #stopBtn').toggle();
         });
-
-        // swap out start button for stop button
-        $('#startBtn, #stopBtn').toggle();
     });
 
     $('#stopBtn').on('click', function (e) {
@@ -701,11 +704,8 @@ var Main = (function () {
         // delete session array blobs
         blobs = [];
         edits = [];
-        
-        // empty localStorage
-        localStorage.clear();
 
-        // force stop --> disconnect nodes (Zhuker warns this may not empty Web Worker buffers)
+        // force stop --> disconnect nodes (Zhuker warns this may not empty all Web Worker buffers)
         recorder.stop();
        
         // close audio context
@@ -714,5 +714,4 @@ var Main = (function () {
     
     // initiate required resources
     init();
-
 })();
