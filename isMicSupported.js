@@ -120,8 +120,6 @@ var IsMicSupported = (function () {
                             featureResults.push('no');
                         }
 
-                        $('#blobURL').attr('src', urlToBlob);
-
                         if (featureResults.includes(false)) {
                             // not all core dependencies can be handled, prompt user / don't insert any HTML
                             featureAnswer = ('no support');
@@ -140,7 +138,7 @@ var IsMicSupported = (function () {
                         console.log(pub);
                         
                         // revoke URL
-                        // testURL.revokeObjectURL(urlToBlob);
+                        testURL.revokeObjectURL(urlToBlob);
                     }
                 };
 
