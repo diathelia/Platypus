@@ -1,24 +1,30 @@
 /*
     This feature detection script aims to pre-empt whether a users device + browser configuration
     can support the Web Audio Tool by initialising and testing its core dependencies one by one.
-    The result is a the 'featureAnswer' string which is returned to the IsMicSupported module itself.
+    The results are logged to the console (for now) and returned to the IsMicSupported module itself.
 
     This script could be triggered to run when a user is about to be offered the use of this tool
-    just before any HTML is rendered. If window.IsMicSupported = 'full support' then reveal HTML.
+    just before any HTML is rendered. If the module object has a property 'support' with the string
+    'full support' then reveal HTML.
+
     This way, only users who will not encounter any forseeable problems will see the option, while
     other users could either be given the link and warned, or not given the link.
 
     Issue: Edge on Desktop will give an error message about revoking the blobURL.
-        Its equivalent msSaveOrOpenBlob does not seem to need a revoke method.
+           Its equivalent msSaveOrOpenBlob does not seem to need a revoke method.
 */      
 
 var IsMicSupported = (function () {
     'use strict';
+    // public object. property 'support' will contain the 'featureAnswer'
     var pub = {};
+
     // store results in array, expect booleans (except isBlobURL() which returns a string)
     var featureResults = [],
-    // expect a string indicating level of dependency support (to return to window.Module)
+
+    // expect a string indicating level of dependency support
     featureAnswer = 'unknown support',
+
     // log errors to screen
     featureLog = $('#log');
 
@@ -65,8 +71,8 @@ var IsMicSupported = (function () {
                 }
                 testContext.close().then(console.log('context closed'))
                     .catch(function(){console.log('context not closed')});
-                // .close resolves to void, will this .catch work?
-                // MDN uses 'await' which I can't use (unsupported ES6)
+                //  .close resolves to void, will this .catch work?
+                //  MDN uses 'await' which I can't use (unsupported ES6)
             }
         }
     }
@@ -135,6 +141,7 @@ var IsMicSupported = (function () {
                         pub.support = featureAnswer;
 
                         window.IsMicSupported = pub;
+                        
                         console.log(pub);
                         
                         // revoke URL
