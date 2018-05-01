@@ -36,7 +36,7 @@ var Main = (function () {
 
         // config recorder and connect to audio and canvas contexts
         try {
-            recorder = new MP3Recorder({bitRate: 160});
+            recorder = new MP3Recorder({bitRate: 320});
         }
         catch (e) {
             alert('Recorder not supported, please try updating or switching browsers to continue. Error: ', e);
@@ -426,10 +426,10 @@ var Main = (function () {
         
         // 'bits / frame = frame_size * bit_rate / sample_rate' - http://lame.sourceforge.net/tech-FAQ.txt
         //  417.95918367 = 144        * 128000   / 44100
-        //  new b/f rate = 144        * 160000   / x
+        //  new b/f rate = 144        * 320000   / x
 
         // Web Audio API sampleRate can be changed according to hardware detection, so use audioCtx value
-        var bitsPerFrame = 144 * (160000 / configSampleRate);
+        var bitsPerFrame = 144 * (320000 / configSampleRate);
 
         // get closest quantity of bits to the nearest byte - http://lame.sourceforge.net/tech-FAQ.txt
         // if (padding-bit) {use.round} else {use .floor};
