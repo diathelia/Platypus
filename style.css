@@ -6,6 +6,8 @@
     }
 }
 
+/* think about portrait mobile conditionals */
+
 @media only screen and (max-width: 425px) {
     #playerUI img {
         margin-left: 0 !important;
@@ -13,7 +15,6 @@
         width: 1.7em;
     }
 }
-
 
 /* general page styling */
 html, body {
@@ -23,8 +24,6 @@ html, body {
 }
 
 body {
-    height: 100vh;
-    width: 100vw;
     overflow: hidden;
     background-image: url('img/monotreme.jpg');
     background-size: cover;
@@ -33,9 +32,9 @@ body {
 }
 
 #container {
-    width: 93%;
-    height: 97vh;
-    margin-top: 3vh;
+    width: 93vw;
+    height: 98vh;
+    margin-top: 2vh;
     margin-left: auto;
     margin-right: auto;
 }
@@ -49,22 +48,24 @@ p, ol, h1, h2, h3 {
     border: 0;
 }
 
-#bg {
-    background-color: rgba(0, 82, 100, 0.5);
-    color: auto;
-    padding: 0.3em 0;
-    padding-bottom: 0.5em;
+/* centering floating class */
+.float {
+    width: auto;
+    display: inline-block;
+    vertical-align: middle;
 }
 
-/* centered objects */
+/* centered bar sections */
 #timebar {
     height: 5%;
     text-align: center;
 }
 
-#startbar img {
-    height: 100%;
-    cursor: pointer;
+#bg {
+    background-color: rgba(0, 82, 100, 0.5);
+    color: auto;
+    padding: 0.5em 0;
+    /* padding-bottom: 0.5em; */
 }
 
 #startbar {
@@ -74,85 +75,20 @@ p, ol, h1, h2, h3 {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    
 }
 
-.float {
-    width: auto;
-    display: inline-block;
-    vertical-align: middle;
-}
-
-/* keep / discard modal */
-#keep-discard {
-    overflow: hidden;
-}
-
-#keep-discard p {
-    background-color: auto;
-    color: black;
-    margin-bottom: 1em;
-}
-
-#edited {
-    margin-top: 1em;
-    margin-left: -0.7em; /* pulls visible part of <audio> back in-line with text */
-}
-
-/* Buttons */
-#slide-wrap, #slider, #playerUI, #editBtn, #storeBtn, #upBtn, #timer, #bg {
-    visibility: hidden;
-}
-
-#stopBtn, #keep-discard {
-    display: none;
-}
-
-#download {
+#startbar img {
     height: 100%;
-    width: auto;
-}
-
-#download-edit {
-    margin-bottom: -4px;
-}
-
-#playerUI img {
-    min-height: 100%;
     cursor: pointer;
-    margin-left: 3vw;
+    /* try transition here */
 }
 
-#duration {
-    background-color: auto;
-    color: white;
-}
-
-#volume {
-    min-width: 0.9em;
-    width: 10%;
-    background-color: transparent;
-    color: auto;
-    outline: none;
-    border: 0;
-}
-
-/* features */
+/* canvas */
 #canvas {
     height: 50%;
     width: 100%;
     background-color: transparent;
     color: auto;
-}
-
-#playerUI {
-    background-color: rgba(94, 217, 191, 0.3);
-    color: auto;
-    height: 10%;
-    width: 100%;
-    text-align: center;
-    border-radius: 0.8em;
-    margin-top: 0.3em;
 }
 
 /* slider */
@@ -173,10 +109,10 @@ p, ol, h1, h2, h3 {
 }
 
 #leftHandle, #rightHandle, #timeHandle {
-    top: -0.001em; /* centered within custom slider height */
+    top: -0.001em;       /* centering-fix for custom slider height */
     height: 100%;
-    width: 3em;
-    margin-left: -1.5em;
+    width: 3em;          /* custom slider width requires: */
+    margin-left: -1.5em; /* margin-left must equal the negative half of width */
     outline: none;
     border: 0;
     background-position: center;
@@ -196,14 +132,74 @@ p, ol, h1, h2, h3 {
     background: transparent url('img/timeHandle.svg') no-repeat border-box scroll;
 }
 
+/* custom audio controls */
+#playerUI {
+    background-color: rgba(94, 217, 191, 0.3);
+    color: auto;
+    height: 10%;
+    width: 100%;
+    text-align: center;
+    border-radius: 0.8em;
+    margin-top: 0.3em;
+}
+
+#playerUI img {
+    min-height: 100%;
+    cursor: pointer;
+    margin-left: 3vw;
+}
+
+#duration {
+    background-color: auto;
+    color: white;
+}
+
+#download {
+    height: 100%;
+    width: auto;
+}
+
+#volume {
+    min-width: 0.9em;
+    width: 10%;
+    background-color: transparent;
+    color: auto;
+    outline: none;
+    border: 0;
+}
+
+/* keep / discard modal */
+#keep-discard {
+    overflow: hidden;
+}
+
+#keep-discard p {
+    background-color: auto;
+    color: black;
+    margin-bottom: 1em;
+}
+
+#download-edit {
+    margin-bottom: -4px;
+}
+
+#edited {
+    margin-top: 1em;
+    margin-left: -0.7em; /* pulls visible part of <audio> back in-line with text */
+}
+
+/* hide most functionality on init */
+#slide-wrap, #slider, #playerUI, #editBtn, #storeBtn, #upBtn, #timer, #bg {
+    visibility: hidden;
+}
+
+#stopBtn, #keep-discard {
+    display: none;
+}
+
 /* hiding via margin due to a Firefox playback bug:
    if audio element is hidden on not displayed then
    the custom JavaScript control play(); will break */
 #source {
     margin-left: -9999px;
-}
-
-#consolelog {
-    background-color: rgba(94, 217, 191, 0.3);
-    color: auto;
 }
