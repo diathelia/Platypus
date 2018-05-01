@@ -19,7 +19,7 @@ var IsMicSupported = (function () {
     // public object. property 'support' will contain the 'featureAnswer'
     var pub = {};
 
-    // store results in array, expect booleans (except isBlobURL() which returns a string)
+    // store results in array, expect booleans (except BlobURL() which returns a string)
     var featureResults = [],
 
     // expect a string indicating level of dependency support
@@ -94,7 +94,7 @@ var IsMicSupported = (function () {
     isWebWorker();      // expect true / false
 
     // tests a Blob that is then referenced to test a BlobURL
-    var blobURL = (function isBlobAndURL() {
+    var blobURL = (function () {
         'use strict';
         // test URL API
         var testURL = window.URL || window.webkitURL;
@@ -110,11 +110,13 @@ var IsMicSupported = (function () {
 
                 // open local blob mp3 test (4179 bytes)
                 xhr.open('GET', 'blobURL_test.mp3', true);
+                
                 // load as arraybuffer for broadest compatability
                 xhr.responseType = 'arraybuffer';
 
                 xhr.onreadystatechange = function () {
                     if (xhr.readyState === 4) {
+                        
                         // recreate blob from the arraybuffer response
                         blob = new Blob([xhr.response], {type: 'audio/mpeg'});
 
@@ -133,17 +135,18 @@ var IsMicSupported = (function () {
                             // blobURL success, send Main two thumbs up
                             featureAnswer = ('full support');
                         } else {
-                            // BlobURLs not reliable so use dataURLs eg: <Opera & Samsung>
+                            // BlobURLs not reliable so could use dataURLs eg: <Opera, UC & Samsung Androids>
                             featureAnswer = ('partial support');
                         }
         
                         // save featureAnswer
                         pub.support = featureAnswer;
 
-                        window.IsMicSupported = pub;
-                        
                         console.log(pub);
                         
+                        // return results object to Module
+                        window.IsMicSupported = pub;
+                                                
                         // revoke URL
                         testURL.revokeObjectURL(urlToBlob);
                     }
