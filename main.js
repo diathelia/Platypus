@@ -724,9 +724,4 @@ var Main = (function () {
     
     // initiate required resources
     init();
-    
-    // grab feature detection string from isMicSupported.js Module (needs a short delay for XHR to fulfill)
-    setTimeout(function () {
-        console.log(IsMicSupported);
-    }, 300);
 })();
