@@ -52,7 +52,7 @@
 
     // creates empty Float32Array for LAME output, creates empty Int16Array for Web Audio API
     var convertBuffer = function(arrayBuffer) {
-        var data = new Float32Array(arrayBuffer);
+        var data = arrayBuffer; // new Float32Array(arrayBuffer);
         var out = new Int16Array(arrayBuffer.length);
         floatTo16BitPCM(data, out);
         return out;
@@ -92,10 +92,6 @@
             case 'encode':
                 encode(e.data.buf);
                 break;
-
-            // case 'empty':
-            //     clearBuffer();
-            //     break;
 
             case 'finish':
                 finish();
