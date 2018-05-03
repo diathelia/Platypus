@@ -656,31 +656,32 @@ var Main = (function () {
             try {
                 // create a single blobURL for the audio element and the download button to share
                 var blobURL = handledURL.createObjectURL(blobs[blobs.length - 1]);
-
-                // attach blobURL and use new audio.src to update authoring values
-                $('#source').attr('src', blobURL).on('durationchange', function () {
-                                // keep relevant slider values up to date
-                                source = this;
-                                totalFrames = source.duration * 38.28125;
-
-                                // append the same blobURL as a download link
-                                $('#download').attr('href', blobURL);
-                                // Chrome = no 'save as' prompt (does in firefox)
-
-                                // refresh / reset authoring values for new source
-                                leftHandle  = 0;
-                                $('#slider').slider('values', 0, 0);
-                                rightHandle = 100;
-                                $('#slider').slider('values', 1, 100);
-                                timeValue = source.currentTime; // necessary?
-                                checkFrames();
-                            })
-                            .on('error', function (e) {
-                                alert('media error: ' + e.code + ': ' + e.message);
-                            });
             }
             catch (e) {
                 alert('could not display your recording please try again. error: ' + e);
+            }
+            finally {
+                // attach blobURL and use new audio.src to update authoring values
+                $('#source').attr('src', blobURL).on('durationchange', function () {
+                    // keep relevant slider values up to date
+                    source = this;
+                    totalFrames = source.duration * 38.28125;
+
+                    // append the same blobURL as a download link
+                    $('#download').attr('href', blobURL);
+                    // Chrome = no 'save as' prompt (does in firefox)
+
+                    // refresh / reset authoring values for new source
+                    leftHandle  = 0;
+                    $('#slider').slider('values', 0, 0);
+                    rightHandle = 100;
+                    $('#slider').slider('values', 1, 100);
+                    timeValue = source.currentTime; // necessary?
+                    checkFrames();
+                })
+                .on('error', function (e) {
+                    alert('media error: ' + e.code + ': ' + e.message);
+                });
             }
         });
 
