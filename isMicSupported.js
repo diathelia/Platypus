@@ -55,9 +55,11 @@ var IsMicSupported = (function () {
         if ('AudioContext' in window) {
             try {
                 var testContext = new window.AudioContext();
+                // save the preferred sampleRate for this user
                 pub.samples = testContext.sampleRate;
 
                 var testProcessor = testContext.createScriptProcessor(0, 1, 1);
+                // save the preferred bufferSize for this user
                 pub.buffer = testProcessor.bufferSize;
             }
             catch (e) {
@@ -69,10 +71,7 @@ var IsMicSupported = (function () {
                 } else {
                     featureResults.push(true);
                 }
-                testContext.close().then(console.log('context closed'))
-                    .catch(function(){console.log('context not closed')});
-                //  .close resolves to void, will this .catch work?
-                //  MDN uses 'await' which I can't use (unsupported ES6)
+                testContext.close();
             }
         }
     }
@@ -88,7 +87,23 @@ var IsMicSupported = (function () {
         }
     }
 
-    // query other is-X-Supported functions and log results in array
+    // attempted exception due to revokeObjectURL failure on Edge
+    // function isMsBlob() {
+    //     if (window.navigator.msSaveOrOpenBlob) {
+    //         var aFileParts = ['<a id="a"><b id="b">hey!</b></a>'];        // code from the MDN Blob page
+    //         var oMyBlob = new Blob(aFileParts, {type : 'text/html'});     // code from the MDN Blob page
+    //         var msBlob = window.navigator.msSaveOrOpenBlob(oMyBlob);
+    //         console.log(msBlob);
+    //         if (msBlob.toString().startsWith('blob')) {
+    //             pub.edge = 'yes';
+    //         }
+    //         window.URL.revokeObjectURL(msBlob);
+    //     } else {
+    //         pub.edge = 'no';
+    //     }
+    // }
+
+    // query other is-X-Supported functions and log results
     isGetUserMedia();   // expect true / false
     isAudioContext();   // expect true / false
     isWebWorker();      // expect true / false
@@ -162,12 +177,3 @@ var IsMicSupported = (function () {
         }
     })();
 })();
-
-// exception due to revokeObjectURL failure on Edge
-// if (window.navigator.msSaveOrOpenBlob) {
-//     var msBlob = window.navigator.msSaveOrOpenBlob(new Blob(aFileParts, {type : 'text/plain'}));
-//     var msURL = window.URL.createObjectURL(msBlob);
-//     console.log(msURL);
-//     featureResults.push('yesMsURL');
-//     window.URL.revokeObjectURL(msBlob);
-// }

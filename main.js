@@ -71,7 +71,7 @@ var Main = (function () {
         initPlayerUI();
     }
 
-/** audioContext and microphone function ******************************************************************************/
+/** handles Web Audio API processing and delegating to Web Worker *****************************************************/
 
     // inits recorder object, populate AudioContext & prepares Worker communication
     var MP3Recorder = function (config) {
@@ -82,7 +82,7 @@ var Main = (function () {
 
         // Initializes LAME so that we can record
         this.initialize = function () {
-            // let context decide sampleRate informed by browser / hardware 
+            // let context decide sampleRate - informed by browser / hardware 
             config.sampleRate = audioCtx.sampleRate;
 
             // save sampleRate to global to share with edit equation
@@ -96,16 +96,15 @@ var Main = (function () {
         // Function that handles getting audio out of the browser's media API
         function beginRecording(stream) {
             // Set up Web Audio API to process data from the media stream (microphone)
-            // Settings a bufferSize of 0 instructs the browser to choose the best bufferSize
-            // Webkit version 31 requires that a valid bufferSize be passed when calling this method
-            // Add all buffers from LAME into an array
+            // optional: setting a bufferSize of 0 instructs the browser to choose the best bufferSize
+            // note: Webkit version 31 requires that a valid bufferSize be passed when calling this method
 
             // set bufferSize to a fixed large size (to try avoid noise artifacts on iOS at expense of latency)
             processor = audioCtx.createScriptProcessor(16384, 1, 1); // (largest buffer possible)
             analyser = audioCtx.createAnalyser();
 
+            // for each bufferSize of raw audio (while recording), send it to Worker to be encoded with LAME
             processor.onaudioprocess = function (event) {
-                // Send microphone data to LAME for MP3 encoding while recording
                 realTimeWorker.postMessage({cmd: 'encode', buf: event.inputBuffer.getChannelData(0)});
             };
 
@@ -201,7 +200,7 @@ var Main = (function () {
         }
     }
 
-/** slider and playback functions *************************************************************************************/
+/** slider, authoring and playback functions [interelated] ************************************************************/
 
     // init jquery-ui slider
     function initSlider () {
@@ -408,7 +407,13 @@ var Main = (function () {
         }, 26); // ms is exactly 1 mp3 frame and the fastest possible event rate of 'timeupdate' that I am circumventing
     }
     
-/** edit / store / upload button functions ****************************************************************************/
+/** edit and upload functions and their respective button functions ***************************************************/
+
+    // pass current source blob to edit function
+    $('#editBtn').on('click', function (e) {
+        e.preventDefault();
+        edit(blobs[blobs.length - 1]);
+    });
 
     function edit(blob2edit) {
         'use strict';
@@ -510,6 +515,12 @@ var Main = (function () {
         }
     }
 
+    // pass current source blob to upload function
+    $('#upBtn').on('click', function (e) {
+        e.preventDefault();
+        upload(blobs[blobs.length - 1]);
+    });
+
     function upload(blob2upload) {
         'use strict';
 
@@ -540,20 +551,6 @@ var Main = (function () {
             }
         });
     }
-
-/** button events pass a blob to their respective functions ***********************************************************/
-
-    // pass source to edit function
-    $('#editBtn').on('click', function (e) {
-        e.preventDefault();
-        edit(blobs[blobs.length - 1]);
-    });
-
-    // pass (source || edit) to upload function
-    $('#upBtn').on('click', function (e) {
-        e.preventDefault();
-        upload(blobs[blobs.length - 1]);
-    });
 
 /** Start initiates recording, Stop gets and presents blob  ***********************************************************/
 
@@ -695,7 +692,7 @@ var Main = (function () {
         $('#slide-wrap, #slider, #playerUI, #storeBtn, #upBtn, #editBtn').css('visibility', 'visible');
     });
 
-/** warn user to save progress before unloading resources *************************************************************/
+/** warn user before unloading resources, call to init script *********************************************************/
 
     // jQuery appears to have removed their beforeunload API entries, so using vanilla JS to be safe
     window.addEventListener("beforeunload", function (e) {

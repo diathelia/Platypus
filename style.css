@@ -1,12 +1,23 @@
 @media only screen and (max-width: 768px) {
     #playerUI img {
-        margin-left: 0 !important;
+        margin-left: 0;
         min-height: 1em;
         width: 2.5em;
     }
+    #timer {
+        font-size: 1000%;
+    }
+    #canvas {
+        height: 40%;
+    }
 }
 
-/* think about portrait mobile conditionals */
+/* Landscape iPhone 6, 6S, 7 and 8 */
+/* @media only screen 
+  and (min-device-width: 375px)
+  and (max-device-width: 667px) {
+  and (orientation: landscape) {
+} */
 
 @media only screen and (max-width: 425px) {
     #playerUI img {
@@ -46,7 +57,7 @@ p, ol, h1, h2, h3 {
     border: 0;
 }
 
-/* centering floating class */
+/* centering / floating class */
 .float {
     width: auto;
     display: inline-block;
@@ -59,11 +70,16 @@ p, ol, h1, h2, h3 {
     text-align: center;
 }
 
+#timer {
+    margin: 0;
+    padding: 0;
+    font-size: 150%;    
+}
+
 #bg {
     background-color: rgba(0, 82, 100, 0.5);
     color: auto;
-    padding: 0.5em 0;
-    /* padding-bottom: 0.5em; */
+    padding-bottom: 0.3em;
 }
 
 #startbar {
@@ -78,7 +94,6 @@ p, ol, h1, h2, h3 {
 #startbar img {
     height: 100%;
     cursor: pointer;
-    /* try transition here */
 }
 
 /* canvas */
@@ -196,7 +211,7 @@ p, ol, h1, h2, h3 {
 }
 
 /* hiding via margin due to a Firefox playback bug:
-   if audio element is hidden on not displayed then
+   if audio element is hidden on not displayed, then
    the custom JavaScript control play(); will break */
 #source {
     margin-left: -9999px;
