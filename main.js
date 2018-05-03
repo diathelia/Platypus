@@ -11,7 +11,7 @@ var Main = (function () {
         canvasCtx,                                      // single session canvasContext used in MP3Recorder and draw()
         drawVisual,                                     // requestAnimationFrame id to cancel draw() callback loop
         handledURL = window.URL || window.webkitURL,    // alias to avoid overwriting the window objects themselves
-        uploadCount = 0,                                // counts uploads to help determine if beforeunload prompt appears
+        uploadCount = 0,                                // counts uploads to determine if beforeunload prompt appears
         configSampleRate,                               // shares dynamic sampleRate between audioCtx and edit equation
 
     //  authoring values:
@@ -36,7 +36,7 @@ var Main = (function () {
 
         // config recorder and connect to audio and canvas contexts
         try {
-            recorder = new MP3Recorder({bitRate: 160});
+            recorder = new MP3Recorder({bitRate: 128});
         }
         catch (e) {
             alert('Recorder not supported, please try updating or switching browsers to continue. Error: ', e);
@@ -99,7 +99,7 @@ var Main = (function () {
             // optional: setting a bufferSize of 0 instructs the browser to choose the best bufferSize
             // note: Webkit version 31 requires that a valid bufferSize be passed when calling this method
 
-            // set bufferSize to a fixed large size (to try avoid noise artifacts on iOS at expense of latency)
+            // set bufferSize to largest size to avoid all mobile noise artifacts (at the possible expense of latency)
             processor = audioCtx.createScriptProcessor(16384, 1, 1); // (largest buffer possible)
             analyser = audioCtx.createAnalyser();
 
