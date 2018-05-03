@@ -24,7 +24,6 @@
 <body>
     <!-- this container is designed to hold all visible elements within 97vh / 93vw -->
     <div id="container">
-
         <div id="timebar">
             <span id="bg">
                 <h1 class="float" id="timer">0:00</h1>
@@ -48,7 +47,7 @@
             <img src="img/ic_pause_white_24px.svg" class="float" id="pause">
             <img src="img/ic_edit_white_24px.svg" class="float" id="editBtn">
             <img src="img/ic_file_upload_white_24px.svg" class="float" id="upBtn">
-            <div class="float" id="download"></div>
+            <a class="float" id="download" href="#" download><img src="img/ic_file_download_white_24px.svg"></a>
             <img src="img/ic_volume_up_white_24px.svg" id="volume-btn" class="float">
             <img src="img/ic_volume_off_white_24px.svg" id="muted" class="float">
             <input class="float" id="volume" type="range" min="0" max="10" value="5" />
@@ -61,13 +60,14 @@
             <a     class="float" id="download-edit" href="#" download><img src="img/ic_file_download_black_24px.svg"></a>
             <audio id="edited" controls controlsList="nodownload"></audio>
         </div>
+        <span id="log"></span>
     </div>
 
     <!-- placed at bottom to avoid any interference when revealing UI elements and also
     banished to the far ends of the negative left-margin to both hide and manipulate:
     this is due to a bug in Firefox if display: none or visibility: hidden are set -->
     <audio controls preload="auto" id="source"></audio>
-    
+ 
     <script src="main.js"></script>
 </body>
 </html>

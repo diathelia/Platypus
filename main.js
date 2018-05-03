@@ -36,7 +36,7 @@ var Main = (function () {
 
         // config recorder and connect to audio and canvas contexts
         try {
-            recorder = new MP3Recorder({bitRate: 320});
+            recorder = new MP3Recorder({bitRate: 160});
         }
         catch (e) {
             alert('Recorder not supported, please try updating or switching browsers to continue. Error: ', e);
@@ -101,7 +101,7 @@ var Main = (function () {
             // Add all buffers from LAME into an array
 
             // set bufferSize to a fixed large size (to try avoid noise artifacts on iOS at expense of latency)
-            processor = audioCtx.createScriptProcessor(2048, 1, 1);
+            processor = audioCtx.createScriptProcessor(16384, 1, 1); // (largest buffer possible)
             analyser = audioCtx.createAnalyser();
 
             processor.onaudioprocess = function (event) {
@@ -426,13 +426,13 @@ var Main = (function () {
         
         // 'bits / frame = frame_size * bit_rate / sample_rate' - http://lame.sourceforge.net/tech-FAQ.txt
         //  417.95918367 = 144        * 128000   / 44100
-        //  new b/f rate = 144        * 320000   / x
+        //  new b/f rate = 144        * x        / x
 
         // Web Audio API sampleRate can be changed according to hardware detection, so use audioCtx value
-        var bitsPerFrame = 144 * (320000 / configSampleRate);
+        var bitsPerFrame = 144 * (128000 / configSampleRate);
 
         // get closest quantity of bits to the nearest byte - http://lame.sourceforge.net/tech-FAQ.txt
-        // if (padding-bit) {use.round} else {use .floor};
+        // note: if (padding-bit) {use .round} else {use .floor}
         var leftBytes = Math.round(leftFrames * bitsPerFrame);
         var rightBytes = Math.round(rightFrames * bitsPerFrame);
 
@@ -667,9 +667,7 @@ var Main = (function () {
                                 totalFrames = source.duration * 38.28125;
 
                                 // append the same blobURL as a download link
-                                // (change to svg on html side)
-                                $('#download').html('<a href="' + blobURL +
-                                  '" download><img src="img/ic_file_download_white_24px.svg"></a>');
+                                $('#download').attr('href', blobURL);
                                 // Chrome = no 'save as' prompt (does in firefox)
 
                                 // refresh / reset authoring values for new source

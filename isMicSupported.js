@@ -11,7 +11,7 @@
     other users could either be given the link and warned, or not given the link.
 
     Issue: Edge on Desktop will give an error message about revoking the blobURL.
-           Its equivalent msSaveOrOpenBlob does not seem to need a revoke method.
+    Its equivalent msSaveOrOpenBlob does not seem to need a revoke method.
 */      
 
 var IsMicSupported = (function () {
@@ -19,7 +19,7 @@ var IsMicSupported = (function () {
     // public object. property 'support' will contain the 'featureAnswer'
     var pub = {};
 
-    // store results in array, expect booleans (except BlobURL() which returns a string)
+    // store results in array, expect booleans (except isBlobURL() which returns a string)
     var featureResults = [],
 
     // expect a string indicating level of dependency support
@@ -94,7 +94,7 @@ var IsMicSupported = (function () {
     isWebWorker();      // expect true / false
 
     // tests a Blob that is then referenced to test a BlobURL
-    var blobURL = (function () {
+    var blobURL = (function isBlobAndURL() {
         'use strict';
         // test URL API
         var testURL = window.URL || window.webkitURL;
@@ -110,13 +110,11 @@ var IsMicSupported = (function () {
 
                 // open local blob mp3 test (4179 bytes)
                 xhr.open('GET', 'blobURL_test.mp3', true);
-                
                 // load as arraybuffer for broadest compatability
                 xhr.responseType = 'arraybuffer';
 
                 xhr.onreadystatechange = function () {
                     if (xhr.readyState === 4) {
-                        
                         // recreate blob from the arraybuffer response
                         blob = new Blob([xhr.response], {type: 'audio/mpeg'});
 
@@ -135,18 +133,21 @@ var IsMicSupported = (function () {
                             // blobURL success, send Main two thumbs up
                             featureAnswer = ('full support');
                         } else {
-                            // BlobURLs not reliable so could use dataURLs eg: <Opera, UC & Samsung Androids>
+                            // BlobURLs not reliable so use dataURLs eg: <Opera & Samsung>
                             featureAnswer = ('partial support');
                         }
         
                         // save featureAnswer
                         pub.support = featureAnswer;
 
-                        console.log(pub);
-                        
-                        // return results object to Module
                         window.IsMicSupported = pub;
-                                                
+                        
+                        // display for testing purposes
+                        console.log(pub);
+                        $('#log').html(pub.support.toString())
+                                 .append(' ', pub.buffer.toString())
+                                 .append(' ', pub.samples.toString());
+                        
                         // revoke URL
                         testURL.revokeObjectURL(urlToBlob);
                     }
