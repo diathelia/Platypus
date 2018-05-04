@@ -18,9 +18,9 @@ This repo also contains a feature detection script to specifically test for audi
  - Sometimes the audio blob is properly encoded but the browser fails to display it.
    to counteract this a sample blob mp3 from Platypus is included to test blob URLs
 
- - Sometimes the hardware & browser combination prefer sample rates and buffer sizes.
-   These can cause a sporadic mixture of sped-up playback and high-end artifacts.
-   To help debug them the preferred sample and buffer values are also saved.
+ - Sometimes the hardware & browser combination prefer sample rates and buffer sizes.<br>
+   These can cause a sporadic mixture of sped-up playback and high-end artifacts.<br>
+   To help debug them the preferred sample and buffer values are also saved.<br>
    
- - When run, this script saves the level of support and preferred sample/buffer values.
+ - When run, this script saves the level of support and preferred sample/buffer values.<br>
    These are all returned as an object to the IsMicSupported global module for access.
