@@ -13,7 +13,7 @@ Platypus uses a monkey patch to alias Web Audio API syntax for WebKit browsers
 
 Platypus uses normalize.css in an attempt to coax-together browser slider behaviours
 
--|-
+~ | ~
 
 This repo also contains a feature detection script to specifically test for audio:
 
