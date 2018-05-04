@@ -410,8 +410,7 @@ var Main = (function () {
 /** edit and upload functions and their respective button functions ***************************************************/
 
     // pass current source blob to edit function
-    $('#editBtn').on('click', function (e) {
-        e.preventDefault();
+    $('#editBtn').on('click', function () {
         edit(blobs[blobs.length - 1]);
     });
 
@@ -516,8 +515,7 @@ var Main = (function () {
     }
 
     // pass current source blob to upload function
-    $('#upBtn').on('click', function (e) {
-        e.preventDefault();
+    $('#upBtn').on('click', function () {
         upload(blobs[blobs.length - 1]);
     });
 
@@ -554,9 +552,8 @@ var Main = (function () {
 
 /** Start initiates recording, Stop gets and presents blob  ***********************************************************/
 
-    $('#startBtn').on('click', function (e) {
+    $('#startBtn').on('click', function () {
         'use strict';
-        e.preventDefault();
 
         // iOS will only allow recording in direct response to a user gesture
         if (audioCtx.state === 'suspended') {
@@ -616,9 +613,8 @@ var Main = (function () {
         });
     });
 
-    $('#stopBtn').on('click', function (e) {
+    $('#stopBtn').on('click', function () {
         'use strict';
-        e.preventDefault();
 
         // if source was playing, toggle pause/play buttons
         if (source && !source.paused) {
