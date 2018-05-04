@@ -11,6 +11,8 @@ This repo uses a callback-polyfill for the Streams API getUserMedia promise
 
 This repo uses a monkey patch to alias Web Audio API syntax for WebKit browsers
 
+This repo uses normalize.css in an attempt to coax-together browser slider behaviours
+
 This repo also contains a feature detection script to specifically test for audio:
 
  - Sometimes the audio blob is properly encoded but the browser fails to display it,
