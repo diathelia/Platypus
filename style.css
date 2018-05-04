@@ -5,19 +5,12 @@
         width: 2.5em;
     }
     #timer {
-        font-size: 1000%;
+        font-size: 100%;
     }
     #canvas {
         height: 40%;
     }
 }
-
-/* Landscape iPhone 6, 6S, 7 and 8 */
-/* @media only screen 
-  and (min-device-width: 375px)
-  and (max-device-width: 667px) {
-  and (orientation: landscape) {
-} */
 
 @media only screen and (max-width: 425px) {
     #playerUI img {
