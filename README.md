@@ -18,8 +18,8 @@ This repo also contains a feature detection script to specifically test for audi
  - Sometimes the audio blob is properly encoded but the browser fails to display it,<br>
    To counteract this a sample blob mp3 from Platypus is included to test blob URLs
 
- - Sometimes the hardware & browser combination prefer sample rates and buffer sizes.<br>
-   These can cause a sporadic mixture of sped-up playback and high-end artifacts.<br>
+ - Sometimes the hardware and browser prefers sample rates and buffer sizes which<br>
+   can cause a sporadic mixture of sped-up playback and high-end artifacts.<br>
    To help debug them the preferred sample and buffer values are also saved.<br>
    
  - When run, this script saves the level of support and preferred sample/buffer values.<br>
