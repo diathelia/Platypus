@@ -15,8 +15,8 @@ Platypus uses normalize.css in an attempt to coax-together browser slider behavi
 
 This repo also contains a feature detection script to specifically test for audio:
 
- - Sometimes the audio blob is properly encoded but the browser fails to display it.
-   to counteract this a sample blob mp3 from Platypus is included to test blob URLs
+ - Sometimes the audio blob is properly encoded but the browser fails to display it,<br>
+   To counteract this a sample blob mp3 from Platypus is included to test blob URLs
 
  - Sometimes the hardware & browser combination prefer sample rates and buffer sizes.<br>
    These can cause a sporadic mixture of sped-up playback and high-end artifacts.<br>
