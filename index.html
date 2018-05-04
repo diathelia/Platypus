@@ -12,12 +12,12 @@
     <script src="jquery/js/jquery-1.8.2.js"></script>
     <script src="jquery/js/jquery-ui-1.9.1.custom(added-widgets).js"></script>
     <script src="jquery/js/jquery.ui.touch-punch.js"></script>
-    <link rel="stylesheet" href="normalize.css">
+    <link rel="stylesheet" href="dependencies/normalize.css">
     <link rel="stylesheet" href="jquery/css/jquery-ui-1.9.2.custom.css">
-    <script src="mediaDevices-getUserMedia-polyfill.js"></script>
-    <script src="AudioContextMonkeyPatch.js"></script>
-    <script src="isMicSupported.js"></script>
+    <script src="dependencies/mediaDevices-getUserMedia-polyfill.js"></script>
+    <script src="dependencies/AudioContextMonkeyPatch.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <!-- styling -->
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -60,13 +60,12 @@
             <a     class="float" id="download-edit" href="#" download><img src="img/ic_file_download_black_24px.svg"></a>
             <audio id="edited" controls controlsList="nodownload"></audio>
         </div>
-        <p id="log"></p>
     </div>
 
     <!-- placed at bottom to avoid any interference when revealing UI elements and also
     banished to the far ends of the negative left-margin to both hide and manipulate:
     this is due to a bug in Firefox if display: none or visibility: hidden are set -->
-    <audio controls preload="auto" id="source"></audio>
+    <audio preload="auto" id="source"></audio>
  
     <script src="main.js"></script>
 </body>

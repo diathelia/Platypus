@@ -410,7 +410,8 @@ var Main = (function () {
 /** edit and upload functions and their respective button functions ***************************************************/
 
     // pass current source blob to edit function
-    $('#editBtn').on('click', function () {
+    $('#editBtn').on('click', function (e) {
+        e.preventDefault();
         edit(blobs[blobs.length - 1]);
     });
 
@@ -515,7 +516,8 @@ var Main = (function () {
     }
 
     // pass current source blob to upload function
-    $('#upBtn').on('click', function () {
+    $('#upBtn').on('click', function (e) {
+        e.preventDefault();
         upload(blobs[blobs.length - 1]);
     });
 
@@ -552,8 +554,9 @@ var Main = (function () {
 
 /** Start initiates recording, Stop gets and presents blob  ***********************************************************/
 
-    $('#startBtn').on('click', function () {
+    $('#startBtn').on('click', function (e) {
         'use strict';
+        e.preventDefault();
 
         // iOS will only allow recording in direct response to a user gesture
         if (audioCtx.state === 'suspended') {
@@ -613,8 +616,9 @@ var Main = (function () {
         });
     });
 
-    $('#stopBtn').on('click', function () {
+    $('#stopBtn').on('click', function (e) {
         'use strict';
+        e.preventDefault();
 
         // if source was playing, toggle pause/play buttons
         if (source && !source.paused) {
@@ -689,7 +693,7 @@ var Main = (function () {
         $('#slide-wrap, #slider, #playerUI, #storeBtn, #upBtn, #editBtn').css('visibility', 'visible');
     });
 
-/** warn user before unloading resources, call to init script *********************************************************/
+/** before resource unload function, call to init script **************************************************************/
 
     // jQuery appears to have removed their beforeunload API entries, so using vanilla JS to be safe
     window.addEventListener("beforeunload", function (e) {
