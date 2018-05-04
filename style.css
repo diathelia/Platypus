@@ -4,12 +4,17 @@
         min-height: 1em;
         width: 2.5em;
     }
-    #timer {
+    
+    #container {
+        width: 90vw;
+        margin-top: 2vh;
+    }
+    /*   #timer {
         font-size: 100%;
     }
     #canvas {
         height: 40%;
-    }
+    } */
 }
 
 @media only screen and (max-width: 425px) {
