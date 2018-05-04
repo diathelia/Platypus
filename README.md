@@ -19,4 +19,8 @@ This repo also contains a feature detection script to specifically test for audi
    to counteract this a sample blob mp3 from Platypus is included to test blob URLs
 
  - Sometimes the hardware & browser combination prefer sample rates and buffer sizes
-   which will cause a sporadic mixture of sped-up playback and high-end artifacts
+   which will cause a sporadic mixture of sped-up playback and high-end artifacts,
+   to help debug them the sample and buffer values are also saved.
+   
+ - the level of support, the preferred sample rate and the preferred buffer size are
+   all returned to the IsMicSupported global module.
