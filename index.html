@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="jquery/css/jquery-ui-1.9.2.custom.css">
     <script src="dependencies/mediaDevices-getUserMedia-polyfill.js"></script>
     <script src="dependencies/AudioContextMonkeyPatch.js"></script>
+    <script src="dependencies/FileSaver.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
     <!-- styling -->
     <link rel="stylesheet" href="style.css">
@@ -47,7 +48,7 @@
             <img src="img/ic_pause_white_24px.svg" class="float" id="pause">
             <img src="img/ic_edit_white_24px.svg" class="float" id="editBtn">
             <img src="img/ic_file_upload_white_24px.svg" class="float" id="upBtn">
-            <a class="float" id="download" href="#" download><img src="img/ic_file_download_white_24px.svg"></a>
+            <img class="float" id="download" src="img/ic_file_download_white_24px.svg">
             <img src="img/ic_volume_up_white_24px.svg" id="volume-btn" class="float">
             <img src="img/ic_volume_off_white_24px.svg" id="muted" class="float">
             <input class="float" id="volume" type="range" min="0" max="10" value="5" />
@@ -57,7 +58,7 @@
             <p     class="float"><b>Keep</b> will upload your recording to your Media Manager</p>
             <p     class="float"><b>Discard</b> allows you to continue editing your recording</p>
             <span  class="float"><b>Download</b> your recording here:  </span>
-            <a     class="float" id="download-edit" href="#" download><img src="img/ic_file_download_black_24px.svg"></a>
+            <img class="float" id="download-edit" src="img/ic_file_download_black_24px.svg">
             <audio id="edited" controls controlsList="nodownload"></audio>
         </div>
     </div>

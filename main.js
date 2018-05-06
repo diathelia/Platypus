@@ -11,7 +11,7 @@ var Main = (function () {
         canvasCtx,                                      // single session canvasContext used in MP3Recorder and draw()
         drawVisual,                                     // requestAnimationFrame id to cancel draw() callback loop
         handledURL = window.URL || window.webkitURL,    // alias to avoid overwriting the window objects themselves
-        uploadCount = 0,                                // counts uploads to determine if beforeunload prompt appears
+        saveCount = 0,                                // counts saved mp3s to determine if beforeunload prompt appears
         configSampleRate,                               // shares dynamic sampleRate between audioCtx and edit equation
 
     //  authoring values:
@@ -450,7 +450,9 @@ var Main = (function () {
 
         // trim n bytes, equal to the nearest n mp3 frames, equal to the sliding percent values set by the user
         try {
-            edits.push(blob2edit.slice(leftBytes, rightBytes, 'audio/mpeg'));
+            var newEdit = blob2edit.slice(leftBytes, rightBytes, 'audio/mpeg');
+            newEdit.name = dateString();
+            edits.push(newEdit);
         }
         catch (e) {
             alert('failed to create edit, please try again. error: ' + e);
@@ -458,17 +460,21 @@ var Main = (function () {
         finally {
             if (edits.length > 0) {
                 try {
-                    // use a single URL object for download link and playback
+                    // create URL object
                     var editURL = handledURL.createObjectURL(edits[edits.length - 1]);
-    
-                    // attach download link in case HTML5 default controls does not have one
-                    $('#download-edit').attr('href', editURL);
     
                     // attach new src and reveal audio element
                     $('#edited').attr('src', editURL)
                                 .css('display', 'block')
                                 .on('error', function (e) {
                                     alert('media error: ' + e.code + ': ' + e.message);
+                    });
+
+                    // attach download FileSaver.js event
+                    $('#download-edit').on('click', function() {
+                        // use FileSaver.js to stop UID.mp3 filenames
+                        saveAs(edits[edits.length-1], dateString());
+                        saveCount++;
                     });
 
                     // pause playback before modal overlay
@@ -504,6 +510,7 @@ var Main = (function () {
                     // fixes odd auto-highlighting bug on download button (without removing <a> highlighting)
                     $('#download-edit').blur();
                     $('#edited').focus();
+                    $('#edited').blur();
                 }
                 catch (e) {
                     alert('failed to display your edit, please try again');
@@ -521,13 +528,19 @@ var Main = (function () {
         upload(blobs[blobs.length - 1]);
     });
 
+    function dateString () {
+        var date = new Date();
+        var filename = timer + 's_recording_' + date.getDate() +
+                       '.' + (1 + date.getMonth()) + '.' + date.getFullYear() + '.mp3';
+        return filename;
+    }
+
     function upload(blob2upload) {
         'use strict';
 
         // prepare blob for form upload
         var formData = new FormData();
-        formData.append('blob', blob2upload, 'blob.mp3');
-        formData.append('name', 'value');
+        formData.append('blob', blob2upload, dateString());
 
         // upload to server with no added type-processing
         $.ajax({
@@ -542,7 +555,7 @@ var Main = (function () {
             processData: false,         // tell jQuery not to process the data
             contentType: false,        // tell jQuery not to set a contentType
             success: function (data) {
-                uploadCount++;
+                saveCount++;
                 alert('Your recording has been sent to your Media Manager');
             },
             error: function (error) {
@@ -650,11 +663,14 @@ var Main = (function () {
             if (blob.size === 0) {
                 alert('there was a problem with the recording, please try again');
             } else {
+                // removed <%-- filename = mediaid + fileExt; --%> from UploadHandler.ashx to stop it renaming the file
+                blob.name = dateString();
+                console.log(blob);
                 blobs.push(blob);
             }
 
             try {
-                // create a single blobURL for the audio element and the download button to share
+                // create URL object
                 var blobURL = handledURL.createObjectURL(blobs[blobs.length - 1]);
             }
             catch (e) {
@@ -667,9 +683,12 @@ var Main = (function () {
                     source = this;
                     totalFrames = source.duration * 38.28125;
 
-                    // append the same blobURL as a download link
-                    $('#download').attr('href', blobURL);
-                    // Chrome = no 'save as' prompt (does in firefox)
+                    // attach download FileSaver.js event
+                    $('#download').on('click', function() {
+                        // use FileSaver.js to stop UID.mp3 filenames
+                        saveAs(blobs[blobs.length - 1], dateString());
+                        saveCount++;
+                    });
 
                     // refresh / reset authoring values for new source
                     leftHandle  = 0;
@@ -696,10 +715,10 @@ var Main = (function () {
 /** before resource unload function, call to init script **************************************************************/
 
     // jQuery appears to have removed their beforeunload API entries, so using vanilla JS to be safe
-    window.addEventListener("beforeunload", function (e) {
+    window.addEventListener('beforeunload', function (e) {
 
         // if the user has made a recording but has not uploaded, offer a 'are you sure'
-        if (blobs.length !== 0 && uploadCount === 0) {
+        if (blobs.length !== 0 && saveCount === 0) {
             var confirmationMessage = 'Are you sure you want to leave? Any unsaved recordings will be lost';
 
             e.returnValue = confirmationMessage;     // Gecko, Trident, Chrome 34+

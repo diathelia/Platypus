@@ -21,9 +21,8 @@ public class UploadHandler : IHttpHandler
 			}
 
 			string fileExt = System.IO.Path.GetExtension(filename).ToLower();
-			filename = mediaid + fileExt;
 
-			string outputFileName = context.Server.MapPath("~/Incoming/" + filename);
+			string outputFileName = context.Server.MapPath("~/incoming/" + filename);
 			Stream inputStream = context.Request.Files[0].InputStream;
 
 			using (FileStream fs = File.Open(outputFileName, FileMode.Create))

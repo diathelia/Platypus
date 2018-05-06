@@ -192,12 +192,6 @@ p {
 }
 
 /* not an image */
-#download {
-    height: 100%;
-    width: auto;
-}
-
-/* not an image */
 #volume {
     min-width: 0.9em;
     width: 10%;
@@ -220,6 +214,7 @@ p {
 
 #download-edit {
     margin-bottom: -4px;
+    cursor: pointer;
 }
 
 #edited {
