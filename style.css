@@ -1,26 +1,40 @@
+/* 2fix: if iPad Pro --> font-size: 20/25px; & correct playerUI sizes.
+   note: max-height and !important's required due to ID-specificity clashes.
+*/
 @media only screen and (max-width: 768px) {
+    #playerUI {
+        max-height: 7.5%;
+    }
     #playerUI img {
-        margin-left: 0;
-        min-height: 1em;
-        width: 2.5em;
+        max-height: 3em;
+        max-width: 2.5em;
     }
-    
-    #container {
-        width: 90vw;
-        margin-top: 2vh;
+    #slide-wrap {
+        padding: 0 1.2em !important;
+        max-height: 4em;
     }
-    /*   #timer {
-        font-size: 100%;
+    #slider {
+        background-position: 0px 31px !important;
+        max-height: 4em;
     }
-    #canvas {
-        height: 40%;
-    } */
+    #leftHandle, #rightHandle, #timeHandle {
+        max-width: 2.4em;                 /* custom slider width requirement: */
+        margin-left: -1.2em !important;   /* margin-left must equal the negative half of width */
+    }
 }
 
 @media only screen and (max-width: 425px) {
-    #playerUI img {
-        width: 1.7em;
+    #playerUI {
+        max-height: 5%;
     }
+    #playerUI img {
+        margin-left: 0 !important;
+        max-width: 1.7em;
+    }
+    #duration {
+        font-size: 0.7em;
+    }
+
 }
 
 /* general page styling */
@@ -40,13 +54,13 @@ body {
 
 #container {
     width: 93vw;
-    height: 98vh;
+    height: 97vh;
     margin-top: 2vh;
     margin-left: auto;
     margin-right: auto;
 }
 
-p, ol, h1, h2, h3 {
+p {
     font-family: 'Roboto', sans-serif;
     background-color: auto;
     color: white;
@@ -71,13 +85,15 @@ p, ol, h1, h2, h3 {
 #timer {
     margin: 0;
     padding: 0;
-    font-size: 150%;    
+    font-size: 2em;   
 }
 
 #bg {
     background-color: rgba(0, 82, 100, 0.5);
     color: auto;
-    padding-bottom: 0.3em;
+    margin: 0;
+    border: 0.05em solid white;
+    padding: 0.3em 0.2em 0.5em 0.3em;
 }
 
 #startbar {
@@ -104,25 +120,27 @@ p, ol, h1, h2, h3 {
 
 /* slider */
 #slide-wrap {
-    background-color: white;
+    background-color: #998BA1;
     color: auto;
     padding: 0 1.5em;
-    min-height: 5em;
-    max-height: 10%;
+    height: 5em;
     border-radius: 0.8em;
     margin-top: 0.3em;
 }
 
 #slider {
-    min-height: 5em;
-    max-height: 10%;
+    height: 5em;
     border: 0;
+    background-image: repeating-linear-gradient(0deg,transparent,transparent 50px,#CCC 50px,#CCC 51px),
+                      repeating-linear-gradient(-90deg,transparent,transparent 50px,#CCC 50px,#CCC 51px);
+    background-size: 51px 51px;
+    background-position: 0px 37.8px;
 }
 
 #leftHandle, #rightHandle, #timeHandle {
     top: -0.001em;       /* centering-fix for custom slider height */
     height: 100%;
-    width: 3em;          /* custom slider width requires: */
+    width: 3em;          /* custom slider width requirement: */
     margin-left: -1.5em; /* margin-left must equal the negative half of width */
     outline: none;
     border: 0;
@@ -132,11 +150,11 @@ p, ol, h1, h2, h3 {
 }
 
 #leftHandle {
-    background: transparent url('img/leftHandle.svg') no-repeat border-box scroll;
+    background: transparent url('img/leftHandle-red.svg') no-repeat border-box scroll;
 }
 
 #rightHandle {
-    background: transparent url('img/rightHandle.svg') no-repeat border-box scroll;
+    background: transparent url('img/rightHandle-red.svg') no-repeat border-box scroll;
 }
 
 #timeHandle {
@@ -163,13 +181,16 @@ p, ol, h1, h2, h3 {
 #duration {
     background-color: auto;
     color: white;
+    font-size: 1.3em;
 }
 
+/* not an image */
 #download {
     height: 100%;
     width: auto;
 }
 
+/* not an image */
 #volume {
     min-width: 0.9em;
     width: 10%;
