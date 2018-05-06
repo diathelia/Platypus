@@ -27,6 +27,9 @@
 }
 
 @media only screen and (max-width: 425px) {
+    #container {
+        max-height: 95%;
+    }
     #playerUI {
         max-height: 3em;
     }
@@ -60,7 +63,6 @@ body {
 #container {
     width: 93%;
     height: 95%;
-/*     margin-top: 2vh; */
     margin-left: auto;
     margin-right: auto;
 }
