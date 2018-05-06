@@ -2,6 +2,9 @@
    note: max-height and !important's required due to ID-specificity clashes.
 */
 @media only screen and (max-width: 768px) {
+    #container {
+        max-height: 92vh;
+    }
     #playerUI {
         max-height: 7.5%;
     }
