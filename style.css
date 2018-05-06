@@ -3,7 +3,7 @@
 */
 @media only screen and (max-width: 768px) {
     #container {
-        max-height: 92vh;
+        max-height: 92%;
     }
     #playerUI {
         max-height: 7.5%;
@@ -48,6 +48,8 @@ html, body {
 }
 
 body {
+    width: 100vw;
+    height: 100vh;
     overflow: hidden;
     background-image: url('img/monotreme.jpg');
     background-size: cover;
@@ -56,9 +58,9 @@ body {
 }
 
 #container {
-    width: 93vw;
-    height: 97vh;
-    margin-top: 2vh;
+    width: 93%;
+    height: 95%;
+/*     margin-top: 2vh; */
     margin-left: auto;
     margin-right: auto;
 }
