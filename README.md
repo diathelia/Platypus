@@ -11,6 +11,8 @@ Platypus uses a callback polyfill for the Streams API getUserMedia promise
 
 Platypus uses a monkey patch to alias Web Audio API syntax for WebKit browsers
 
+Platypus uses FileSaver.js to give blob downloads semantic filenames, not UID's
+
 Platypus uses normalize.css in an attempt to coax-together browser slider behaviours
 
 ~ | ~
