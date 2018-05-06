@@ -267,10 +267,6 @@ var Main = (function () {
                 checkFrames();
                 // fixes a removing-your-finger bug on some touch screens
                 $('.ui-slider-handle').blur();
-                console.log('source.currentTime = ', source.currentTime);
-                console.log('source.duration = ', source.duration);
-                console.log('timeHandle value = ', ui.values[2]);
-
             }
         });
     }
