@@ -1,5 +1,5 @@
 /* 2fix: if iPad Pro --> font-size: 20/25px; & correct playerUI sizes.
-   note: max-height and !important's required due to ID-specificity clashes.
+   note: max-height and !important's required, possibly due to ID-specificity clashes? idk
 */
 @media only screen and (max-width: 768px) {
     #container {
@@ -37,10 +37,6 @@
         margin-left: 0 !important;
         max-width: 1.7em;
     }
-    #duration {
-        font-size: 0.7em;
-    }
-
 }
 
 /* general page styling */
@@ -53,7 +49,7 @@ html, body {
 body {
     width: 100vw;
     height: 100vh;
-    overflow: hidden;
+    overflow-x: hidden;
     background-image: url('img/monotreme.jpg');
     background-size: cover;
     background-position: center;

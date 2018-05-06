@@ -69,6 +69,20 @@ var Main = (function () {
 
         // init audio player controls
         initPlayerUI();
+
+        // attach the two FileSaver.js events in init & therefore only once - avoids queued file downloads
+        $('#download').on('click', function() {
+            // use FileSaver.js to stop UID.mp3 filenames
+            saveAs(blobs[0], dateString());
+            saveCount++;
+        });
+
+        $('#download-edit').on('click', function() {
+            // use FileSaver.js to stop UID.mp3 filenames
+            saveAs(edits[0], dateString());
+            saveCount++;
+        });
+
     }
 
 /** handles Web Audio API processing and delegating to Web Worker *****************************************************/
@@ -345,9 +359,7 @@ var Main = (function () {
         $('#slider').slider('values', 1, right);
         
         // bump timeHandle off of leftHandle to stop Firefox Mobile getting stuck
-        // console.log('pre t = ', source.currentTime, timeValue);
         source.currentTime = source.currentTime + 0.001;
-        // console.log('post t = ', source.currentTime, timeValue);
     }
 
     // runs once on repeat to keep handle values up to date and within range
@@ -470,13 +482,6 @@ var Main = (function () {
                                     alert('media error: ' + e.code + ': ' + e.message);
                     });
 
-                    // attach download FileSaver.js event
-                    $('#download-edit').on('click', function() {
-                        // use FileSaver.js to stop UID.mp3 filenames
-                        saveAs(edits[edits.length-1], dateString());
-                        saveCount++;
-                    });
-
                     // pause playback before modal overlay
                     if (!source.paused) {
                         source.pause();
@@ -528,10 +533,11 @@ var Main = (function () {
         upload(blobs[blobs.length - 1]);
     });
 
+    // returns semantic filename for up/downloads
     function dateString () {
         var date = new Date();
-        var filename = timer + 's_recording_' + date.getDate() +
-                       '.' + (1 + date.getMonth()) + '.' + date.getFullYear() + '.mp3';
+        var filename = 'recording_' + date.getDate() + '.' + (1 + date.getMonth()) +
+                       '.' + date.getFullYear() + '.mp3';
         return filename;
     }
 
@@ -665,7 +671,6 @@ var Main = (function () {
             } else {
                 // removed <%-- filename = mediaid + fileExt; --%> from UploadHandler.ashx to stop it renaming the file
                 blob.name = dateString();
-                console.log(blob);
                 blobs.push(blob);
             }
 
@@ -683,13 +688,6 @@ var Main = (function () {
                     source = this;
                     totalFrames = source.duration * 38.28125;
 
-                    // attach download FileSaver.js event
-                    $('#download').on('click', function() {
-                        // use FileSaver.js to stop UID.mp3 filenames
-                        saveAs(blobs[blobs.length - 1], dateString());
-                        saveCount++;
-                    });
-
                     // refresh / reset authoring values for new source
                     leftHandle  = 0;
                     $('#slider').slider('values', 0, 0);
@@ -702,6 +700,7 @@ var Main = (function () {
                     alert('media error: ' + e.code + ': ' + e.message);
                 });
             }
+
         });
 
         if (audioCtx.state === 'running') {
