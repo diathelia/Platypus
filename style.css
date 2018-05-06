@@ -28,7 +28,7 @@
 
 @media only screen and (max-width: 425px) {
     #playerUI {
-        max-height: 5%;
+        max-height: 3em;
     }
     #playerUI img {
         margin-left: 0 !important;
