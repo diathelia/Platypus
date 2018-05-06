@@ -247,6 +247,16 @@ var Main = (function () {
                     $('#leftHandle').trigger('mouseup');
                     return false;
                 }
+
+                // attempt to smooth currentTime when being dragged forward by leftHandle
+                // if (ui.values[2] < ui.values[0]) {
+                //     ui.values[2] = ui.values[0];
+                //     $('#timeHandle').css('left', (ui.values[2] + '\%'));
+                // }
+
+                // color slider bars
+                $('#leftDiv').css('width', (ui.values[0] + '\%'));
+                $('#rightDiv').css('width', ((100 - ui.values[1]) + '\%'));
             },
 
             // refresh frame values when handles are explicitly moved by the user
@@ -693,7 +703,9 @@ var Main = (function () {
                     $('#slider').slider('values', 0, 0);
                     rightHandle = 100;
                     $('#slider').slider('values', 1, 100);
-                    timeValue = source.currentTime; // necessary?
+                    source.currentTime = 0.0;
+                    timeValue = source.currentTime;
+                    $('#leftDiv, #rightDiv').css('width', '0.0\%');
                     checkFrames();
                 })
                 .on('error', function (e) {

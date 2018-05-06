@@ -49,7 +49,7 @@ html, body {
 body {
     width: 100vw;
     height: 100vh;
-    overflow: hidden;
+    overflow-x: hidden;
     background-image: url('img/monotreme.jpg');
     background-size: cover;
     background-position: center;
@@ -138,6 +138,26 @@ p {
                       repeating-linear-gradient(-90deg,transparent,transparent 50px,#CCC 50px,#CCC 51px);
     background-size: 51px 51px;
     background-position: 0px 38.9px;
+}
+
+#leftDiv, #rightDiv {
+    position: absolute;
+    background-color: #998BA1;
+    color: auto;
+    opacity: 0.666;
+    height: 100%;
+    z-index: 1;
+    top: 0;
+}
+
+#leftDiv {
+    left: 0;
+    width: 0.0%;
+}
+
+#rightDiv {
+    right: 0;
+    width: 0.0%;
 }
 
 #leftHandle, #rightHandle, #timeHandle {
