@@ -153,11 +153,11 @@ p {
 }
 
 #leftHandle {
-    background: transparent url('img/leftHandle-red.svg') no-repeat border-box scroll;
+    background: transparent url('img/leftHandle.svg') no-repeat border-box scroll;
 }
 
 #rightHandle {
-    background: transparent url('img/rightHandle-red.svg') no-repeat border-box scroll;
+    background: transparent url('img/rightHandle.svg') no-repeat border-box scroll;
 }
 
 #timeHandle {
