@@ -141,7 +141,7 @@ p {
     background-image: repeating-linear-gradient(0deg,transparent,transparent 50px,#CCC 50px,#CCC 51px),
                       repeating-linear-gradient(-90deg,transparent,transparent 50px,#CCC 50px,#CCC 51px);
     background-size: 51px 51px;
-    background-position: 0px 37.8px;
+    background-position: 0px 38.9px;
 }
 
 #leftHandle, #rightHandle, #timeHandle {
