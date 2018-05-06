@@ -224,8 +224,8 @@ var Main = (function () {
         $('#slider').slider({
             step   : 0.1,
             range  : false,
-            animate: true,
-            values : [0.0, 100.0, 0.0], // (jquery gives lowest index value precedence upon overlap)
+            animate: 'fast', // inconsistent at best, probably being thrown off by lots of custom value/css setting
+            values : [0.0, 100.0, 0.0], // jquery gives lowest index value precedence upon overlap
 
             // define convienient handle id's to target for editing and playback
             create: function () {
