@@ -72,14 +72,14 @@ var Main = (function () {
 
         // attach the two FileSaver.js events in init & therefore only once - avoids queued file downloads
         $('#download').on('click', function() {
-            // use FileSaver.js to stop UID.mp3 filenames
-            saveAs(blobs[0], dateString());
+            // use FileSaver.js saveAs() to stop UID.mp3 filenames
+            saveAs(blobs[0], getFilename(false));
             saveCount++;
         });
 
         $('#download-edit').on('click', function() {
-            // use FileSaver.js to stop UID.mp3 filenames
-            saveAs(edits[0], dateString());
+            // use FileSaver.js saveAs() to stop UID.mp3 filenames
+            saveAs(edits[0], getFilename(true));
             saveCount++;
         });
 
@@ -224,7 +224,7 @@ var Main = (function () {
         $('#slider').slider({
             step   : 0.1,
             range  : false,
-            animate: 'fast', // inconsistent at best, probably being thrown off by lots of custom value/css setting
+            animate: true, // inconsistent at best: being thrown off by setInterval currentTime mapping to css
             values : [0.0, 100.0, 0.0], // jquery gives lowest index value precedence upon overlap
 
             // define convienient handle id's to target for editing and playback
@@ -248,9 +248,12 @@ var Main = (function () {
                     return false;
                 }
 
-                // attempt to smooth currentTime when being dragged forward by leftHandle
-                // if (ui.values[2] < ui.values[0]) {
-                //     ui.values[2] = ui.values[0];
+                // attempt to smooth currentTime animation when being dragged forward by leftHandle.
+                // needs to update currentTime from here and not interfere with setIntervals job of
+                // watching currentTime changes driven by playback rather than slider user actions.
+
+                // if (ui.values[2] <= ui.values[0]) {
+                //     ui.values[2] = (0.1 + ui.values[0]);
                 //     $('#timeHandle').css('left', (ui.values[2] + '\%'));
                 // }
 
@@ -264,6 +267,10 @@ var Main = (function () {
                 checkFrames();
                 // fixes a removing-your-finger bug on some touch screens
                 $('.ui-slider-handle').blur();
+                console.log('source.currentTime = ', source.currentTime);
+                console.log('source.duration = ', source.duration);
+                console.log('timeHandle value = ', ui.values[2]);
+
             }
         });
     }
@@ -380,7 +387,8 @@ var Main = (function () {
             // only runs if interval has some audio to affect
             if (source) {
                 // timeValue (int) is given to both timeHandle value & CSS position
-                timeValue = ((source.currentTime / source.duration) * 100);
+                timeValue = (source.currentTime / source.duration) * 100;
+
                 // add percentage and update position
                 $('#timeHandle').css('left', (timeValue  + '\%'));
                 // assigns up-to-date timeValue to timeHandle
@@ -431,6 +439,20 @@ var Main = (function () {
     
 /** edit and upload functions and their respective button functions ***************************************************/
 
+    // returns semantic filename for up/downloads
+    function getFilename (ifEdit) {
+        // check if filename is for an edited mp3
+        var string = '';
+        if (ifEdit === true) {
+            string = 'edit_';
+        }
+
+        var date = new Date();
+        var filename = 'recording_' + string + date.getDate() + '.' + (1 + date.getMonth()) +
+                        '.' + date.getFullYear() + '.mp3';
+        return filename;
+    }
+
     // pass current source blob to edit function
     $('#editBtn').on('click', function (e) {
         e.preventDefault();
@@ -473,7 +495,7 @@ var Main = (function () {
         // trim n bytes, equal to the nearest n mp3 frames, equal to the sliding percent values set by the user
         try {
             var newEdit = blob2edit.slice(leftBytes, rightBytes, 'audio/mpeg');
-            newEdit.name = dateString();
+            newEdit.name = getFilename(true);
             edits.push(newEdit);
         }
         catch (e) {
@@ -508,7 +530,8 @@ var Main = (function () {
                         buttons: [
                                     { 
                                         text: 'Keep', click: function() {
-                                            upload(edits[edits.length - 1]);
+
+                                            upload(edits[edits.length - 1], true);
                                             $('#keep-discard').dialog('close');
                                         }
                                     },
@@ -540,23 +563,20 @@ var Main = (function () {
     // pass current source blob to upload function
     $('#upBtn').on('click', function (e) {
         e.preventDefault();
-        upload(blobs[blobs.length - 1]);
+        upload(blobs[blobs.length - 1], false);
     });
 
-    // returns semantic filename for up/downloads
-    function dateString () {
-        var date = new Date();
-        var filename = 'recording_' + date.getDate() + '.' + (1 + date.getMonth()) +
-                       '.' + date.getFullYear() + '.mp3';
-        return filename;
-    }
-
-    function upload(blob2upload) {
+    function upload(blob2upload, ifEdit) {
         'use strict';
 
         // prepare blob for form upload
         var formData = new FormData();
-        formData.append('blob', blob2upload, dateString());
+        // check for edited mp3 and change filename accordingly 
+        if (ifEdit === true) {
+            formData.append('blob', blob2upload, getFilename(true));
+        } else {
+            formData.append('blob', blob2upload, getFilename(false));
+        }
 
         // upload to server with no added type-processing
         $.ajax({
@@ -680,7 +700,7 @@ var Main = (function () {
                 alert('there was a problem with the recording, please try again');
             } else {
                 // removed <%-- filename = mediaid + fileExt; --%> from UploadHandler.ashx to stop it renaming the file
-                blob.name = dateString();
+                blob.name = getFilename(false);
                 blobs.push(blob);
             }
 
@@ -704,7 +724,7 @@ var Main = (function () {
                     rightHandle = 100;
                     $('#slider').slider('values', 1, 100);
                     source.currentTime = 0.0;
-                    timeValue = source.currentTime;
+                    timeValue = ((source.currentTime / source.duration) * 100);
                     $('#leftDiv, #rightDiv').css('width', '0.0\%');
                     checkFrames();
                 })
