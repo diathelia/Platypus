@@ -739,7 +739,7 @@ var Main = (function () {
         $('#slide-wrap, #slider, #playerUI, #storeBtn, #upBtn, #editBtn').css('visibility', 'visible');
     });
 
-/** before resource unload function, call to init script **************************************************************/
+/** resource unload functions and call to init() **********************************************************************/
 
     // jQuery appears to have removed their beforeunload API entries, so using vanilla JS to be safe
     window.addEventListener('beforeunload', function (e) {
