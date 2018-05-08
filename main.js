@@ -73,13 +73,13 @@ var Main = (function () {
         // attach the two FileSaver.js events in init & therefore only once - avoids queued file downloads
         $('#download').on('click', function() {
             // use FileSaver.js saveAs() to stop UID.mp3 filenames
-            saveAs(blobs[0], getFilename(false));
+            saveAs(blobs[blobs.length - 1], getFilename(false));
             saveCount++;
         });
 
         $('#download-edit').on('click', function() {
             // use FileSaver.js saveAs() to stop UID.mp3 filenames
-            saveAs(edits[0], getFilename(true));
+            saveAs(edits[edits.length - 1], getFilename(true));
             saveCount++;
         });
 
