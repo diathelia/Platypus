@@ -1,10 +1,15 @@
 /*
     This feature detection script aims to pre-empt whether a users device + browser configuration
-    can support the Web Audio Tool by initialising and testing its core dependencies one by one.
-    The results can be logged to view but are also returned to the IsMicSupported module itself.
-
+    can support Platypus by initialising and testing core dependencies and other property values.
+    
+    The results are returned to the IsMicSupported module as an object with 3 string values:
+    
+    IsMicSupported.support = indicates the level of dependency support {full, partial, none, unkown}.
+    IsMicSUpported.samples = the preferred audio samples per second rate of the Web Audio API.
+    IsMicSupported.buffer  = the preferred processing buffer size of the Web Audio API.
+    
     This script could be triggered to run when a user is about to be offered the use of this tool
-    just before any HTML is rendered. If the module object has a property 'support' with the string
+    just before any HTML is rendered. If the module object has the property 'support' with the string
     'full support' then reveal HTML.
 
     This way, only users who will not encounter any forseeable problems will see the option, while
@@ -103,7 +108,7 @@ var IsMicSupported = (function () {
     isAudioContext();   // expect true / false
     isWebWorker();      // expect true / false
 
-    // tests a Blob that is then referenced to test a BlobURL
+    // tests a Blob that is then referenced to test a BlobURL, then save featureAnswer to pub and pub to IsMicSupported
     var blobURL = (function isBlobAndURL() {
         'use strict';
         // test URL API
@@ -154,9 +159,6 @@ var IsMicSupported = (function () {
                         
                         // display for testing purposes
                         console.log(pub);
-                        // $('#log').html(pub.support.toString())
-                        //          .append(' ', pub.buffer.toString())
-                        //          .append(' ', pub.samples.toString());
                         
                         // revoke URL
                         testURL.revokeObjectURL(urlToBlob);
