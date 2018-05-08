@@ -11,7 +11,7 @@ var Main = (function () {
         canvasCtx,                                      // single session canvasContext used in MP3Recorder and draw()
         drawVisual,                                     // requestAnimationFrame id to cancel draw() callback loop
         handledURL = window.URL || window.webkitURL,    // alias to avoid overwriting the window objects themselves
-        saveCount = 0,                                // counts saved mp3s to determine if beforeunload prompt appears
+        saveCount = 0,                                  // counts saved mp3s to determine if beforeunload prompt appears
         configSampleRate,                               // shares dynamic sampleRate between audioCtx and edit equation
 
     //  authoring values:
@@ -45,7 +45,7 @@ var Main = (function () {
             // suspend audioContext until user starts recording
             if (recorder && audioCtx.state === 'running') {
                     audioCtx.suspend();
-                }
+            }
         }
 
         // init canvas 2d context
@@ -115,7 +115,7 @@ var Main = (function () {
 
             // set bufferSize to largest size to avoid all mobile noise artifacts (at the possible expense of latency)
             processor = audioCtx.createScriptProcessor(16384, 1, 1); // (largest buffer possible)
-            analyser = audioCtx.createAnalyser();
+            analyser  = audioCtx.createAnalyser();
 
             // for each bufferSize of raw audio (while recording), send it to Worker to be encoded with LAME
             processor.onaudioprocess = function (event) {
@@ -257,7 +257,7 @@ var Main = (function () {
                 //     $('#timeHandle').css('left', (ui.values[2] + '\%'));
                 // }
 
-                // color slider bars
+                // color in slider to the left of leftHandle and the right of rightHandle
                 $('#leftDiv').css('width', (ui.values[0] + '\%'));
                 $('#rightDiv').css('width', ((100 - ui.values[1]) + '\%'));
             },
@@ -341,7 +341,7 @@ var Main = (function () {
                         // seperate function to try avoid a ...play().then().play()... loop when timeHandle gets stuck
                         resumePlay();
                     }
-                }, 30); // > 26ms allows setInterval to update time value
+                }, 30); // delay > 26ms allows setInterval to clear one loop and update timeValue
             }).catch(function(){
                 $('#play, #pause').toggle();
             });
@@ -396,7 +396,7 @@ var Main = (function () {
             
                 // set lower-bound of currentTime to wherever leftHandle currently is
                 if (source.currentTime < (source.duration / 100) * leftHandle) {
-                    source.currentTime = (((source.duration / 100) * leftHandle) + 0.005);
+                    source.currentTime = (((source.duration / 100) * leftHandle) + 0.001);
                     resetSlider(leftHandle, rightHandle);
                     $('#play').show();
                     $('#pause').hide();
@@ -404,7 +404,7 @@ var Main = (function () {
 
                 // set upper-bound of currentTime to wherever rightHandle currently is
                 if (source.currentTime > (source.duration / 100) * rightHandle) {
-                    source.currentTime = (((source.duration / 100) * leftHandle) + 0.005);
+                    source.currentTime = (((source.duration / 100) * leftHandle) + 0.001);
                     resetSlider(leftHandle, rightHandle);
                     $('#play').show();
                     $('#pause').hide();
@@ -470,14 +470,13 @@ var Main = (function () {
         // 1152 / 8 = 144 bits per sample            (constant)
         
         // 'bits / frame = frame_size * bit_rate / sample_rate' - http://lame.sourceforge.net/tech-FAQ.txt
-        //  417.95918367 = 144        * 128000   / 44100
-        //  new b/f rate = 144        * x        / x
+        //  new b/f rate = 144        * 128000   / x
 
         // Web Audio API sampleRate can be changed according to hardware detection, so use audioCtx value
         var bitsPerFrame = 144 * (128000 / configSampleRate);
 
         // get closest quantity of bits to the nearest byte - http://lame.sourceforge.net/tech-FAQ.txt
-        // note: if (padding-bit) {use .round} else {use .floor}
+        // if (padding-bit) {use .round} else {use .floor}, we use MPEG-1 Layer 3 which uses the padding-bit
         var leftBytes = Math.round(leftFrames * bitsPerFrame);
         var rightBytes = Math.round(rightFrames * bitsPerFrame);
 
