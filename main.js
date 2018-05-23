@@ -44,7 +44,7 @@ var Main = (function () {
         finally {
             // suspend audioContext until user starts recording
             if (recorder && audioCtx.state === 'running') {
-                    audioCtx.suspend();
+                audioCtx.suspend();
             }
         }
 
@@ -73,16 +73,15 @@ var Main = (function () {
         // attach the two FileSaver.js events in init & therefore only once - avoids queued file downloads
         $('#download').on('click', function() {
             // use FileSaver.js saveAs() to stop UID.mp3 filenames
-            saveAs(blobs[blobs.length - 1], getFilename(false));
+            saveAs(blobs[0], getFilename(false));
             saveCount++;
         });
 
         $('#download-edit').on('click', function() {
             // use FileSaver.js saveAs() to stop UID.mp3 filenames
-            saveAs(edits[edits.length - 1], getFilename(true));
+            saveAs(edits[0], getFilename(true));
             saveCount++;
         });
-
     }
 
 /** handles Web Audio API processing and delegating to Web Worker *****************************************************/
@@ -114,8 +113,8 @@ var Main = (function () {
             // note: Webkit version 31 requires that a valid bufferSize be passed when calling this method
 
             // set bufferSize to largest size to avoid all mobile noise artifacts (at the possible expense of latency)
-            processor = audioCtx.createScriptProcessor(16384, 1, 1); // (largest buffer possible)
-            analyser  = audioCtx.createAnalyser();
+            processor = audioCtx.createScriptProcessor(16384, 1, 1); // (16384 = largest buffer possible)
+            analyser = audioCtx.createAnalyser();
 
             // for each bufferSize of raw audio (while recording), send it to Worker to be encoded with LAME
             processor.onaudioprocess = function (event) {
@@ -231,6 +230,7 @@ var Main = (function () {
             create: function () {
                 $('.ui-slider-handle').eq(0).attr('id', 'leftHandle');
                 $('.ui-slider-handle').eq(1).attr('id', 'rightHandle');
+                // give timeHandle the highest index value so that editHandles get UI selection priority
                 $('.ui-slider-handle').eq(2).attr('id', 'timeHandle');
             },
 
@@ -252,12 +252,19 @@ var Main = (function () {
                 // needs to update currentTime from here and not interfere with setIntervals job of
                 // watching currentTime changes driven by playback rather than slider user actions.
 
+                // real solution: divide up control such that when user is sliding & this loop runs:
+
+                // it dictates handle css + handle value + time value and BLOCKS setIntervals updates.
+                
+                // however when !source.paused, let setInterval and timeValue drive css + values.
+
                 // if (ui.values[2] <= ui.values[0]) {
                 //     ui.values[2] = (0.1 + ui.values[0]);
                 //     $('#timeHandle').css('left', (ui.values[2] + '\%'));
+                //     needs to somehow timeValue = ui.values[2]
                 // }
 
-                // color in slider to the left of leftHandle and the right of rightHandle
+                // color edit handle divs
                 $('#leftDiv').css('width', (ui.values[0] + '\%'));
                 $('#rightDiv').css('width', ((100 - ui.values[1]) + '\%'));
             },
@@ -267,6 +274,10 @@ var Main = (function () {
                 checkFrames();
                 // fixes a removing-your-finger bug on some touch screens
                 $('.ui-slider-handle').blur();
+                console.log('source.currentTime = ', source.currentTime);
+                console.log('source.duration = ', source.duration);
+                console.log('timeHandle value = ', ui.values[2]);
+
             }
         });
     }
@@ -341,7 +352,7 @@ var Main = (function () {
                         // seperate function to try avoid a ...play().then().play()... loop when timeHandle gets stuck
                         resumePlay();
                     }
-                }, 30); // delay > 26ms allows setInterval to clear one loop and update timeValue
+                }, 30); // > 26ms allows setInterval to update time value
             }).catch(function(){
                 $('#play, #pause').toggle();
             });
@@ -389,6 +400,8 @@ var Main = (function () {
                 $('#timeHandle').css('left', (timeValue  + '\%'));
                 // assigns up-to-date timeValue to timeHandle
                 $('#slider').slider('values', 2, timeValue.toFixed(1));
+                // color time div width
+                $('#timeDiv').css('width', (timeValue.toFixed(1) + '\%'));
 
                 // keep these top-scope variables up-to-date for other authoring/playback functions
                 leftHandle  = $('#slider').slider('values')[0];
@@ -396,7 +409,7 @@ var Main = (function () {
             
                 // set lower-bound of currentTime to wherever leftHandle currently is
                 if (source.currentTime < (source.duration / 100) * leftHandle) {
-                    source.currentTime = (((source.duration / 100) * leftHandle) + 0.001);
+                    source.currentTime = (((source.duration / 100) * leftHandle) + 0.005);
                     resetSlider(leftHandle, rightHandle);
                     $('#play').show();
                     $('#pause').hide();
@@ -404,7 +417,7 @@ var Main = (function () {
 
                 // set upper-bound of currentTime to wherever rightHandle currently is
                 if (source.currentTime > (source.duration / 100) * rightHandle) {
-                    source.currentTime = (((source.duration / 100) * leftHandle) + 0.001);
+                    source.currentTime = (((source.duration / 100) * leftHandle) + 0.005);
                     resetSlider(leftHandle, rightHandle);
                     $('#play').show();
                     $('#pause').hide();
@@ -470,13 +483,14 @@ var Main = (function () {
         // 1152 / 8 = 144 bits per sample            (constant)
         
         // 'bits / frame = frame_size * bit_rate / sample_rate' - http://lame.sourceforge.net/tech-FAQ.txt
-        //  new b/f rate = 144        * 128000   / x
+        //  417.95918367 = 144        * 128000   / 44100
+        //  new b/f rate = 144        * x        / x
 
-        // Web Audio API sampleRate can be changed according to hardware detection, so use audioCtx value
+        // Web Audio API sampleRate can be changed according to browser/hardware detection, so use audioCtx value
         var bitsPerFrame = 144 * (128000 / configSampleRate);
 
         // get closest quantity of bits to the nearest byte - http://lame.sourceforge.net/tech-FAQ.txt
-        // if (padding-bit) {use .round} else {use .floor}, we use MPEG-1 Layer 3 which uses the padding-bit
+        // note: if (padding-bit) {use .round} else {use .floor}
         var leftBytes = Math.round(leftFrames * bitsPerFrame);
         var rightBytes = Math.round(rightFrames * bitsPerFrame);
 
@@ -720,7 +734,7 @@ var Main = (function () {
                     $('#slider').slider('values', 1, 100);
                     source.currentTime = 0.0;
                     timeValue = ((source.currentTime / source.duration) * 100);
-                    $('#leftDiv, #rightDiv').css('width', '0.0\%');
+                    $('#leftDiv, #rightDiv, #timeDiv').css('width', '0.0\%');
                     checkFrames();
                 })
                 .on('error', function (e) {
@@ -765,7 +779,7 @@ var Main = (function () {
         recorder.stop();
        
         // close audio context
-        audioCtx.close().then(console.log('context closed'));
+        audioCtx.close();
     });
     
     // initiate required resources

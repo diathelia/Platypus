@@ -1,6 +1,4 @@
-/* 2fix: if iPad Pro --> font-size: 20/25px; & correct playerUI sizes.
-   note: max-height and !important's required, possibly due to ID-specificity clashes? idk
-*/
+/* note: max-height and !important's required, possibly due to ID-specificity clashes */
 @media only screen and (max-width: 768px) {
     #container {
         max-height: 92%;
@@ -49,7 +47,7 @@ html, body {
 body {
     width: 100vw;
     height: 100vh;
-    overflow: hidden;
+    overflow-x: hidden;
     background-image: url('img/monotreme.jpg');
     background-size: cover;
     background-position: center;
@@ -140,13 +138,13 @@ p {
     background-position: 0px 38.9px;
 }
 
+/* colored divs to show handle progress */
 #leftDiv, #rightDiv {
     position: absolute;
-    background-color: #998BA1;
+    background-color: rgb(202, 190, 209);  /* rgb(153, 139, 161) */
     color: auto;
-    opacity: 0.666;
+    z-index: 2;
     height: 100%;
-    z-index: 1;
     top: 0;
 }
 
@@ -154,12 +152,22 @@ p {
     left: 0;
     width: 0.0%;
 }
-
 #rightDiv {
     right: 0;
     width: 0.0%;
 }
 
+#timeDiv {
+    position: absolute;
+    background-color: rgba(94, 217, 191, 0.5);
+    color: auto;
+    z-index: 1;
+    height: 100%;
+    left: 0;
+    width: 0.0%;
+}
+
+/* handles */
 #leftHandle, #rightHandle, #timeHandle {
     top: -0.001em;       /* centering-fix for custom slider height */
     height: 100%;
