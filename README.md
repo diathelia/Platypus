@@ -22,9 +22,9 @@ run Platypus audio specific tests properties on the following two bugs:
    to counteract this a sample blob mp3 from Platypus is included to test blob URLs
 
  - Sometimes the hardware and browser prefers sample rates and buffer sizes which<br>
-   can cause a sporadic mixture of sped-up playback and high-end artifacts; while<br>
-   this is currently fixed via a forced huge bufferSize of 16384 bytes, new devices<br>
-   and operating systems may have issues reoccur. To help debug them the preferred<br>
+   can cause a sporadic mixture of sped-up playback and high-end artifacts; while this<br>
+   is currently fixed via a forced huge bufferSize of 16384 bytes, new devices and<br>
+   operating systems may have issues reoccur. To help debug them the preferred<br>
    sample and buffer values are also saved.
    
 When run, this script saves the level of support and preferred sample/buffer values;<br>
