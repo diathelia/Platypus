@@ -22,10 +22,10 @@ run Platypus audio specific tests properties on the following two bugs:
    to counteract this a sample blob mp3 from Platypus is included to test blob URLs
 
  - Sometimes the hardware and browser prefers sample rates and buffer sizes which<br>
-   can cause a sporadic mixture of sped-up playback and high-end artifacts;<br>
-   while this is currently fixed via a forced huge bufferSize of 16384 bytes,<br>
-   new devices and operating systems may have issues reoccur. To help debug them<br>
-   the preferred sample and buffer values are also saved.
+   can cause a sporadic mixture of sped-up playback and high-end artifacts; while<br>
+   this is currently fixed via a forced huge bufferSize of 16384 bytes, new devices<br>
+   and operating systems may have issues reoccur. To help debug them the preferred<br>
+   sample and buffer values are also saved.
    
 When run, this script saves the level of support and preferred sample/buffer values;<br>
 these are all returned as an object to the IsMicSupported global module for access
