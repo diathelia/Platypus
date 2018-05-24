@@ -31,7 +31,7 @@ var IsMicSupported = (function () {
     // expect a string indicating level of dependency support
     featureAnswer = 'unknown support',
 
-    // log errors to screen for mobile debug
+    // used to log errors to screen for mobile debug
     featureLog = $('#log');
 
     // asks if the getUserMedia object hangs off navigator (or .mediaDevices) and is defined
@@ -108,7 +108,7 @@ var IsMicSupported = (function () {
     isAudioContext();   // expect true / false
     isWebWorker();      // expect true / false
 
-    // tests a Blob that is then referenced to test a BlobURL, then save featureAnswer to pub and pub to IsMicSupported
+    // tests a Blob that is then referenced to test a BlobURL, then save featureAnswer to pub
     var blobURL = (function isBlobAndURL() {
         'use strict';
         // test URL API
@@ -145,20 +145,18 @@ var IsMicSupported = (function () {
                             // not all core dependencies can be handled, prompt user / don't insert any HTML
                             featureAnswer = ('no support');
                         } else if (featureResults.includes('yes')) {
-                            // blobURL success, send Main two thumbs up
+                            // blobURL success, send back two thumbs up
                             featureAnswer = ('full support');
                         } else {
-                            // BlobURLs not reliable so use dataURLs eg: <Opera & Samsung>
+                            // BlobURLs not reliable, could use dataURLs eg for <Opera, Samsung, UC>
                             featureAnswer = ('partial support');
                         }
         
                         // save featureAnswer
                         pub.support = featureAnswer;
 
+                        // save pub to module
                         window.IsMicSupported = pub;
-                        
-                        // display for testing purposes
-                        console.log(pub);
                         
                         // revoke URL
                         testURL.revokeObjectURL(urlToBlob);
