@@ -23,7 +23,7 @@
 </head>
 
 <body>
-    <!-- this container is designed to hold all visible elements within {width 93%, height: 95%} of screen -->
+    <!-- container to hold all visible elements within {width 93%, height: 95%} of screen -->
     <div id="container">
         <div id="timebar">
             <span id="bg">
@@ -31,7 +31,8 @@
             </span>
         </div>
 
-        <canvas id="canvas">your browser or device does not support the Canvas element</canvas>
+        <canvas id="canvas">your browser or device does not support the Canvas element,
+                            please try switching browsers to see the visualisation effect</canvas>
 
         <div id="startbar">
             <img src="img/ic_keyboard_voice_white_24px.svg" class="float" id="startBtn" alt="start recording">
@@ -70,7 +71,8 @@
 
     <!-- placed at bottom to avoid any interference when revealing UI elements and also
     banished to the far ends of the negative left-margin to both hide and manipulate:
-    this is due to a bug in Firefox if display: none or visibility: hidden are set -->
+    sometimes Firefox would ignore this element if display: none or visibility: hidden
+    were set. margins plus setting preload to auto ensures up to date element values -->
     <audio preload="auto" id="source"></audio>
  
     <script src="main.js"></script>

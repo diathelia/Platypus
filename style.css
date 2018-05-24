@@ -1,4 +1,4 @@
-/* note: max-height and !important's required, possibly due to ID-specificity clashes */
+/* note: @media max-height and !important's required, probably due to ID-based specificity clashes */
 @media only screen and (max-width: 768px) {
     #container {
         max-height: 92%;
@@ -141,7 +141,7 @@ p {
 /* colored divs to show handle progress */
 #leftDiv, #rightDiv {
     position: absolute;
-    background-color: rgb(202, 190, 209);  /* rgb(153, 139, 161) */
+    background-color: rgb(202, 190, 209);
     color: auto;
     z-index: 2;
     height: 100%;
@@ -152,6 +152,7 @@ p {
     left: 0;
     width: 0.0%;
 }
+
 #rightDiv {
     right: 0;
     width: 0.0%;
@@ -215,7 +216,6 @@ p {
     font-size: 1.3em;
 }
 
-/* not an image */
 #volume {
     min-width: 0.9em;
     width: 10%;
@@ -257,7 +257,7 @@ p {
 
 /* hiding via margin due to a Firefox playback bug:
    if audio element is hidden on not displayed, then
-   the custom JavaScript control play(); will break */
+   the custom JavaScript control play(); can break */
 #source {
     margin-left: -9999px;
 }

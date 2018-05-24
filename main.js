@@ -223,7 +223,7 @@ var Main = (function () {
         $('#slider').slider({
             step   : 0.1,
             range  : false,
-            animate: true, // inconsistent at best: being thrown off by setInterval currentTime mapping to css
+            animate: false, // true = inconsistent due to interference from setInterval mapping currentTime to CSS
             values : [0.0, 100.0, 0.0], // jquery gives lowest index value precedence upon overlap
 
             // define convienient handle id's to target for editing and playback
@@ -252,16 +252,14 @@ var Main = (function () {
                 // needs to update currentTime from here and not interfere with setIntervals job of
                 // watching currentTime changes driven by playback rather than slider user actions.
 
-                // real solution: divide up control such that when user is sliding & this loop runs:
-
-                // it dictates handle css + handle value + time value and BLOCKS setIntervals updates.
-                
-                // however when !source.paused, let setInterval and timeValue drive css + values.
+                // real solution: divide up control such that when user is sliding & this loop runs which:
+                    // dictates handle css + handle value + time value and BLOCKS setIntervals updates.
+                    // however when !source.paused, let setInterval and timeValue drive css + values.
 
                 // if (ui.values[2] <= ui.values[0]) {
                 //     ui.values[2] = (0.1 + ui.values[0]);
                 //     $('#timeHandle').css('left', (ui.values[2] + '\%'));
-                //     needs to somehow timeValue = ui.values[2]
+                       // needs to somehow timeValue = ui.values[2]
                 // }
 
                 // color edit handle divs
@@ -274,10 +272,6 @@ var Main = (function () {
                 checkFrames();
                 // fixes a removing-your-finger bug on some touch screens
                 $('.ui-slider-handle').blur();
-                console.log('source.currentTime = ', source.currentTime);
-                console.log('source.duration = ', source.duration);
-                console.log('timeHandle value = ', ui.values[2]);
-
             }
         });
     }
@@ -367,7 +361,7 @@ var Main = (function () {
         });
     }
 
-    // seperate function to try avoid a ...play().then().play()... loop when timeHandle gets stuck
+    // seperated purely to try avoid a ...play().then().play()... loop when timeHandle gets stuck
     function resumePlay () {
         source.play();
     }
@@ -449,6 +443,7 @@ var Main = (function () {
 /** edit and upload functions and their respective button functions ***************************************************/
 
     // returns semantic filename for up/downloads
+    // note: required removing 'filename = mediaid + fileExt;' from UploadHandler.ashx to stop it overriding filenames
     function getFilename (ifEdit) {
         // check if filename is for an edited mp3
         var string = '';
@@ -678,7 +673,7 @@ var Main = (function () {
         'use strict';
         e.preventDefault();
 
-        // if source was playing, toggle pause/play buttons
+        // if source was playing, reset pause/play buttons
         if (source && !source.paused) {
             $('#play').show();
             $('#pause').hide();
@@ -694,7 +689,6 @@ var Main = (function () {
         // swap out stop button for start button
         $(this).css('display', 'none');
         $('#startBtn').css('display', 'inline-block');
-        // why not toggle?
 
         recorder.getMp3Blob(function (blob) {
 
@@ -708,7 +702,6 @@ var Main = (function () {
             if (blob.size === 0) {
                 alert('there was a problem with the recording, please try again');
             } else {
-                // removed <%-- filename = mediaid + fileExt; --%> from UploadHandler.ashx to stop it renaming the file
                 blob.name = getFilename(false);
                 blobs.push(blob);
             }
@@ -722,7 +715,7 @@ var Main = (function () {
             }
             finally {
                 // attach blobURL and use new audio.src to update authoring values
-                $('#source').attr('src', blobURL).on('durationchange', function () {
+                $('#source').attr('src', blobURL).one('durationchange', function () {
                     // keep relevant slider values up to date
                     source = this;
                     totalFrames = source.duration * 38.28125;
