@@ -20,7 +20,7 @@ var Main = (function () {
         timeValue,          // current audio time in int percentage for timeHandle
         leftFrames,         // discrete n frames to trim (requires leftHandle)
         rightFrames,        // discrete n frames to trim (requires rightHandle)
-        totalFrames;        // a constant per each audio recording
+        totalFrames;        // a constant per audio recording
 
     // initiate application resources
     function init () {
