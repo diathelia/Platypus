@@ -82,6 +82,30 @@ var Main = (function () {
             saveAs(edits[0], getFilename(true));
             saveCount++;
         });
+        
+        // attach listrner here to avoid double ups
+        $('#edited').on('error', function (e) {
+            alert('media error: ' + e.code + ': ' + e.message);
+        });
+        
+        $('#source').on('durationchange', function () {
+            // keep relevant slider values up to date
+            source = this;
+            totalFrames = source.duration * 38.28125;
+
+            // refresh / reset authoring values for new source
+            leftHandle  = 0;
+            $('#slider').slider('values', 0, 0);
+            rightHandle = 100;
+            $('#slider').slider('values', 1, 100);
+            source.currentTime = 0.0;
+            timeValue = ((source.currentTime / source.duration) * 100);
+            $('#leftDiv, #rightDiv, #timeDiv').css('width', '0.0\%');
+            checkFrames();
+        })
+        .on('error', function (e) {
+            alert('media error: ' + e.code + ': ' + e.message);
+        });
     }
 
 /** handles Web Audio API processing and delegating to Web Worker *****************************************************/
@@ -512,11 +536,7 @@ var Main = (function () {
                     var editURL = handledURL.createObjectURL(edits[edits.length - 1]);
     
                     // attach new src and reveal audio element
-                    $('#edited').attr('src', editURL)
-                                .css('display', 'block')
-                                .on('error', function (e) {
-                                    alert('media error: ' + e.code + ': ' + e.message);
-                    });
+                    $('#edited').attr('src', editURL).css('display', 'block');
 
                     // pause playback before modal overlay
                     if (!source.paused) {
@@ -715,26 +735,8 @@ var Main = (function () {
             }
             finally {
                 // attach blobURL and use new audio.src to update authoring values
-                $('#source').attr('src', blobURL).one('durationchange', function () {
-                    // keep relevant slider values up to date
-                    source = this;
-                    totalFrames = source.duration * 38.28125;
-
-                    // refresh / reset authoring values for new source
-                    leftHandle  = 0;
-                    $('#slider').slider('values', 0, 0);
-                    rightHandle = 100;
-                    $('#slider').slider('values', 1, 100);
-                    source.currentTime = 0.0;
-                    timeValue = ((source.currentTime / source.duration) * 100);
-                    $('#leftDiv, #rightDiv, #timeDiv').css('width', '0.0\%');
-                    checkFrames();
-                })
-                .on('error', function (e) {
-                    alert('media error: ' + e.code + ': ' + e.message);
-                });
+                $('#source').attr('src', blobURL);
             }
-
         });
 
         if (audioCtx.state === 'running') {
