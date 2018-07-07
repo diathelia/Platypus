@@ -53,7 +53,7 @@ var Main = (function () {
             canvasCtx = canvas.getContext('2d');
             // set colors here instead of inside draw() callback to avoid flickering
             canvasCtx.fillStyle = 'rgb(' + 10 + ',' + 211 + ',' + (256 >> 0) + ')';
-            var gradient = canvasCtx.createLinearGradient(0, 0, 0, 200);
+            var gradient = canvasCtx.createLinearGradient(0, 0, 0, 300);
             gradient.addColorStop(0, 'white');
             gradient.addColorStop(1, 'red');
             canvasCtx.strokeStyle = gradient;
