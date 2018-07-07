@@ -449,11 +449,11 @@ var Main = (function () {
                     $('#play').show();
                 }
                 
-                //Get hours and minutes
+                // get minutes and seconds
                 var s = parseInt(source.currentTime % 60);
                 var m = parseInt((source.currentTime / 60) % 60);
 
-                //Add 0 if seconds less than 10
+                // add 0 if seconds less than 10
                 if (s < 10) {
                     s = '0' + s;
                 }
@@ -653,10 +653,10 @@ var Main = (function () {
 
             timer = setInterval(function () {
                 start++;
-                //Get hours and minutes
+                // get minutes and seconds
                 s = parseInt(start % 60);
                 m = parseInt((start / 60) % 60);
-                //Add 0 if seconds less than 10
+                // add 0 if seconds less than 10
                 if (s < 10) {
                     s = '0' + s;
                 }
